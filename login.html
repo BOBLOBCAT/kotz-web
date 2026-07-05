@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Discord · KoTZ</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/crest.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div id="loginScreen">
+  <div class="login-card">
+    <img class="crest-img" src="assets/crest.png" alt="Escudo KoTZ">
+    <h1>Iniciar sesión</h1>
+    <p class="lede">Accede con Discord. La web comprobará tus roles en el servidor de KoTZ y te enviará al panel correcto.</p>
+    <a id="discordLoginBtn" class="btn btn-primary" style="width:100%; margin-top:18px;" href="/auth/discord">Iniciar sesión con Discord</a>
+    <div id="setupWarning" class="login-hint" style="display:none; color:#ffcf4a; border-color:rgba(255,207,74,.25);">
+      Falta configurar Discord OAuth en el archivo <b>.env</b>. Copia <b>.env.example</b>, rellena los IDs y reinicia el servidor.
+    </div>
+    <div class="login-hint">
+      Owner, Co-Owner y Capitanes → Panel Alto Mando.<br>
+      Miembros, Soldados, Reclutas o Pendientes → Panel Usuario.
+    </div>
+    <a href="index.html" class="btn btn-ghost btn-sm" style="margin-top:22px;">← Volver al sitio público</a>
+  </div>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const next = params.get('next') || '/user.html';
+  const setup = params.get('setup');
+  document.getElementById('discordLoginBtn').href = '/auth/discord?next=' + encodeURIComponent(next);
+  if (setup) document.getElementById('setupWarning').style.display = 'block';
+</script>
+</body>
+</html>

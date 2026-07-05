@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Usuario · KoTZ</title>
+<meta name="description" content="Panel de usuario de KoTZ — cuotas, alianzas, galería y estado diplomático.">
+<link rel="icon" href="assets/crest.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header id="siteHeader">
+  <div class="nav-inner">
+    <a href="#/" class="brand">
+      <img class="crest-img" src="assets/crest.png" alt="Escudo KoTZ">
+      <span class="brand-name">Ko<span>TZ</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#/">Inicio</a>
+      <a href="#/nosotros">Quiénes Somos</a>
+      <a href="#/alianzas">Aliados</a>
+      <a href="#/estado">Estado</a>
+      <a href="#/galeria">Galería</a>
+      <a href="#/cuotas">Cuotas</a>
+    </nav>
+    <div class="nav-ctas">
+      <a href="#/cuotas" class="btn btn-primary">Enviar cuota</a>
+      <a href="index.html" class="btn btn-ghost">Sitio público</a>
+      <a href="panel.html" class="btn btn-ghost">Alto Mando</a>
+      <button id="logoutBtnSite" class="btn btn-ghost" type="button">Salir</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="mobile-panel" id="mobilePanel">
+  <a href="#/">Inicio</a>
+  <a href="#/nosotros">Quiénes Somos</a>
+  <a href="#/alianzas">Aliados</a>
+  <a href="#/estado">Estado</a>
+  <a href="#/galeria">Galería</a>
+  <a href="#/cuotas" class="btn btn-primary">Enviar cuota</a>
+  <a href="index.html" class="btn btn-ghost">Sitio público</a>
+  <a href="panel.html" class="btn btn-ghost">Alto Mando</a>
+      <button id="logoutBtnSite" class="btn btn-ghost" type="button">Salir</button>
+</div>
+
+<main id="view"></main>
+
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">
+        <img class="crest-img" src="assets/crest.png" alt="Escudo KoTZ">
+        <span class="brand-name">Ko<span>TZ</span></span>
+      </div>
+      <div class="footer-mottos">Panel Usuario · Cuotas · Estado · Aliados · Galería</div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Usuario</h4>
+        <a href="#/cuotas">Enviar cuota</a>
+        <a href="#/estado">Estado diplomático</a>
+        <a href="#/galeria">Galería</a>
+      </div>
+      <div class="footer-col">
+        <h4>KoTZ</h4>
+        <a href="#/nosotros">Quiénes Somos</a>
+        <a href="#/alianzas">Aliados</a>
+        <a href="index.html">Sitio público</a>
+      </div>
+      <div class="footer-col">
+        <h4>Gestión</h4>
+        <a href="panel.html">Acceso Alto Mando</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 KoTZ · Kings of The Zone</span>
+    <span>Honor · Respeto · Lealtad · Familia</span>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>

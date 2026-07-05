@@ -1,0 +1,261 @@
+/* ==========================================================================
+   KoTZ — DATA LAYER
+   ==========================================================================
+   Esto es una capa de datos EN MEMORIA. Sirve para tener el panel 100%
+   funcional en pantalla (altas, aprobaciones, sanciones, etc.) sin backend,
+   ideal para alojar el sitio como estático en GitHub Pages.
+
+   IMPORTANTE: al recargar la página, todo vuelve a los datos de ejemplo.
+   Nada se guarda entre sesiones ni se comparte entre dispositivos.
+
+   CUANDO QUIERAS PERSISTENCIA REAL:
+   Sustituye las funciones de KotzStore (abajo) por llamadas a tu backend,
+   por ejemplo Supabase:
+
+     async function loadMembers(){
+       const { data } = await supabase.from('members').select('*');
+       return data;
+     }
+
+   El resto del código (site.js / panel.js) llama siempre a través de
+   KotzStore, así que puedes cambiar el motor de datos sin tocar el resto
+   de la app.
+   ========================================================================== */
+
+const KotzData = {
+
+  alliances: [
+    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
+    { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
+    { id:'a3', name:'KAOs', emoji:'△', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
+    { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
+    { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
+    { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
+    { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
+  ],
+
+  conflicts: [
+    { id:'w1', name:'Sin guerras activas', emoji:'🕊️', status:'Estable', since:'Actualmente', desc:'KoTZ no tiene una guerra oficial activa registrada en este momento. Si el Alto Mando declara una guerra o conflicto, aparecerá aquí para que todos los miembros estén informados.', rules:['Mantener comunicación por Discord','No actuar por cuenta propia','Esperar instrucciones del Alto Mando'] }
+  ],
+
+  gallery: [
+    { id:'g1', title:'Foto oficial de KoTZ', category:'Fotos oficiales', tone:1, image:'assets/gallery-official.jpg' },
+    { id:'g2', title:'Reunión de Alto Mando', category:'Reuniones', tone:2 },
+    { id:'g3', title:'Operación nocturna', category:'Operaciones', tone:3 },
+    { id:'g4', title:'Alianza con The NATO', category:'Alianzas', tone:1 },
+    { id:'g6', title:'Cumbre con aliados', category:'Alianzas', tone:3 },
+  ],
+
+  members: [
+    { id:'m1', name:'Roger', discord:'@Roger', rank:'Owner', joined:'2026-06-01', status:'Activo', notes:'Fundador de KoTZ - Kings of The Zone.', sanctions:[], dues:[] },
+    { id:'m2', name:'Kyle Crimson', discord:'@Kyle Crimson', rank:'Capitán', joined:'2026-06-01', status:'Activo', notes:'Capitán de KoTZ.', sanctions:[], dues:[] },
+
+    { id:'m3', name:'Amaru Ocllo', discord:'@Amaru Ocllo', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m4', name:'Isaac Harris', discord:'@Isaac Harris', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m5', name:'Jack Griffin', discord:'@Jack Griffin', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m6', name:'William White', discord:'@William White', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m7', name:'Chino Antrax II', discord:'@Chino Antrax II', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m8', name:'Moon Jackson II', discord:'@Moon Jackson II', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m9', name:'yeyos57', discord:'@yeyos57', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+
+    { id:'m10', name:'Aurora Hall', discord:'@Aurora Hall', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m11', name:'Daniel Murphy', discord:'@Daniel Murphy', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m12', name:'Emma Cook', discord:'@Emma Cook', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m13', name:'Eva Grimblade', discord:'@Eva Grimblade', rank:'Capitán', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m14', name:'fxtxxx', discord:'@fxtxxx', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m15', name:'Gigi', discord:'@Gigi', rank:'Capitán', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m16', name:'Ian Grimstone', discord:'@Ian Grimstone', rank:'Co-Owner', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m17', name:'Katherine Anderson', discord:'@Katherine Anderson', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m18', name:'Kayla Allen', discord:'@Kayla Allen', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m19', name:'Levi Smith', discord:'@Levi Smith', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m20', name:'Lobo Ancestral', discord:'@Lobo Ancestral', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m21', name:'Mari', discord:'@Mari', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m22', name:'Owen Grimwood', discord:'@Owen Grimwood', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m23', name:'Peter', discord:'@Peter', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m24', name:'Tame Impala', discord:'@Tame Impala', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m25', name:'Tyler Price', discord:'@Tyler Price', rank:'Capitán', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m26', name:'Victor Wolfstrike', discord:'@Victor Wolfstrike', rank:'Teniente', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+    { id:'m27', name:'Wilson House', discord:'@Wilson House', rank:'Soldado', joined:'2026-06-01', status:'Activo', notes:'', sanctions:[], dues:[] },
+  ],
+
+  applications: [],
+
+  ranks: ['Owner','Co-Owner','Capitán','Líder de Comunicación','Líder de Reclutamiento','Líder de Administración','Líder de Venta de Armas','Teniente','Sargento','Soldado','Miembro','Asociado','Recluta'],
+
+  weeklyDues: [
+    { week:'Sem 1', amount:300 }, { week:'Sem 2', amount:600 }, { week:'Sem 3', amount:900 },
+    { week:'Sem 4', amount:1200 }, { week:'Sem 5', amount:1500 }, { week:'Sem 6', amount:2100 },
+  ],
+
+  memberGrowth: [
+    { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:20 }, { month:'Jul', total:27 },
+  ],
+};
+/* ==========================================================================
+   KotzStore — capa de acceso a datos. TODO el código de la app pasa por
+   aquí. Cuando conectes un backend real, reescribe estos métodos.
+   ========================================================================== */
+const KotzStore = {
+  _backendDues: [],
+  _backendGallery: [],
+  _backendMembers: [],
+  _membersLoaded: false,
+  _currentMember: null,
+  _authUser: null,
+  setBackendDues(dues){ this._backendDues = Array.isArray(dues) ? dues : []; },
+  getBackendDues(){ return this._backendDues || []; },
+  setBackendGallery(items){ this._backendGallery = Array.isArray(items) ? items : []; },
+  getBackendGallery(){ return this._backendGallery || []; },
+  deleteBackendGalleryItem(id){ this._backendGallery = this.getBackendGallery().filter(g => g.id !== id); },
+  setBackendMembers(members){ this._membersLoaded = true; this._backendMembers = Array.isArray(members) ? members.map(m => ({ sanctions:[], dues:[], ...m })) : []; },
+  getBackendMembers(){ return this._backendMembers || []; },
+  setCurrentMember(member){ this._currentMember = member ? ({ sanctions:[], dues:[], ...member }) : null; },
+  getCurrentMember(){ return this._currentMember; },
+  setAuthUser(user){ this._authUser = user || null; },
+  getAuthUser(){ return this._authUser; },
+  getMembers(){ return this._membersLoaded ? this.getBackendMembers() : []; },
+  getMember(id){ return this.getMembers().find(m => m.id === id); },
+  addMember(member){ member.id = 'm' + (this.getMembers().length + 1) + '_' + Date.now().toString(36); KotzData.members.push(member); return member; },
+  updateMember(id, patch){ const m = this.getMember(id); if (m) Object.assign(m, patch); },
+  findMemberByDiscordId(discordId){ return this.getMembers().find(m => String(m.discordId||'') === String(discordId||'')); },
+
+  getApplications(){ return KotzData.applications; },
+  setApplicationStatus(id, status, comment){
+    const app = KotzData.applications.find(a => a.id === id);
+    app.status = status; app.comment = comment || app.comment;
+    return app;
+  },
+  submitApplication(app){ app.id = 'r' + Date.now().toString(36); app.status = 'pending'; app.comment=''; KotzData.applications.unshift(app); return app; },
+
+  getStoredDues(){
+    try { return JSON.parse(localStorage.getItem('kotz_dues_submissions') || '[]'); }
+    catch(e){ return []; }
+  },
+  saveStoredDues(dues){
+    localStorage.setItem('kotz_dues_submissions', JSON.stringify(dues));
+  },
+  getAllDues(){
+    const builtIn = this.getMembers().flatMap(m => (m.dues||[]).map(d => ({...d, memberId:m.id, memberName:m.name, source:'seed'})));
+    const stored = this.getStoredDues();
+    const backend = this.getBackendDues().map(d => ({...d, source:'server'}));
+    const seen = new Set();
+    return [...backend, ...stored, ...builtIn]
+      .filter(d => { if (!d.id) return true; if (seen.has(d.id)) return false; seen.add(d.id); return true; })
+      .sort((a,b) => String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));
+  },
+  getDuesForMember(memberId){
+    return this.getAllDues().filter(d => d.memberId === memberId);
+  },
+  setDueStatus(memberId, dueId, status, comment){
+    const stored = this.getStoredDues();
+    const storedDue = stored.find(d => d.id === dueId);
+    if (storedDue){
+      storedDue.status = status; storedDue.comment = comment || storedDue.comment || '';
+      storedDue.reviewedAt = new Date().toISOString();
+      this.saveStoredDues(stored);
+      return storedDue;
+    }
+    const member = this.getMember(memberId);
+    const due = member?.dues?.find(d => d.id === dueId);
+    if (!due) return null;
+    due.status = status; due.comment = comment || due.comment;
+    return due;
+  },
+  addDue(memberId, due){
+    const member = this.getMember(memberId);
+    const stored = this.getStoredDues();
+    const entry = {
+      ...due,
+      id: 'd' + Date.now().toString(36),
+      memberId,
+      memberName: member ? member.name : (due.memberName || 'Miembro'),
+      status: 'pending',
+      comment: '',
+      createdAt: new Date().toISOString(),
+      source: 'user-panel'
+    };
+    stored.unshift(entry);
+    this.saveStoredDues(stored);
+    return entry;
+  },
+
+  getAllSanctions(){
+    return this.getMembers().flatMap(m => (m.sanctions||[]).map(s => ({...s, memberId:m.id, memberName:m.name})));
+  },
+  addSanction(memberId, sanction){
+    const member = this.getMember(memberId);
+    sanction.id = 's' + Date.now().toString(36);
+    member.sanctions.push(sanction);
+    return sanction;
+  },
+
+  getAlliances(){ return KotzData.alliances; },
+  getConflicts(){ return KotzData.conflicts || []; },
+  getGallery(){
+    try {
+      const serverItems = this.getBackendGallery().map(g => ({...g, source:g.source || 'google'}));
+      const extra = this.getExtraGalleryItems();
+      return [...serverItems, ...extra, ...KotzData.gallery];
+    } catch(e){ return KotzData.gallery; }
+  },
+  getExtraGalleryItems(){
+    try { return JSON.parse(localStorage.getItem('kotz_gallery_extra') || '[]'); }
+    catch(e){ return []; }
+  },
+  isExtraGalleryItem(id){
+    return this.getExtraGalleryItems().some(g => g.id === id);
+  },
+  isBackendGalleryItem(id){
+    return this.getBackendGallery().some(g => g.id === id);
+  },
+  addGalleryItem(item){
+    const extra = this.getExtraGalleryItems();
+    item.id = 'g' + Date.now().toString(36);
+    item.tone = item.tone || ((extra.length % 3) + 1);
+    extra.unshift(item);
+    try {
+      localStorage.setItem('kotz_gallery_extra', JSON.stringify(extra));
+    } catch(e){
+      alert('No se pudo guardar la foto. Probablemente el navegador se quedó sin espacio. Prueba con una URL directa o exporta/limpia la galería.');
+      throw e;
+    }
+    return item;
+  },
+  importGalleryItems(items){
+    const clean = items.filter(i => i && i.title && i.category && i.image).map((i, idx) => ({
+      id: i.id || ('g' + Date.now().toString(36) + '_' + idx),
+      title: String(i.title),
+      category: String(i.category),
+      image: String(i.image),
+      tone: Number(i.tone || ((idx % 3) + 1)),
+    }));
+    localStorage.setItem('kotz_gallery_extra', JSON.stringify(clean));
+    return clean;
+  },
+  clearExtraGalleryItems(){
+    localStorage.removeItem('kotz_gallery_extra');
+  },
+  deleteGalleryItem(id){
+    const extra = this.getExtraGalleryItems();
+    localStorage.setItem('kotz_gallery_extra', JSON.stringify(extra.filter(g => g.id !== id)));
+  },
+  getRanks(){ return KotzData.ranks; },
+  getWeeklyDues(){ return KotzData.weeklyDues; },
+  getMemberGrowth(){ return KotzData.memberGrowth; },
+
+  stats(){
+    const members = this.getMembers();
+    const dues = this.getAllDues();
+    return {
+      totalMembers: members.length,
+      activeMembers: members.filter(m => m.status === 'Activo').length,
+      pendingMembers: members.filter(m => m.status === 'Pendiente').length,
+      alliances: this.getAlliances().filter(a => a.status === 'Activa').length,
+      duesPending: dues.filter(d => d.status === 'pending').length,
+      duesApproved: dues.filter(d => d.status === 'approved').length,
+      openSanctions: this.getAllSanctions().length,
+      eventsHeld: 15,
+    };
+  }
+};
