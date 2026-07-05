@@ -28,7 +28,11 @@ function status(){
     quotaFolder: Boolean(process.env.GOOGLE_DRIVE_QUOTAS_FOLDER_ID),
     galleryFolder: Boolean(process.env.GOOGLE_DRIVE_GALLERY_FOLDER_ID),
     duesTab: process.env.GOOGLE_SHEET_DUES_TAB || 'dues',
-    galleryTab: process.env.GOOGLE_SHEET_GALLERY_TAB || 'gallery'
+    galleryTab: process.env.GOOGLE_SHEET_GALLERY_TAB || 'gallery',
+    sanctionsTab: process.env.GOOGLE_SHEET_SANCTIONS_TAB || 'sanctions',
+    shopItemsTab: process.env.GOOGLE_SHEET_SHOP_ITEMS_TAB || 'shop_items',
+    shopOrdersTab: process.env.GOOGLE_SHEET_SHOP_ORDERS_TAB || 'shop_orders',
+    shopOffersTab: process.env.GOOGLE_SHEET_SHOP_OFFERS_TAB || 'shop_offers'
   };
 }
 
@@ -94,7 +98,7 @@ async function appsScriptPost(action, payload = {}){
 async function ensureBaseTabs(){
   // Llama a las lecturas para que Apps Script cree las pestañas base si no existen.
   if (!configured()) return false;
-  await Promise.all([listDues(), listGallery(), listMembers()]);
+  await Promise.all([listDues(), listGallery(), listMembers(), listSanctions(), listShopItems(), listShopOrders(), listShopOffers()]);
   return true;
 }
 
@@ -207,6 +211,195 @@ async function updateDueStatus(id, statusValue, comment, user){
   return normalizeDue(data.due);
 }
 
+function normalizeSanction(s){
+  return {
+    id: s.id || ('sanction_' + Date.now()),
+    createdAt: s.createdAt || '',
+    memberId: String(s.memberId || ''),
+    memberName: s.memberName || '',
+    severity: s.severity || 'Leve',
+    date: s.date || '',
+    responsible: s.responsible || '',
+    reason: s.reason || '',
+    createdByDiscordId: String(s.createdByDiscordId || ''),
+    createdByUsername: s.createdByUsername || '',
+    createdByDisplayName: s.createdByDisplayName || '',
+    source: 'apps-script'
+  };
+}
+
+async function listSanctions(){
+  const data = await appsScriptGet('listSanctions');
+  return (data.sanctions || []).map(normalizeSanction);
+}
+
+async function appendSanction(input, user){
+  const data = await appsScriptPost('appendSanction', {
+    sanction: {
+      memberId: input.memberId,
+      memberName: input.memberName,
+      severity: input.severity || 'Leve',
+      date: input.date,
+      responsible: input.responsible,
+      reason: input.reason,
+      createdByDiscordId: user?.id || '',
+      createdByUsername: user?.username || '',
+      createdByDisplayName: user?.displayName || user?.globalName || user?.username || ''
+    }
+  });
+  return normalizeSanction(data.sanction || {});
+}
+
+
+function normalizeShopItem(item = {}){
+  return {
+    id: item.id || ('shop_' + Date.now()),
+    createdAt: item.createdAt || '',
+    updatedAt: item.updatedAt || '',
+    name: item.name || 'Producto RP',
+    category: item.category || 'General',
+    description: item.description || '',
+    damage: Number(item.damage || 0),
+    durability: Number(item.durability || 0),
+    basePrice: Number(item.basePrice || item.price || 0),
+    memberPrice: Number(item.memberPrice || item.basePrice || item.price || 0),
+    allyPrice: Number(item.allyPrice || item.memberPrice || item.basePrice || item.price || 0),
+    stock: Number(item.stock || 0),
+    imageUrl: item.imageUrl || item.image || '',
+    image: item.image || item.imageUrl || '',
+    status: item.status || 'Activo',
+    featured: item.featured === true || String(item.featured || '').toLowerCase() === 'true' || String(item.featured || '').toLowerCase() === 'si' || String(item.featured || '').toLowerCase() === 'sí',
+    notes: item.notes || '',
+    source: 'apps-script'
+  };
+}
+
+function normalizeShopOrder(order = {}){
+  return {
+    id: order.id || ('order_' + Date.now()),
+    createdAt: order.createdAt || '',
+    buyerDiscordId: String(order.buyerDiscordId || ''),
+    buyerUsername: order.buyerUsername || '',
+    buyerDisplayName: order.buyerDisplayName || '',
+    buyerMemberId: order.buyerMemberId || '',
+    buyerName: order.buyerName || '',
+    itemId: order.itemId || '',
+    itemName: order.itemName || '',
+    price: Number(order.price || 0),
+    quantity: Number(order.quantity || 1),
+    status: order.status || 'pending',
+    message: order.message || '',
+    reviewedBy: order.reviewedBy || '',
+    reviewedAt: order.reviewedAt || '',
+    source: 'apps-script'
+  };
+}
+
+function normalizeShopOffer(offer = {}){
+  return {
+    id: offer.id || ('offer_' + Date.now()),
+    createdAt: offer.createdAt || '',
+    buyerDiscordId: String(offer.buyerDiscordId || ''),
+    buyerUsername: offer.buyerUsername || '',
+    buyerDisplayName: offer.buyerDisplayName || '',
+    buyerMemberId: offer.buyerMemberId || '',
+    buyerName: offer.buyerName || '',
+    itemId: offer.itemId || '',
+    itemName: offer.itemName || '',
+    originalPrice: Number(offer.originalPrice || 0),
+    offeredPrice: Number(offer.offeredPrice || 0),
+    message: offer.message || '',
+    status: offer.status || 'pending',
+    counterOffer: offer.counterOffer || '',
+    reviewedBy: offer.reviewedBy || '',
+    reviewedAt: offer.reviewedAt || '',
+    source: 'apps-script'
+  };
+}
+
+async function listShopItems(){
+  const data = await appsScriptGet('listShopItems');
+  return (data.items || []).map(normalizeShopItem);
+}
+
+async function appendShopItem(input = {}, user){
+  const data = await appsScriptPost('appendShopItem', {
+    item: {
+      ...input,
+      updatedBy: user?.displayName || user?.globalName || user?.username || ''
+    }
+  });
+  return normalizeShopItem(data.item || {});
+}
+
+async function updateShopItem(id, patch = {}, user){
+  const data = await appsScriptPost('updateShopItem', {
+    id,
+    patch: {
+      ...patch,
+      updatedBy: user?.displayName || user?.globalName || user?.username || ''
+    }
+  });
+  return normalizeShopItem(data.item || {});
+}
+
+async function listShopOrders(){
+  const data = await appsScriptGet('listShopOrders');
+  return (data.orders || []).map(normalizeShopOrder);
+}
+
+async function appendShopOrder(input = {}, user, member){
+  const data = await appsScriptPost('appendShopOrder', {
+    order: {
+      ...input,
+      buyerDiscordId: user?.id || '',
+      buyerUsername: user?.username || '',
+      buyerDisplayName: user?.displayName || user?.globalName || user?.username || '',
+      buyerMemberId: member?.id || input.buyerMemberId || '',
+      buyerName: member?.name || member?.rpName || user?.displayName || user?.globalName || user?.username || input.buyerName || ''
+    }
+  });
+  return normalizeShopOrder(data.order || {});
+}
+
+async function updateShopOrderStatus(id, statusValue, user){
+  const data = await appsScriptPost('updateShopOrderStatus', {
+    id,
+    status: statusValue,
+    reviewedBy: user?.displayName || user?.globalName || user?.username || ''
+  });
+  return normalizeShopOrder(data.order || {});
+}
+
+async function listShopOffers(){
+  const data = await appsScriptGet('listShopOffers');
+  return (data.offers || []).map(normalizeShopOffer);
+}
+
+async function appendShopOffer(input = {}, user, member){
+  const data = await appsScriptPost('appendShopOffer', {
+    offer: {
+      ...input,
+      buyerDiscordId: user?.id || '',
+      buyerUsername: user?.username || '',
+      buyerDisplayName: user?.displayName || user?.globalName || user?.username || '',
+      buyerMemberId: member?.id || input.buyerMemberId || '',
+      buyerName: member?.name || member?.rpName || user?.displayName || user?.globalName || user?.username || input.buyerName || ''
+    }
+  });
+  return normalizeShopOffer(data.offer || {});
+}
+
+async function updateShopOfferStatus(id, statusValue, counterOffer, user){
+  const data = await appsScriptPost('updateShopOfferStatus', {
+    id,
+    status: statusValue,
+    counterOffer: counterOffer || '',
+    reviewedBy: user?.displayName || user?.globalName || user?.username || ''
+  });
+  return normalizeShopOffer(data.offer || {});
+}
+
 function normalizeGalleryItem(g){
   const fileId = g.driveFileId || g.fileId || '';
   const fallbackImage = fileId ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600` : '';
@@ -261,6 +454,17 @@ module.exports = {
   listDues,
   appendDue,
   updateDueStatus,
+  listSanctions,
+  appendSanction,
+  listShopItems,
+  appendShopItem,
+  updateShopItem,
+  listShopOrders,
+  appendShopOrder,
+  updateShopOrderStatus,
+  listShopOffers,
+  appendShopOffer,
+  updateShopOfferStatus,
   listGallery,
   appendGallery,
   deleteGallery,

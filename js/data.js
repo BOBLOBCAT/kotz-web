@@ -100,13 +100,25 @@ const KotzStore = {
   _backendDues: [],
   _backendGallery: [],
   _backendMembers: [],
+  _backendSanctions: [],
+  _backendShopItems: [],
+  _backendShopOrders: [],
+  _backendShopOffers: [],
   _membersLoaded: false,
   _currentMember: null,
   _authUser: null,
+  setBackendShopItems(items){ this._backendShopItems = Array.isArray(items) ? items : []; },
+  getBackendShopItems(){ return this._backendShopItems || []; },
+  setBackendShopOrders(orders){ this._backendShopOrders = Array.isArray(orders) ? orders : []; },
+  getBackendShopOrders(){ return this._backendShopOrders || []; },
+  setBackendShopOffers(offers){ this._backendShopOffers = Array.isArray(offers) ? offers : []; },
+  getBackendShopOffers(){ return this._backendShopOffers || []; },
   setBackendDues(dues){ this._backendDues = Array.isArray(dues) ? dues : []; },
   getBackendDues(){ return this._backendDues || []; },
   setBackendGallery(items){ this._backendGallery = Array.isArray(items) ? items : []; },
   getBackendGallery(){ return this._backendGallery || []; },
+  setBackendSanctions(sanctions){ this._backendSanctions = Array.isArray(sanctions) ? sanctions : []; },
+  getBackendSanctions(){ return this._backendSanctions || []; },
   deleteBackendGalleryItem(id){ this._backendGallery = this.getBackendGallery().filter(g => g.id !== id); },
   setBackendMembers(members){ this._membersLoaded = true; this._backendMembers = Array.isArray(members) ? members.map(m => ({ sanctions:[], dues:[], ...m })) : []; },
   getBackendMembers(){ return this._backendMembers || []; },
@@ -181,13 +193,31 @@ const KotzStore = {
   },
 
   getAllSanctions(){
-    return this.getMembers().flatMap(m => (m.sanctions||[]).map(s => ({...s, memberId:m.id, memberName:m.name})));
+    const builtIn = this.getMembers().flatMap(m => (m.sanctions||[]).map(s => ({...s, memberId:m.id, memberName:m.name, source:s.source || 'seed'})));
+    const backend = this.getBackendSanctions().map(s => ({...s, source:s.source || 'server'}));
+    const seen = new Set();
+    return [...backend, ...builtIn]
+      .filter(s => { if (!s.id) return true; if (seen.has(s.id)) return false; seen.add(s.id); return true; })
+      .sort((a,b) => String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));
+  },
+  getSanctionsForMember(memberId){
+    return this.getAllSanctions().filter(s => String(s.memberId) === String(memberId));
   },
   addSanction(memberId, sanction){
     const member = this.getMember(memberId);
-    sanction.id = 's' + Date.now().toString(36);
-    member.sanctions.push(sanction);
-    return sanction;
+    const entry = {
+      ...sanction,
+      id: sanction.id || ('s' + Date.now().toString(36)),
+      memberId,
+      memberName: member ? member.name : (sanction.memberName || 'Miembro'),
+      createdAt: sanction.createdAt || new Date().toISOString(),
+      source: sanction.source || 'local'
+    };
+    if (member) {
+      member.sanctions = member.sanctions || [];
+      member.sanctions.unshift(entry);
+    }
+    return entry;
   },
 
   getAlliances(){ return KotzData.alliances; },
@@ -240,6 +270,31 @@ const KotzStore = {
     const extra = this.getExtraGalleryItems();
     localStorage.setItem('kotz_gallery_extra', JSON.stringify(extra.filter(g => g.id !== id)));
   },
+
+  getShopItems(){
+    return this.getBackendShopItems().sort((a,b) => Number(b.featured === true) - Number(a.featured === true) || String(a.name||'').localeCompare(String(b.name||'')));
+  },
+  getActiveShopItems(){
+    return this.getShopItems().filter(i => String(i.status || 'Activo') === 'Activo');
+  },
+  getShopItem(id){ return this.getShopItems().find(i => String(i.id) === String(id)); },
+  getShopOrders(){ return this.getBackendShopOrders().sort((a,b) => String(b.createdAt||'').localeCompare(String(a.createdAt||''))); },
+  getShopOffers(){ return this.getBackendShopOffers().sort((a,b) => String(b.createdAt||'').localeCompare(String(a.createdAt||''))); },
+  getPendingShopOrders(){ return this.getShopOrders().filter(o => o.status === 'pending'); },
+  getPendingShopOffers(){ return this.getShopOffers().filter(o => o.status === 'pending'); },
+  priceFor(item, mode='member'){
+    if (!item) return 0;
+    if (mode === 'ally') return Number(item.allyPrice || item.memberPrice || item.basePrice || 0);
+    if (mode === 'base') return Number(item.basePrice || item.memberPrice || item.allyPrice || 0);
+    return Number(item.memberPrice || item.basePrice || item.allyPrice || 0);
+  },
+  formatMoney(value){
+    return '$' + Number(value || 0).toLocaleString('es-ES');
+  },
+  shopStatusLabel(status){
+    const map = { pending:'Pendiente', approved:'Aprobado', rejected:'Rechazado', delivered:'Entregado', cancelled:'Cancelado', accepted:'Aceptada', countered:'Contraoferta' };
+    return map[status] || status || 'Pendiente';
+  },
   getRanks(){ return KotzData.ranks; },
   getWeeklyDues(){ return KotzData.weeklyDues; },
   getMemberGrowth(){ return KotzData.memberGrowth; },
@@ -255,6 +310,7 @@ const KotzStore = {
       duesPending: dues.filter(d => d.status === 'pending').length,
       duesApproved: dues.filter(d => d.status === 'approved').length,
       openSanctions: this.getAllSanctions().length,
+      shopPending: this.getPendingShopOrders().length + this.getPendingShopOffers().length,
       eventsHeld: 15,
     };
   }

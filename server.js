@@ -20,9 +20,9 @@ const DB_PATH = path.join(__dirname, 'server-data.json');
 const DISCORD_API = 'https://discord.com/api/v10';
 
 function readDb(){
-  if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({ dues: [] }, null, 2));
+  if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({ dues: [], sanctions: [], shopItems: [], shopOrders: [], shopOffers: [] }, null, 2));
   try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); }
-  catch { return { dues: [] }; }
+  catch { return { dues: [], sanctions: [], shopItems: [], shopOrders: [], shopOffers: [] }; }
 }
 function writeDb(db){ fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2)); }
 function envList(name){ return String(process.env[name] || '').split(',').map(v => v.trim()).filter(Boolean); }
@@ -52,6 +52,12 @@ function getAccessLevel(roles = []){
   if (hasAnyRole(roles, roleConfig.user)) return 'usuario';
   return 'denegado';
 }
+function pickShopPrice(item, mode = 'member'){
+  if (mode === 'ally') return Number(item.allyPrice || item.memberPrice || item.basePrice || 0);
+  if (mode === 'base') return Number(item.basePrice || item.memberPrice || item.allyPrice || 0);
+  return Number(item.memberPrice || item.basePrice || item.allyPrice || 0);
+}
+function isActiveShopItem(item){ return String(item?.status || 'Activo').toLowerCase() === 'activo'; }
 function requireDiscordConfig(){
   return Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET && process.env.DISCORD_GUILD_ID);
 }
@@ -324,6 +330,213 @@ app.patch('/api/dues/:id/status', requireAdmin, async (req, res) => {
   } catch(err){
     console.error('[KoTZ] Error actualizando estado de cuota en server-data.json:', req.params.id, '\n', err?.stack || err?.message || err);
     return res.status(500).json({ ok:false, error:'No se pudo actualizar la cuota.' });
+  }
+});
+
+app.get('/api/sanctions', requireAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) return res.json({ ok:true, sanctions: await googleStorage.listSanctions(), storage:'google' });
+    return res.json({ ok:true, sanctions: readDb().sanctions || [], storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo sanciones:', '\n', err?.stack || err?.message || err);
+    const friendly = googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer las sanciones.';
+    return res.status(502).json({ ok:false, error: friendly, storage: googleStorage.configured() ? 'google' : 'json' });
+  }
+});
+
+app.post('/api/sanctions', requireAdmin, async (req, res) => {
+  const { memberId, memberName, severity, date, responsible, reason } = req.body || {};
+
+  if (!memberId || !memberName || !date || !reason) {
+    return res.status(400).json({ ok:false, error:'Faltan campos obligatorios (memberId, memberName, date o reason).' });
+  }
+
+  if (googleStorage.configured()){
+    try {
+      const sanction = await googleStorage.appendSanction({ memberId, memberName, severity, date, responsible, reason }, req.session.user);
+      return res.json({ ok:true, sanction, storage:'google' });
+    } catch(err){
+      console.error('[KoTZ] Error guardando sanción en Google:', { memberId, memberName, severity, date, responsible }, '\n', err?.stack || err?.message || err);
+      return res.status(502).json({ ok:false, error: googleStorage.friendlyGoogleError(err), storage:'google' });
+    }
+  }
+
+  try {
+    const db = readDb();
+    const sanction = {
+      id: 'sanction_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      createdAt: new Date().toISOString(),
+      memberId: String(memberId),
+      memberName: String(memberName),
+      severity: String(severity || 'Leve'),
+      date: String(date),
+      responsible: String(responsible || ''),
+      reason: String(reason),
+      createdByDiscordId: req.session.user?.id || '',
+      createdByUsername: req.session.user?.username || '',
+      createdByDisplayName: req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '',
+      source: 'server'
+    };
+    db.sanctions = db.sanctions || [];
+    db.sanctions.unshift(sanction);
+    writeDb(db);
+    return res.json({ ok:true, sanction, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error guardando sanción en server-data.json:', '\n', err?.stack || err?.message || err);
+    return res.status(500).json({ ok:false, error:'No se pudo guardar la sanción en el servidor.' });
+  }
+});
+
+
+/* ------------------------------------------------------------ SHOP / TIENDA RP */
+
+app.get('/api/shop/items', requireUserOrAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) {
+      const items = await googleStorage.listShopItems();
+      const visible = req.session.accessLevel === 'alto-mando' ? items : items.filter(isActiveShopItem);
+      return res.json({ ok:true, items: visible, storage:'google' });
+    }
+    const items = readDb().shopItems || [];
+    return res.json({ ok:true, items: req.session.accessLevel === 'alto-mando' ? items : items.filter(isActiveShopItem), storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo tienda:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo leer la tienda.' });
+  }
+});
+
+app.post('/api/shop/items', requireAdmin, async (req, res) => {
+  try {
+    const item = req.body || {};
+    if (!item.name) return res.status(400).json({ ok:false, error:'Falta el nombre del producto.' });
+    if (googleStorage.configured()) return res.json({ ok:true, item: await googleStorage.appendShopItem(item, req.session.user), storage:'google' });
+    const db = readDb();
+    const entry = { id:'shop_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), ...item };
+    db.shopItems = db.shopItems || []; db.shopItems.unshift(entry); writeDb(db);
+    return res.json({ ok:true, item:entry, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando producto:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear el producto.' });
+  }
+});
+
+app.patch('/api/shop/items/:id', requireAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) return res.json({ ok:true, item: await googleStorage.updateShopItem(req.params.id, req.body || {}, req.session.user), storage:'google' });
+    const db = readDb();
+    const item = (db.shopItems || []).find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ ok:false, error:'Producto no encontrado.' });
+    Object.assign(item, req.body || {}, { updatedAt:new Date().toISOString() }); writeDb(db);
+    return res.json({ ok:true, item, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando producto:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar el producto.' });
+  }
+});
+
+app.get('/api/shop/orders', requireUserOrAdmin, async (req, res) => {
+  try {
+    const all = googleStorage.configured() ? await googleStorage.listShopOrders() : (readDb().shopOrders || []);
+    const orders = req.session.accessLevel === 'alto-mando' ? all : all.filter(o => String(o.buyerDiscordId || '') === String(req.session.user?.id || ''));
+    return res.json({ ok:true, orders, storage: googleStorage.configured() ? 'google' : 'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo pedidos:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer los pedidos.' });
+  }
+});
+
+app.post('/api/shop/orders', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { itemId, quantity = 1, message = '', priceMode = 'member' } = req.body || {};
+    if (!itemId) return res.status(400).json({ ok:false, error:'Falta itemId.' });
+    const items = googleStorage.configured() ? await googleStorage.listShopItems() : (readDb().shopItems || []);
+    const item = items.find(i => String(i.id) === String(itemId));
+    if (!item || !isActiveShopItem(item)) return res.status(404).json({ ok:false, error:'Producto no disponible.' });
+    const qty = Math.max(1, Number(quantity || 1));
+    if (Number(item.stock || 0) < qty) return res.status(400).json({ ok:false, error:'No hay stock suficiente.' });
+    const member = googleStorage.configured() ? await googleStorage.getMemberForDiscordUser(req.session.user) : null;
+    const orderInput = { itemId:item.id, itemName:item.name, price: pickShopPrice(item, priceMode), quantity:qty, status:'pending', message:String(message || '') };
+    if (googleStorage.configured()) return res.json({ ok:true, order: await googleStorage.appendShopOrder(orderInput, req.session.user, member), storage:'google' });
+    const db = readDb();
+    const order = { id:'order_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), buyerDiscordId:req.session.user?.id || '', buyerUsername:req.session.user?.username || '', buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '', buyerMemberId:member?.id || '', buyerName:member?.name || req.session.user?.displayName || req.session.user?.username || '', ...orderInput };
+    db.shopOrders = db.shopOrders || []; db.shopOrders.unshift(order); writeDb(db);
+    return res.json({ ok:true, order, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando pedido:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear el pedido.' });
+  }
+});
+
+app.patch('/api/shop/orders/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!['pending','approved','rejected','delivered','cancelled'].includes(status)) return res.status(400).json({ ok:false, error:'Estado inválido.' });
+
+    if (googleStorage.configured()) {
+      const before = (await googleStorage.listShopOrders()).find(o => String(o.id) === String(req.params.id));
+      const order = await googleStorage.updateShopOrderStatus(req.params.id, status, req.session.user);
+      if (status === 'approved' && before && before.status !== 'approved') {
+        const item = (await googleStorage.listShopItems()).find(i => String(i.id) === String(order.itemId));
+        if (item) await googleStorage.updateShopItem(item.id, { stock: Math.max(0, Number(item.stock || 0) - Number(order.quantity || 1)) }, req.session.user);
+      }
+      return res.json({ ok:true, order, storage:'google' });
+    }
+
+    const db = readDb();
+    const order = (db.shopOrders || []).find(o => o.id === req.params.id);
+    if (!order) return res.status(404).json({ ok:false, error:'Pedido no encontrado.' });
+    order.status = status; order.reviewedBy = req.session.user?.displayName || req.session.user?.username || ''; order.reviewedAt = new Date().toISOString(); writeDb(db);
+    return res.json({ ok:true, order, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando pedido:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar el pedido.' });
+  }
+});
+
+app.get('/api/shop/offers', requireUserOrAdmin, async (req, res) => {
+  try {
+    const all = googleStorage.configured() ? await googleStorage.listShopOffers() : (readDb().shopOffers || []);
+    const offers = req.session.accessLevel === 'alto-mando' ? all : all.filter(o => String(o.buyerDiscordId || '') === String(req.session.user?.id || ''));
+    return res.json({ ok:true, offers, storage: googleStorage.configured() ? 'google' : 'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo ofertas:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer las ofertas.' });
+  }
+});
+
+app.post('/api/shop/offers', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { itemId, offeredPrice, message = '', priceMode = 'member' } = req.body || {};
+    if (!itemId || !offeredPrice) return res.status(400).json({ ok:false, error:'Falta itemId u offeredPrice.' });
+    const items = googleStorage.configured() ? await googleStorage.listShopItems() : (readDb().shopItems || []);
+    const item = items.find(i => String(i.id) === String(itemId));
+    if (!item || !isActiveShopItem(item)) return res.status(404).json({ ok:false, error:'Producto no disponible.' });
+    const member = googleStorage.configured() ? await googleStorage.getMemberForDiscordUser(req.session.user) : null;
+    const offerInput = { itemId:item.id, itemName:item.name, originalPrice: pickShopPrice(item, priceMode), offeredPrice:Number(offeredPrice), message:String(message || ''), status:'pending' };
+    if (googleStorage.configured()) return res.json({ ok:true, offer: await googleStorage.appendShopOffer(offerInput, req.session.user, member), storage:'google' });
+    const db = readDb();
+    const offer = { id:'offer_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), buyerDiscordId:req.session.user?.id || '', buyerUsername:req.session.user?.username || '', buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '', buyerMemberId:member?.id || '', buyerName:member?.name || req.session.user?.displayName || req.session.user?.username || '', ...offerInput };
+    db.shopOffers = db.shopOffers || []; db.shopOffers.unshift(offer); writeDb(db);
+    return res.json({ ok:true, offer, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando oferta:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear la oferta.' });
+  }
+});
+
+app.patch('/api/shop/offers/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status, counterOffer = '' } = req.body || {};
+    if (!['pending','accepted','rejected','countered','cancelled'].includes(status)) return res.status(400).json({ ok:false, error:'Estado inválido.' });
+    if (googleStorage.configured()) return res.json({ ok:true, offer: await googleStorage.updateShopOfferStatus(req.params.id, status, counterOffer, req.session.user), storage:'google' });
+    const db = readDb();
+    const offer = (db.shopOffers || []).find(o => o.id === req.params.id);
+    if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+    offer.status = status; offer.counterOffer = counterOffer; offer.reviewedBy = req.session.user?.displayName || req.session.user?.username || ''; offer.reviewedAt = new Date().toISOString(); writeDb(db);
+    return res.json({ ok:true, offer, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando oferta:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar la oferta.' });
   }
 });
 

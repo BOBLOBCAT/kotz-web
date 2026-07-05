@@ -1,4 +1,0 @@
-id	rpName	discordUsername	discordId	rank	joinDate	status	profileUrl	notes
-m1	Roger	boblobcat8489	948660846060507176	Owner	2026-06-01	Activo		Fundador de KoTZ
-m2	Kyle Crimson			Capitán	2026-06-01	Activo		
-m3	Ian Grimstone			Co-Owner	2026-06-01	Activo		

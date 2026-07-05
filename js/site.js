@@ -10,6 +10,7 @@ const routes = {
   '/estado': pageDiplomaticStatus,
   '/galeria': pageGallery,
   '/cuotas': pageUserDues,
+  '/tienda': pageShop,
   '/estadisticas': pageStats,
 };
 
@@ -21,6 +22,7 @@ const navMeta = [
   { path:'/estado', label:'Estado' },
   { path:'/galeria', label:'Galería' },
   { path:'/cuotas', label:'Cuotas' },
+  { path:'/tienda', label:'Tienda' },
   { path:'/estadisticas', label:'Estadísticas' },
 ];
 
@@ -31,6 +33,8 @@ let serverGalleryLoaded = false;
 let serverGalleryLoading = false;
 let currentMemberLoaded = false;
 let currentMemberLoading = false;
+let shopLoaded = false;
+let shopLoading = false;
 
 async function syncDuesFromServer(rerender = false){
   if (serverDuesLoading) return;
@@ -97,6 +101,28 @@ async function syncCurrentMemberFromServer(rerender = false){
   }
 }
 
+
+async function syncShopFromServer(rerender = false){
+  if (shopLoading) return;
+  shopLoading = true;
+  try {
+    const [itemsRes, ordersRes, offersRes] = await Promise.all([
+      fetch('/api/shop/items', { credentials:'same-origin' }),
+      fetch('/api/shop/orders', { credentials:'same-origin' }),
+      fetch('/api/shop/offers', { credentials:'same-origin' })
+    ]);
+    if (itemsRes.ok){ const data = await itemsRes.json(); KotzStore.setBackendShopItems(data.items || []); }
+    if (ordersRes.ok){ const data = await ordersRes.json(); KotzStore.setBackendShopOrders(data.orders || []); }
+    if (offersRes.ok){ const data = await offersRes.json(); KotzStore.setBackendShopOffers(data.offers || []); }
+    shopLoaded = true;
+    if (rerender && (location.hash.replace('#','') || '/') === '/tienda') router();
+  } catch(e) {
+    // Sin backend: no hay tienda persistente.
+  } finally {
+    shopLoading = false;
+  }
+}
+
 function setupSiteLogout(){
   const logout = async () => {
     try { await fetch('/api/logout', { method:'POST', credentials:'same-origin' }); } catch(e) {}
@@ -125,6 +151,7 @@ function afterRender(path){
   if (path === '/estadisticas') animateCounters();
   if (path === '/galeria') { initGalleryFilters(); if (!serverGalleryLoaded) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
+  if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
   if (path === '/organizacion') initSecurityLog();
   if (document.getElementById('embers')) initEmbers();
 }
@@ -607,6 +634,111 @@ function initGalleryFilters(){
     });
   }));
 }
+
+
+/* ------------------------------------------------------------ TIENDA */
+function pageShop(){
+  const items = KotzStore.getActiveShopItems();
+  const orders = KotzStore.getShopOrders();
+  const offers = KotzStore.getShopOffers();
+  const current = KotzStore.getCurrentMember();
+  const pill = status => status === 'pending' ? 'pill-yellow' : ['approved','accepted','delivered'].includes(status) ? 'pill-green' : status === 'countered' ? 'pill-yellow' : 'pill-red';
+  return `
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Catálogo interno RP</div>
+      <h1 class="h1">Tienda <span class="accent">KoTZ.</span></h1>
+      <p class="lede">Catálogo interno de rol. Compra, solicita autorización o lanza una oferta al Alto Mando.</p>
+      ${current ? `<p class="lede" style="font-size:.92rem;">Entrando como <b>${current.name || current.rpName}</b> · ${current.rank || 'Miembro'}</p>` : `<p class="lede" style="font-size:.92rem;">Cargando tu perfil de miembro...</p>`}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">Disponibles</div><h2 class="h2">Arsenal RP y equipo.</h2></div>
+      </div>
+      <div class="cards-grid">
+        ${items.map(item => `
+          <article class="glass-card reveal" style="padding:18px; display:flex; flex-direction:column; gap:14px; min-height:320px;">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+              <div>
+                <div class="eyebrow">${item.category || 'Producto'}</div>
+                <h3 class="h3" style="margin:4px 0 6px;">${escapeHtml(item.name)}</h3>
+                <p class="lede" style="font-size:.9rem; margin:0;">${escapeHtml(item.description || 'Producto configurable por Alto Mando.')}</p>
+              </div>
+              ${item.featured ? `<span class="pill pill-yellow">Oferta</span>` : ''}
+            </div>
+            <div style="height:130px;border:1px solid rgba(255,255,255,.12);border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);overflow:hidden;">
+              ${item.imageUrl ? `<img src="${escapeAttr(item.imageUrl)}" alt="${escapeAttr(item.name)}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<div style="font-size:3rem;opacity:.7;">▰</div>`}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="mini-row" style="margin:0;"><div><b>Daño</b><span class="mini-sub">${Number(item.damage||0)}</span></div></div>
+              <div class="mini-row" style="margin:0;"><div><b>Durabilidad</b><span class="mini-sub">${Number(item.durability||0)}</span></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:.85rem;">
+              <div><span class="mini-sub">Normal</span><br><b>${KotzStore.formatMoney(item.basePrice)}</b></div>
+              <div><span class="mini-sub">Miembro</span><br><b class="accent">${KotzStore.formatMoney(item.memberPrice)}</b></div>
+              <div><span class="mini-sub">Aliado</span><br><b>${KotzStore.formatMoney(item.allyPrice)}</b></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:10px;">
+              <span class="pill ${Number(item.stock||0)>0?'pill-green':'pill-red'}">Stock: ${Number(item.stock||0)}</span>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                <button class="btn btn-primary btn-sm" data-shop-buy="${item.id}" ${Number(item.stock||0)<=0?'disabled':''}>Solicitar compra</button>
+                <button class="btn btn-ghost btn-sm" data-shop-offer="${item.id}" ${Number(item.stock||0)<=0?'disabled':''}>Hacer oferta</button>
+              </div>
+            </div>
+          </article>`).join('') || `<div class="glass-card pad"><p class="lede">No hay productos activos todavía.</p></div>`}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap panel-grid-2">
+      <div class="card pad reveal">
+        <div class="eyebrow">Mis pedidos</div>
+        ${orders.length ? orders.map(o => `<div class="mini-row"><div><b>${escapeHtml(o.itemName)}</b><span class="mini-sub">${KotzStore.formatMoney(o.price)} · x${o.quantity} · ${o.message || 'Sin mensaje'}</span></div><span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span></div>`).join('') : `<p class="lede" style="font-size:.9rem;">Aún no has enviado pedidos.</p>`}
+      </div>
+      <div class="card pad reveal">
+        <div class="eyebrow">Mis ofertas</div>
+        ${offers.length ? offers.map(o => `<div class="mini-row"><div><b>${escapeHtml(o.itemName)}</b><span class="mini-sub">Ofreciste ${KotzStore.formatMoney(o.offeredPrice)} · Original ${KotzStore.formatMoney(o.originalPrice)}${o.counterOffer ? ' · Contra: ' + KotzStore.formatMoney(o.counterOffer) : ''}</span></div><span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span></div>`).join('') : `<p class="lede" style="font-size:.9rem;">Aún no has enviado ofertas.</p>`}
+      </div>
+    </div>
+  </section>`;
+}
+
+async function submitShopOrder(itemId, offer=false){
+  const item = KotzStore.getShopItem(itemId);
+  if (!item) return alert('Producto no encontrado.');
+  try {
+    if (offer){
+      const offeredPrice = prompt(`¿Cuánto ofreces por ${item.name}? Precio miembro: ${KotzStore.formatMoney(item.memberPrice)}`);
+      if (!offeredPrice) return;
+      const message = prompt('Mensaje para Alto Mando (opcional):') || '';
+      const res = await fetch('/api/shop/offers', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ itemId, offeredPrice:Number(offeredPrice), message, priceMode:'member' }) });
+      if (!res.ok){ const data = await res.json().catch(() => ({})); throw new Error(data.error || 'No se pudo enviar la oferta.'); }
+      alert('Oferta enviada a Alto Mando.');
+    } else {
+      const message = prompt(`Mensaje para Alto Mando sobre ${item.name} (opcional):`) || '';
+      const res = await fetch('/api/shop/orders', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ itemId, quantity:1, message, priceMode:'member' }) });
+      if (!res.ok){ const data = await res.json().catch(() => ({})); throw new Error(data.error || 'No se pudo enviar el pedido.'); }
+      alert('Pedido enviado a Alto Mando.');
+    }
+    await syncShopFromServer(true);
+  } catch(err){
+    alert('Error en tienda: ' + (err.message || err));
+  }
+}
+
+function initShopPage(){
+  document.querySelectorAll('[data-shop-buy]').forEach(btn => btn.addEventListener('click', () => submitShopOrder(btn.dataset.shopBuy, false)));
+  document.querySelectorAll('[data-shop-offer]').forEach(btn => btn.addEventListener('click', () => submitShopOrder(btn.dataset.shopOffer, true)));
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+function escapeAttr(value){ return escapeHtml(value).replace(/'/g, '&#39;'); }
 
 /* --------------------------------------------------------- ESTADISTICAS */
 function pageStats(){

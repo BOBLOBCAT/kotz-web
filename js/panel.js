@@ -13,6 +13,7 @@ const panelRoutes = {
   '/miembros': viewMiembros,
   '/cuotas': viewCuotas,
   '/sanciones': viewSanciones,
+  '/tienda': viewTienda,
   '/estadisticas': viewEstadisticas,
   '/galeria': viewGaleria,
 };
@@ -22,6 +23,7 @@ const panelNav = [
   ['/miembros','Miembros','☰'],
   ['/cuotas','Cuotas','◆'],
   ['/sanciones','Sanciones','⚑'],
+  ['/tienda','Tienda','▰'],
   ['/estadisticas','Estadísticas','▤'],
   ['/galeria','Galería','▣'],
 ];
@@ -70,6 +72,103 @@ async function panelSyncMembers(){
   } catch(e) {
     // Modo local sin backend: se mantiene la lista de ejemplo del código.
   }
+}
+
+async function panelSyncSanctions(){
+  try {
+    const res = await fetch('/api/sanctions', { credentials:'same-origin' });
+    if (res.ok){
+      const data = await res.json();
+      KotzStore.setBackendSanctions(data.sanctions || []);
+    }
+  } catch(e) {
+    // Modo local sin backend: se mantiene local.
+  }
+}
+
+
+async function panelSyncShop(){
+  try {
+    const [itemsRes, ordersRes, offersRes] = await Promise.all([
+      fetch('/api/shop/items', { credentials:'same-origin' }),
+      fetch('/api/shop/orders', { credentials:'same-origin' }),
+      fetch('/api/shop/offers', { credentials:'same-origin' })
+    ]);
+    if (itemsRes.ok){ const data = await itemsRes.json(); KotzStore.setBackendShopItems(data.items || []); }
+    if (ordersRes.ok){ const data = await ordersRes.json(); KotzStore.setBackendShopOrders(data.orders || []); }
+    if (offersRes.ok){ const data = await offersRes.json(); KotzStore.setBackendShopOffers(data.offers || []); }
+  } catch(e) {
+    // Sin backend: no hay tienda persistente.
+  }
+}
+
+async function panelSaveShopItem(payload, id=''){
+  try {
+    const res = await fetch(id ? `/api/shop/items/${encodeURIComponent(id)}` : '/api/shop/items', {
+      method: id ? 'PATCH' : 'POST',
+      credentials:'same-origin',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok){ const data = await res.json().catch(() => ({})); throw new Error(data.error || 'No se pudo guardar el producto.'); }
+    await panelSyncShop();
+    panelRouter();
+  } catch(err){
+    alert('No se pudo guardar el producto: ' + (err.message || err));
+  }
+}
+
+async function panelSetShopOrderStatus(id, status){
+  try {
+    const res = await fetch(`/api/shop/orders/${encodeURIComponent(id)}/status`, {
+      method:'PATCH', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ status })
+    });
+    if (!res.ok){ const data = await res.json().catch(() => ({})); throw new Error(data.error || 'No se pudo actualizar el pedido.'); }
+    await panelSyncShop();
+    panelRouter();
+  } catch(err){ alert('No se pudo actualizar el pedido: ' + (err.message || err)); }
+}
+
+async function panelSetShopOfferStatus(id, status, counterOffer=''){
+  try {
+    const res = await fetch(`/api/shop/offers/${encodeURIComponent(id)}/status`, {
+      method:'PATCH', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ status, counterOffer })
+    });
+    if (!res.ok){ const data = await res.json().catch(() => ({})); throw new Error(data.error || 'No se pudo actualizar la oferta.'); }
+    await panelSyncShop();
+    panelRouter();
+  } catch(err){ alert('No se pudo actualizar la oferta: ' + (err.message || err)); }
+}
+
+async function panelCreateSanction(payload){
+  let response;
+  try {
+    response = await fetch('/api/sanctions', {
+      method:'POST',
+      credentials:'same-origin',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(networkErr){
+    console.error('[KoTZ] No se pudo contactar con el servidor para guardar sanción:', networkErr);
+    KotzStore.addSanction(payload.memberId, payload);
+    alert('No se pudo contactar con el servidor. La sanción solo se ha aplicado en este navegador.');
+    panelRouter();
+    return;
+  }
+
+  if (response.ok){
+    await panelSyncSanctions();
+    panelRouter();
+    return;
+  }
+
+  let serverError = 'No se pudo guardar la sanción en Google Sheets.';
+  try { const data = await response.json(); serverError = data.error || serverError; } catch(e) {}
+  console.error('[KoTZ] POST /api/sanctions respondió con error:', response.status, serverError);
+  alert('No se pudo guardar la sanción: ' + serverError);
+  await panelSyncSanctions();
+  panelRouter();
 }
 
 async function panelUpdateMember(id, patch){
@@ -179,7 +278,7 @@ function mountApp(){
   document.querySelectorAll('.crest-img').forEach(img => img.src = 'assets/crest.png');
   window.addEventListener('hashchange', panelRouter);
   panelRouter();
-  Promise.all([panelSyncMembers(), panelSyncDues(), panelSyncGallery()]).then(panelRouter);
+  Promise.all([panelSyncMembers(), panelSyncDues(), panelSyncGallery(), panelSyncSanctions(), panelSyncShop()]).then(panelRouter);
 }
 
 /* ---------------------------------------------------------------- LOGIN */
@@ -218,6 +317,7 @@ function viewResumen(){
     <div class="kpi-card"><div class="kpi-num">${s.pendingMembers}</div><div class="kpi-label">Miembros pendientes</div></div>
     <div class="kpi-card"><div class="kpi-num">${s.duesPending}</div><div class="kpi-label">Cuotas por revisar</div></div>
     <div class="kpi-card"><div class="kpi-num">${s.openSanctions}</div><div class="kpi-label">Sanciones registradas</div></div>
+    <div class="kpi-card"><div class="kpi-num">${s.shopPending || 0}</div><div class="kpi-label">Pedidos/ofertas tienda</div></div>
     <div class="kpi-card"><div class="kpi-num">${s.alliances}</div><div class="kpi-label">Alianzas activas</div></div>
   </div>
 
@@ -290,6 +390,8 @@ function renderMembersBody(){
 
 function openMemberModal(id){
   const m = KotzStore.getMember(id);
+  const sanctions = KotzStore.getSanctionsForMember(id);
+  const dues = KotzStore.getDuesForMember(id);
   document.getElementById('memberModalRoot').innerHTML = `
     <div class="modal-backdrop" id="modalBackdrop">
       <div class="modal">
@@ -304,12 +406,12 @@ function openMemberModal(id){
           <button class="btn btn-primary btn-sm" id="saveNotes">Guardar notas</button>
           <div class="divider" style="margin:22px 0;"></div>
           <div class="eyebrow">Historial de sanciones</div>
-          ${m.sanctions.length ? m.sanctions.map(s => `
+          ${sanctions.length ? sanctions.map(s => `
             <div class="mini-row"><div><b>${s.reason}</b><span class="mini-sub">${s.date} · Responsable: ${s.responsible}</span></div><span class="pill pill-red">${s.severity}</span></div>
           `).join('') : '<p class="lede" style="margin-bottom:16px;">Sin sanciones registradas.</p>'}
           <div class="divider" style="margin:22px 0;"></div>
           <div class="eyebrow">Historial de cuotas</div>
-          ${m.dues.length ? m.dues.map(d => `
+          ${dues.length ? dues.map(d => `
             <div class="mini-row"><div><b>${d.date}</b><span class="mini-sub">${d.server} · ${d.proof}</span></div><span class="pill ${d.status==='approved'?'pill-green':d.status==='rejected'?'pill-red':'pill-yellow'}">${d.status}</span></div>
           `).join('') : '<p class="lede">Sin cuotas registradas.</p>'}
         </div>
@@ -391,7 +493,7 @@ function viewSanciones(){
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Responsable</label><input type="text" name="responsible" required></div>
+        <div class="field"><label>Responsable</label><input type="text" name="responsible" value="${KotzStore.getAuthUser()?.displayName || KotzStore.getAuthUser()?.globalName || KotzStore.getAuthUser()?.username || ''}" required></div>
         <div class="field"><label>Fecha</label><input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" required></div>
       </div>
       <div class="field"><label>Motivo</label><textarea name="reason" rows="2" required></textarea></div>
@@ -515,6 +617,107 @@ function downloadTextFile(filename, text){
   URL.revokeObjectURL(url);
 }
 
+
+/* ---------------------------------------------------------------- TIENDA */
+function viewTienda(){
+  const items = KotzStore.getShopItems();
+  const orders = KotzStore.getShopOrders();
+  const offers = KotzStore.getShopOffers();
+  const pill = status => status === 'pending' ? 'pill-yellow' : ['approved','accepted','delivered'].includes(status) ? 'pill-green' : status === 'countered' ? 'pill-yellow' : 'pill-red';
+  return `
+  <div class="view-head">
+    <div class="eyebrow">Economía RP</div>
+    <h1 class="h2">Tienda</h1>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-num">${items.length}</div><div class="kpi-label">Productos configurados</div></div>
+    <div class="kpi-card"><div class="kpi-num">${items.filter(i => i.status === 'Activo').length}</div><div class="kpi-label">Productos activos</div></div>
+    <div class="kpi-card"><div class="kpi-num">${orders.filter(o => o.status === 'pending').length}</div><div class="kpi-label">Pedidos pendientes</div></div>
+    <div class="kpi-card"><div class="kpi-num">${offers.filter(o => o.status === 'pending').length}</div><div class="kpi-label">Ofertas pendientes</div></div>
+  </div>
+
+  <div class="card pad" style="margin-bottom:24px;">
+    <div class="eyebrow">Nuevo producto RP</div>
+    <form id="shopItemForm" class="form-grid">
+      <div class="field"><label>Nombre</label><input name="name" required placeholder="Escopeta, Bate, etc."></div>
+      <div class="field"><label>Categoría</label><input name="category" placeholder="Arma larga / Cuerpo a cuerpo / Herramienta"></div>
+      <div class="field"><label>Daño</label><input name="damage" type="number" min="0" value="0"></div>
+      <div class="field"><label>Durabilidad</label><input name="durability" type="number" min="0" value="0"></div>
+      <div class="field"><label>Precio normal</label><input name="basePrice" type="number" min="0" value="0"></div>
+      <div class="field"><label>Precio miembros</label><input name="memberPrice" type="number" min="0" value="0"></div>
+      <div class="field"><label>Precio aliados</label><input name="allyPrice" type="number" min="0" value="0"></div>
+      <div class="field"><label>Stock</label><input name="stock" type="number" min="0" value="1"></div>
+      <div class="field"><label>Estado</label><select name="status"><option>Activo</option><option>Oculto</option><option>Agotado</option></select></div>
+      <div class="field"><label>Destacado</label><select name="featured"><option value="false">No</option><option value="true">Sí</option></select></div>
+      <div class="field" style="grid-column:1/-1;"><label>Imagen URL</label><input name="imageUrl" placeholder="URL de imagen o thumbnail de Drive"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Descripción</label><textarea name="description" rows="3" placeholder="Información visible para clientes"></textarea></div>
+      <div class="field" style="grid-column:1/-1;"><label>Notas internas</label><textarea name="notes" rows="2" placeholder="Solo Alto Mando"></textarea></div>
+      <button class="btn btn-primary" type="submit">Crear producto</button>
+    </form>
+  </div>
+
+  <div class="card pad" style="margin-bottom:24px;">
+    <div class="eyebrow">Productos</div>
+    <div class="table-wrap">
+      <table class="kotz-table">
+        <thead><tr><th>Producto</th><th>Stats</th><th>Precios</th><th>Stock/Estado</th><th>Imagen</th><th></th></tr></thead>
+        <tbody>
+          ${items.map(i => `
+            <tr data-shop-item-row="${i.id}">
+              <td><input class="inline-select" data-field="name" value="${escapeAttr(i.name)}"><br><input class="inline-select" data-field="category" value="${escapeAttr(i.category)}" style="margin-top:8px;"></td>
+              <td><input class="inline-select" data-field="damage" type="number" value="${Number(i.damage||0)}" title="Daño"><br><input class="inline-select" data-field="durability" type="number" value="${Number(i.durability||0)}" style="margin-top:8px;" title="Durabilidad"></td>
+              <td><input class="inline-select" data-field="basePrice" type="number" value="${Number(i.basePrice||0)}" title="Normal"><br><input class="inline-select" data-field="memberPrice" type="number" value="${Number(i.memberPrice||0)}" style="margin-top:8px;" title="Miembros"><br><input class="inline-select" data-field="allyPrice" type="number" value="${Number(i.allyPrice||0)}" style="margin-top:8px;" title="Aliados"></td>
+              <td><input class="inline-select" data-field="stock" type="number" value="${Number(i.stock||0)}"><br><select class="inline-select" data-field="status" style="margin-top:8px;">${['Activo','Oculto','Agotado'].map(st => `<option ${st===i.status?'selected':''}>${st}</option>`).join('')}</select><br><select class="inline-select" data-field="featured" style="margin-top:8px;"><option value="false" ${!i.featured?'selected':''}>Normal</option><option value="true" ${i.featured?'selected':''}>Destacado</option></select></td>
+              <td><input class="inline-select" data-field="imageUrl" value="${escapeAttr(i.imageUrl||'')}" placeholder="URL"><textarea class="inline-select" data-field="description" rows="2" style="margin-top:8px;" placeholder="Descripción">${escapeHtml(i.description||'')}</textarea></td>
+              <td><button class="btn btn-primary btn-sm" data-action="save-shop-item" data-id="${i.id}">Guardar</button></td>
+            </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin productos todavía</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel-grid-2">
+    <div class="card pad">
+      <div class="eyebrow">Pedidos</div>
+      <div class="table-wrap">
+        <table class="kotz-table">
+          <thead><tr><th>Cliente</th><th>Producto</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <tbody>${orders.map(o => `
+            <tr><td><b>${o.buyerName}</b><div class="mini-sub">@${o.buyerUsername || 'discord'}</div></td><td>${o.itemName}<div class="mini-sub">x${o.quantity} · ${o.message || 'Sin mensaje'}</div></td><td>${KotzStore.formatMoney(o.price)}</td><td><span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span></td><td class="actions-cell">${o.status==='pending' ? `<button class="btn btn-ok btn-sm" data-action="order-status" data-id="${o.id}" data-status="approved">Aprobar</button><button class="btn btn-danger btn-sm" data-action="order-status" data-id="${o.id}" data-status="rejected">Rechazar</button>` : `<button class="btn btn-ghost btn-sm" data-action="order-status" data-id="${o.id}" data-status="delivered">Entregado</button>`}</td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin pedidos</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="eyebrow">Ofertas</div>
+      <div class="table-wrap">
+        <table class="kotz-table">
+          <thead><tr><th>Cliente</th><th>Producto</th><th>Oferta</th><th>Estado</th><th></th></tr></thead>
+          <tbody>${offers.map(o => `
+            <tr><td><b>${o.buyerName}</b><div class="mini-sub">@${o.buyerUsername || 'discord'}</div></td><td>${o.itemName}<div class="mini-sub">${o.message || 'Sin mensaje'}</div></td><td>${KotzStore.formatMoney(o.offeredPrice)}<div class="mini-sub">Original: ${KotzStore.formatMoney(o.originalPrice)}</div></td><td><span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span>${o.counterOffer ? `<div class="mini-sub">Contra: ${KotzStore.formatMoney(o.counterOffer)}</div>` : ''}</td><td class="actions-cell">${o.status==='pending' ? `<button class="btn btn-ok btn-sm" data-action="offer-status" data-id="${o.id}" data-status="accepted">Aceptar</button><button class="btn btn-danger btn-sm" data-action="offer-status" data-id="${o.id}" data-status="rejected">Rechazar</button><button class="btn btn-ghost btn-sm" data-action="offer-counter" data-id="${o.id}">Contraoferta</button>` : '—'}</td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin ofertas</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+function escapeAttr(value){ return escapeHtml(value).replace(/'/g, '&#39;'); }
+
+function collectShopRow(row){
+  const payload = {};
+  row.querySelectorAll('[data-field]').forEach(el => {
+    const key = el.dataset.field;
+    let value = el.value;
+    if (['basePrice','memberPrice','allyPrice','stock','damage','durability'].includes(key)) value = Number(value || 0);
+    if (key === 'featured') value = value === 'true';
+    payload[key] = value;
+  });
+  return payload;
+}
+
 /* --------------------------------------------------------- ESTADISTICAS */
 function viewEstadisticas(){
   const growth = KotzStore.getMemberGrowth();
@@ -579,13 +782,55 @@ function bindPanelEvents(path){
     });
   }
   if (path === '/sanciones'){
-    document.getElementById('sanctionForm').addEventListener('submit', e => {
+    document.getElementById('sanctionForm').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      KotzStore.addSanction(fd.get('memberId'), { reason: fd.get('reason'), responsible: fd.get('responsible'), date: fd.get('date'), severity: fd.get('severity') });
-      panelRouter();
+      const memberId = fd.get('memberId');
+      const member = KotzStore.getMember(memberId);
+      if (!member) return alert('No se ha encontrado ese miembro. Recarga la página e inténtalo de nuevo.');
+      await panelCreateSanction({
+        memberId,
+        memberName: member.name || member.rpName || 'Miembro',
+        reason: fd.get('reason'),
+        responsible: fd.get('responsible'),
+        date: fd.get('date'),
+        severity: fd.get('severity')
+      });
     });
   }
+
+  if (path === '/tienda'){
+    document.getElementById('shopItemForm')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      await panelSaveShopItem({
+        name: fd.get('name'),
+        category: fd.get('category'),
+        description: fd.get('description'),
+        damage: Number(fd.get('damage') || 0),
+        durability: Number(fd.get('durability') || 0),
+        basePrice: Number(fd.get('basePrice') || 0),
+        memberPrice: Number(fd.get('memberPrice') || 0),
+        allyPrice: Number(fd.get('allyPrice') || 0),
+        stock: Number(fd.get('stock') || 0),
+        imageUrl: fd.get('imageUrl'),
+        status: fd.get('status'),
+        featured: fd.get('featured') === 'true',
+        notes: fd.get('notes')
+      });
+    });
+    document.querySelectorAll('[data-action="save-shop-item"]').forEach(btn => btn.addEventListener('click', async () => {
+      const row = btn.closest('[data-shop-item-row]');
+      await panelSaveShopItem(collectShopRow(row), btn.dataset.id);
+    }));
+    document.querySelectorAll('[data-action="order-status"]').forEach(btn => btn.addEventListener('click', () => panelSetShopOrderStatus(btn.dataset.id, btn.dataset.status)));
+    document.querySelectorAll('[data-action="offer-status"]').forEach(btn => btn.addEventListener('click', () => panelSetShopOfferStatus(btn.dataset.id, btn.dataset.status)));
+    document.querySelectorAll('[data-action="offer-counter"]').forEach(btn => btn.addEventListener('click', () => {
+      const value = prompt('¿Qué contraoferta quieres enviar?');
+      if (value) panelSetShopOfferStatus(btn.dataset.id, 'countered', value);
+    }));
+  }
+
   if (path === '/galeria'){
     const form = document.getElementById('galleryForm');
     const fileInput = form?.elements['image'];

@@ -23,7 +23,10 @@ const CONFIG = {
     MEMBERS: "members",
     SANCTIONS: "sanctions",
     WARS: "wars",
-    EVENTS: "events"
+    EVENTS: "events",
+    SHOP_ITEMS: "shop_items",
+    SHOP_ORDERS: "shop_orders",
+    SHOP_OFFERS: "shop_offers"
   }
 };
 
@@ -39,6 +42,26 @@ const GALLERY_HEADERS = [
 
 const MEMBERS_HEADERS = [
   "id", "rpName", "discordUsername", "discordId", "rank", "joinDate", "status", "profileUrl", "notes"
+];
+
+const SANCTIONS_HEADERS = [
+  "id", "createdAt", "memberId", "memberName", "severity", "date", "responsible", "reason",
+  "createdByDiscordId", "createdByUsername", "createdByDisplayName"
+];
+
+const SHOP_ITEMS_HEADERS = [
+  "id", "createdAt", "updatedAt", "name", "category", "description", "damage", "durability",
+  "basePrice", "memberPrice", "allyPrice", "stock", "imageUrl", "status", "featured", "notes"
+];
+
+const SHOP_ORDERS_HEADERS = [
+  "id", "createdAt", "buyerDiscordId", "buyerUsername", "buyerDisplayName", "buyerMemberId", "buyerName",
+  "itemId", "itemName", "price", "quantity", "status", "message", "reviewedBy", "reviewedAt"
+];
+
+const SHOP_OFFERS_HEADERS = [
+  "id", "createdAt", "buyerDiscordId", "buyerUsername", "buyerDisplayName", "buyerMemberId", "buyerName",
+  "itemId", "itemName", "originalPrice", "offeredPrice", "message", "status", "counterOffer", "reviewedBy", "reviewedAt"
 ];
 
 function doGet(e) {
@@ -62,6 +85,26 @@ function doGet(e) {
     if (action === "listMembers") {
       checkSecret(e.parameter.secret);
       return jsonResponse({ ok: true, members: listMembers() });
+    }
+
+    if (action === "listSanctions") {
+      checkSecret(e.parameter.secret);
+      return jsonResponse({ ok: true, sanctions: listSanctions() });
+    }
+
+    if (action === "listShopItems") {
+      checkSecret(e.parameter.secret);
+      return jsonResponse({ ok: true, items: listShopItems() });
+    }
+
+    if (action === "listShopOrders") {
+      checkSecret(e.parameter.secret);
+      return jsonResponse({ ok: true, orders: listShopOrders() });
+    }
+
+    if (action === "listShopOffers") {
+      checkSecret(e.parameter.secret);
+      return jsonResponse({ ok: true, offers: listShopOffers() });
     }
 
     return jsonResponse({ ok: false, error: "Acción GET no reconocida." }, 400);
@@ -97,6 +140,41 @@ function doPost(e) {
     if (body.action === "updateMember") {
       const member = updateMember(body.id, body.patch || {});
       return jsonResponse({ ok: true, member });
+    }
+
+    if (body.action === "appendSanction") {
+      const sanction = appendSanction(body.sanction);
+      return jsonResponse({ ok: true, sanction });
+    }
+
+    if (body.action === "appendShopItem") {
+      const item = appendShopItem(body.item);
+      return jsonResponse({ ok: true, item });
+    }
+
+    if (body.action === "updateShopItem") {
+      const item = updateShopItem(body.id, body.patch || body.item || {});
+      return jsonResponse({ ok: true, item });
+    }
+
+    if (body.action === "appendShopOrder") {
+      const order = appendShopOrder(body.order);
+      return jsonResponse({ ok: true, order });
+    }
+
+    if (body.action === "updateShopOrderStatus") {
+      const order = updateShopOrderStatus(body.id, body.status, body.reviewedBy);
+      return jsonResponse({ ok: true, order });
+    }
+
+    if (body.action === "appendShopOffer") {
+      const offer = appendShopOffer(body.offer);
+      return jsonResponse({ ok: true, offer });
+    }
+
+    if (body.action === "updateShopOfferStatus") {
+      const offer = updateShopOfferStatus(body.id, body.status, body.counterOffer, body.reviewedBy);
+      return jsonResponse({ ok: true, offer });
     }
 
     return jsonResponse({ ok: false, error: "Acción POST no reconocida." }, 400);
@@ -287,6 +365,339 @@ function updateMember(id, patch) {
   throw new Error("Miembro no encontrado.");
 }
 
+function listSanctions() {
+  const sheet = getSheet(CONFIG.TABS.SANCTIONS, SANCTIONS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return [];
+  return values.slice(1).filter(row => row[0] || row[2] || row[3]).map(rowToSanction).reverse();
+}
+
+function appendSanction(sanction) {
+  if (!sanction) throw new Error("Falta el objeto sanction.");
+  if (!sanction.memberId) throw new Error("Falta memberId.");
+  if (!sanction.memberName) throw new Error("Falta memberName.");
+  if (!sanction.reason) throw new Error("Falta reason.");
+  if (!sanction.date) throw new Error("Falta date.");
+
+  const severity = normalizeSeverity(sanction.severity || "Leve");
+  const id = sanction.id || makeId("sanction");
+  const createdAt = new Date().toISOString();
+
+  const row = [
+    id, createdAt, sanction.memberId, sanction.memberName, severity, sanction.date,
+    sanction.responsible || "", sanction.reason || "",
+    sanction.createdByDiscordId || "", sanction.createdByUsername || "", sanction.createdByDisplayName || ""
+  ];
+
+  const sheet = getSheet(CONFIG.TABS.SANCTIONS, SANCTIONS_HEADERS);
+  sheet.appendRow(row);
+  return rowToSanction(row);
+}
+
+function normalizeSeverity(severity) {
+  const raw = String(severity || "Leve").trim();
+  const key = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[_\s-]+/g, "");
+  const map = {
+    "leve": "Leve",
+    "grave": "Grave",
+    "muygrave": "Muy grave"
+  };
+  return map[key] || raw || "Leve";
+}
+
+
+/* ------------------------------------------------------------ SHOP */
+
+function listShopItems() {
+  const sheet = getSheet(CONFIG.TABS.SHOP_ITEMS, SHOP_ITEMS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return seedShopItems(sheet);
+  return values.slice(1).filter(row => row[0] || row[3]).map(rowToShopItem);
+}
+
+function seedShopItems(sheet) {
+  const now = new Date().toISOString();
+  const rows = [
+    ["shop_screwdriver", now, now, "Destornillador", "Herramienta", "Herramienta RP compacta. Útil para operaciones discretas.", 15, 15, 87, 75, 70, 5, "", "Activo", true, "Producto inicial"],
+    ["shop_knuckles", now, now, "Nudillos de latón", "Cuerpo a cuerpo", "Arma RP de contacto. Precio editable desde Alto Mando.", 20, 30, 131, 115, 105, 2, "", "Activo", false, "Producto inicial"],
+    ["shop_combat_knife", now, now, "Cuchillo de combate", "Cuerpo a cuerpo", "Arma RP ligera con buena durabilidad.", 20, 40, 292, 260, 240, 1, "", "Activo", true, "Producto inicial"],
+    ["shop_bat", now, now, "Bate de béisbol", "Cuerpo a cuerpo", "Arma RP resistente para defensa y presión.", 30, 30, 660, 590, 540, 2, "", "Activo", false, "Producto inicial"],
+    ["shop_handmade", now, now, "Arma hecha a mano", "Arma corta", "Pieza RP de alto valor. Requiere aprobación.", 0, 25, 8279, 7800, 7400, 1, "", "Activo", true, "Producto inicial"],
+    ["shop_shotgun", now, now, "Escopeta", "Arma larga", "Artículo RP premium. Venta revisada por Alto Mando.", 30, 40, 13922, 13200, 12500, 2, "", "Activo", true, "Producto inicial"]
+  ];
+  if (rows.length) sheet.getRange(2, 1, rows.length, SHOP_ITEMS_HEADERS.length).setValues(rows);
+  return rows.map(rowToShopItem);
+}
+
+function appendShopItem(item) {
+  if (!item) throw new Error("Falta el objeto item.");
+  if (!item.name) throw new Error("Falta name.");
+
+  const now = new Date().toISOString();
+  const row = [
+    item.id || makeId("shop"),
+    now,
+    now,
+    item.name || "",
+    item.category || "General",
+    item.description || "",
+    Number(item.damage || 0),
+    Number(item.durability || 0),
+    Number(item.basePrice || item.price || 0),
+    Number(item.memberPrice || item.basePrice || item.price || 0),
+    Number(item.allyPrice || item.memberPrice || item.basePrice || item.price || 0),
+    Number(item.stock || 0),
+    item.imageUrl || item.image || "",
+    item.status || "Activo",
+    toBool(item.featured),
+    item.notes || ""
+  ];
+
+  const sheet = getSheet(CONFIG.TABS.SHOP_ITEMS, SHOP_ITEMS_HEADERS);
+  sheet.appendRow(row);
+  return rowToShopItem(row);
+}
+
+function updateShopItem(id, patch) {
+  if (!id) throw new Error("Falta id de producto.");
+  const sheet = getSheet(CONFIG.TABS.SHOP_ITEMS, SHOP_ITEMS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(id)) {
+      const current = rowToShopItem(values[i]);
+      const updated = {
+        ...current,
+        ...patch,
+        id: current.id,
+        updatedAt: new Date().toISOString(),
+        basePrice: Number(patch.basePrice !== undefined ? patch.basePrice : current.basePrice),
+        memberPrice: Number(patch.memberPrice !== undefined ? patch.memberPrice : current.memberPrice),
+        allyPrice: Number(patch.allyPrice !== undefined ? patch.allyPrice : current.allyPrice),
+        stock: Number(patch.stock !== undefined ? patch.stock : current.stock),
+        damage: Number(patch.damage !== undefined ? patch.damage : current.damage),
+        durability: Number(patch.durability !== undefined ? patch.durability : current.durability),
+        featured: patch.featured !== undefined ? toBool(patch.featured) : toBool(current.featured)
+      };
+      const row = shopItemToRow(updated);
+      sheet.getRange(i + 1, 1, 1, SHOP_ITEMS_HEADERS.length).setValues([row]);
+      return rowToShopItem(row);
+    }
+  }
+
+  throw new Error("Producto no encontrado.");
+}
+
+function listShopOrders() {
+  const sheet = getSheet(CONFIG.TABS.SHOP_ORDERS, SHOP_ORDERS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return [];
+  return values.slice(1).filter(row => row[0] || row[7]).map(rowToShopOrder).reverse();
+}
+
+function appendShopOrder(order) {
+  if (!order) throw new Error("Falta el objeto order.");
+  if (!order.itemId) throw new Error("Falta itemId.");
+  if (!order.itemName) throw new Error("Falta itemName.");
+  if (!order.buyerName) throw new Error("Falta buyerName.");
+
+  const row = [
+    order.id || makeId("order"),
+    new Date().toISOString(),
+    order.buyerDiscordId || "",
+    order.buyerUsername || "",
+    order.buyerDisplayName || "",
+    order.buyerMemberId || "",
+    order.buyerName || "",
+    order.itemId,
+    order.itemName,
+    Number(order.price || 0),
+    Number(order.quantity || 1),
+    order.status || "pending",
+    order.message || "",
+    "",
+    ""
+  ];
+
+  const sheet = getSheet(CONFIG.TABS.SHOP_ORDERS, SHOP_ORDERS_HEADERS);
+  sheet.appendRow(row);
+  return rowToShopOrder(row);
+}
+
+function updateShopOrderStatus(id, status, reviewedBy) {
+  if (!id) throw new Error("Falta id de pedido.");
+  const valid = ["pending", "approved", "rejected", "delivered", "cancelled"];
+  if (!valid.includes(status)) throw new Error("Estado de pedido inválido.");
+
+  const sheet = getSheet(CONFIG.TABS.SHOP_ORDERS, SHOP_ORDERS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(id)) {
+      const rowNumber = i + 1;
+      sheet.getRange(rowNumber, SHOP_ORDERS_HEADERS.indexOf("status") + 1).setValue(status);
+      sheet.getRange(rowNumber, SHOP_ORDERS_HEADERS.indexOf("reviewedBy") + 1).setValue(reviewedBy || "");
+      sheet.getRange(rowNumber, SHOP_ORDERS_HEADERS.indexOf("reviewedAt") + 1).setValue(new Date().toISOString());
+      const row = sheet.getRange(rowNumber, 1, 1, SHOP_ORDERS_HEADERS.length).getValues()[0];
+      return rowToShopOrder(row);
+    }
+  }
+
+  throw new Error("Pedido no encontrado.");
+}
+
+function listShopOffers() {
+  const sheet = getSheet(CONFIG.TABS.SHOP_OFFERS, SHOP_OFFERS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return [];
+  return values.slice(1).filter(row => row[0] || row[7]).map(rowToShopOffer).reverse();
+}
+
+function appendShopOffer(offer) {
+  if (!offer) throw new Error("Falta el objeto offer.");
+  if (!offer.itemId) throw new Error("Falta itemId.");
+  if (!offer.itemName) throw new Error("Falta itemName.");
+  if (!offer.buyerName) throw new Error("Falta buyerName.");
+  if (!offer.offeredPrice) throw new Error("Falta offeredPrice.");
+
+  const row = [
+    offer.id || makeId("offer"),
+    new Date().toISOString(),
+    offer.buyerDiscordId || "",
+    offer.buyerUsername || "",
+    offer.buyerDisplayName || "",
+    offer.buyerMemberId || "",
+    offer.buyerName || "",
+    offer.itemId,
+    offer.itemName,
+    Number(offer.originalPrice || 0),
+    Number(offer.offeredPrice || 0),
+    offer.message || "",
+    offer.status || "pending",
+    offer.counterOffer || "",
+    "",
+    ""
+  ];
+
+  const sheet = getSheet(CONFIG.TABS.SHOP_OFFERS, SHOP_OFFERS_HEADERS);
+  sheet.appendRow(row);
+  return rowToShopOffer(row);
+}
+
+function updateShopOfferStatus(id, status, counterOffer, reviewedBy) {
+  if (!id) throw new Error("Falta id de oferta.");
+  const valid = ["pending", "accepted", "rejected", "countered", "cancelled"];
+  if (!valid.includes(status)) throw new Error("Estado de oferta inválido.");
+
+  const sheet = getSheet(CONFIG.TABS.SHOP_OFFERS, SHOP_OFFERS_HEADERS);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(id)) {
+      const rowNumber = i + 1;
+      sheet.getRange(rowNumber, SHOP_OFFERS_HEADERS.indexOf("status") + 1).setValue(status);
+      sheet.getRange(rowNumber, SHOP_OFFERS_HEADERS.indexOf("counterOffer") + 1).setValue(counterOffer || "");
+      sheet.getRange(rowNumber, SHOP_OFFERS_HEADERS.indexOf("reviewedBy") + 1).setValue(reviewedBy || "");
+      sheet.getRange(rowNumber, SHOP_OFFERS_HEADERS.indexOf("reviewedAt") + 1).setValue(new Date().toISOString());
+      const row = sheet.getRange(rowNumber, 1, 1, SHOP_OFFERS_HEADERS.length).getValues()[0];
+      return rowToShopOffer(row);
+    }
+  }
+
+  throw new Error("Oferta no encontrada.");
+}
+
+function shopItemToRow(item) {
+  return [
+    item.id,
+    item.createdAt || new Date().toISOString(),
+    item.updatedAt || new Date().toISOString(),
+    item.name || "",
+    item.category || "General",
+    item.description || "",
+    Number(item.damage || 0),
+    Number(item.durability || 0),
+    Number(item.basePrice || 0),
+    Number(item.memberPrice || item.basePrice || 0),
+    Number(item.allyPrice || item.memberPrice || item.basePrice || 0),
+    Number(item.stock || 0),
+    item.imageUrl || item.image || "",
+    item.status || "Activo",
+    toBool(item.featured),
+    item.notes || ""
+  ];
+}
+
+function rowToShopItem(row) {
+  return {
+    id: row[0],
+    createdAt: row[1],
+    updatedAt: row[2],
+    name: row[3],
+    category: row[4] || "General",
+    description: row[5] || "",
+    damage: Number(row[6] || 0),
+    durability: Number(row[7] || 0),
+    basePrice: Number(row[8] || 0),
+    memberPrice: Number(row[9] || row[8] || 0),
+    allyPrice: Number(row[10] || row[9] || row[8] || 0),
+    stock: Number(row[11] || 0),
+    imageUrl: row[12] || "",
+    image: row[12] || "",
+    status: row[13] || "Activo",
+    featured: toBool(row[14]),
+    notes: row[15] || "",
+    source: "apps-script"
+  };
+}
+
+function rowToShopOrder(row) {
+  return {
+    id: row[0],
+    createdAt: row[1],
+    buyerDiscordId: String(row[2] || ""),
+    buyerUsername: row[3] || "",
+    buyerDisplayName: row[4] || "",
+    buyerMemberId: row[5] || "",
+    buyerName: row[6] || "",
+    itemId: row[7],
+    itemName: row[8],
+    price: Number(row[9] || 0),
+    quantity: Number(row[10] || 1),
+    status: row[11] || "pending",
+    message: row[12] || "",
+    reviewedBy: row[13] || "",
+    reviewedAt: row[14] || "",
+    source: "apps-script"
+  };
+}
+
+function rowToShopOffer(row) {
+  return {
+    id: row[0],
+    createdAt: row[1],
+    buyerDiscordId: String(row[2] || ""),
+    buyerUsername: row[3] || "",
+    buyerDisplayName: row[4] || "",
+    buyerMemberId: row[5] || "",
+    buyerName: row[6] || "",
+    itemId: row[7],
+    itemName: row[8],
+    originalPrice: Number(row[9] || 0),
+    offeredPrice: Number(row[10] || 0),
+    message: row[11] || "",
+    status: row[12] || "pending",
+    counterOffer: row[13] || "",
+    reviewedBy: row[14] || "",
+    reviewedAt: row[15] || "",
+    source: "apps-script"
+  };
+}
+
+function toBool(value) {
+  return value === true || String(value || "").toLowerCase() === "true" || String(value || "").toLowerCase() === "sí" || String(value || "").toLowerCase() === "si" || String(value || "") === "1";
+}
+
 function uploadDataUrlToDrive(dataUrl, folderId, fileName) {
   const parsed = parseDataUrl(dataUrl);
   const bytes = Utilities.base64Decode(parsed.base64);
@@ -354,6 +765,23 @@ function rowToMember(row) {
     notes: row[8] || "",
     sanctions: [],
     dues: [],
+    source: "apps-script"
+  };
+}
+
+function rowToSanction(row) {
+  return {
+    id: row[0],
+    createdAt: row[1],
+    memberId: row[2],
+    memberName: row[3],
+    severity: normalizeSeverity(row[4] || "Leve"),
+    date: row[5] || "",
+    responsible: row[6] || "",
+    reason: row[7] || "",
+    createdByDiscordId: String(row[8] || ""),
+    createdByUsername: row[9] || "",
+    createdByDisplayName: row[10] || "",
     source: "apps-script"
   };
 }
