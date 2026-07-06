@@ -27,6 +27,137 @@ function readDb(){
 function writeDb(db){ fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2)); }
 function envList(name){ return String(process.env[name] || '').split(',').map(v => v.trim()).filter(Boolean); }
 
+
+
+const KOTZ_ALLIANCES = [
+  {
+    slug: 'rose-spines',
+    name: 'Rose-Spines',
+    code: 'SPINES',
+    emoji: '⚔️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza de apoyo mutuo',
+    level: 'Confianza estable',
+    colors: { primary: '#9FE8FF', secondary: '#FFFFFF', dark: '#06121A' },
+    desc: 'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.',
+    full: 'Rose-Spines representa una conexión directa entre comunidades que entienden el valor de la confianza. Esta alianza nace para reforzar la defensa mutua, mantener comunicación constante entre liderazgos y construir una relación estable a largo plazo, sin dramas innecesarios ni acciones improvisadas.',
+    pillars: ['Defensa y apoyo mutuo', 'Comunicación directa entre líderes', 'Respeto de acuerdos', 'Crecimiento conjunto'],
+    agreements: ['KoTZ y Rose-Spines se reconocen como comunidades aliadas.', 'Ambas partes priorizan la coordinación antes de cualquier movimiento sensible.', 'Los conflictos deberán tratarse por vía interna entre líderes, evitando exposición pública.'],
+    benefits: ['Apoyo en situaciones de presión externa.', 'Canal de comunicación directa para coordinación rápida.', 'Imagen común de respeto, estabilidad y crecimiento.'],
+    protocol: ['No atacar, provocar ni estafar a miembros aliados.', 'No captar miembros de la comunidad aliada.', 'Informar a Alto Mando antes de actuar en nombre de la alianza.'],
+    note: 'Una alianza pensada para crecer con calma: respeto primero, fuerza después.'
+  },
+  {
+    slug: 'lacrew',
+    name: 'LaCREW',
+    code: 'LACREW',
+    emoji: '🛡️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Pacto de no agresión y cooperación',
+    level: 'Confianza operativa',
+    colors: { primary: '#7B4DFF', secondary: '#09050F', dark: '#07040D' },
+    desc: 'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.',
+    full: 'LaCREW mantiene con KoTZ una alianza práctica, directa y orientada a la cooperación. El acuerdo se centra en evitar conflictos innecesarios, compartir apoyo cuando sea conveniente y mantener una relación útil para ambas bandas.',
+    pillars: ['Pacto de no agresión', 'Apoyo económico puntual', 'Cooperación entre bandas', 'Confianza entre líderes'],
+    agreements: ['No agresión entre miembros de ambas organizaciones.', 'Apoyo económico o logístico cuando sea viable y aprobado por liderazgo.', 'Contacto directo entre responsables para resolver dudas o tensiones.'],
+    benefits: ['Reduce riesgos de conflictos internos entre bandas.', 'Permite acuerdos económicos cuando ambas partes ganan.', 'Refuerza presencia y estabilidad diplomática de KoTZ.'],
+    protocol: ['Cualquier problema se eleva a líderes antes de escalar.', 'No se realizan acuerdos económicos sin autorización.', 'Se mantiene respeto público y privado hacia miembros aliados.'],
+    note: 'Una alianza útil, discreta y orientada al beneficio mutuo.'
+  },
+  {
+    slug: 'kaos',
+    name: '𝐾𝐴𝑂𝑠 ム',
+    code: 'KAOS',
+    emoji: '△',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza estratégica',
+    level: 'Confianza táctica',
+    colors: { primary: '#D8C84A', secondary: '#050505', dark: '#080807' },
+    desc: 'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.',
+    full: 'KAOs y KoTZ sostienen una alianza enfocada en estrategia, información y coordinación rápida. Su valor está en la capacidad de actuar con cabeza, compartir información relevante y mantener una línea clara de respeto mutuo.',
+    pillars: ['Apoyo mutuo', 'Intercambio de información', 'Coordinación rápida', 'Respeto y no agresión'],
+    agreements: ['Ambas partes se comprometen a no agredirse ni provocar conflictos.', 'La información relevante se comparte únicamente por canales de confianza.', 'Los líderes coordinan cualquier situación que pueda afectar a la alianza.'],
+    benefits: ['Mejor lectura del entorno diplomático.', 'Respuesta más rápida ante situaciones delicadas.', 'Refuerzo estratégico para ambas comunidades.'],
+    protocol: ['No filtrar información aliada.', 'No actuar usando el nombre de KAOs o KoTZ sin permiso.', 'Cualquier tensión se informa al Alto Mando.'],
+    note: 'Estrategia, respeto y comunicación: esa es la base del acuerdo.'
+  },
+  {
+    slug: 'underworld',
+    name: 'Underworld',
+    code: 'UNDERWORLD',
+    emoji: '⚖️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza económica y comercial',
+    level: 'Confianza comercial',
+    colors: { primary: '#FFC4E1', secondary: '#9AD7FF', dark: '#120814' },
+    desc: 'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.',
+    full: 'Underworld es una alianza centrada en cooperación económica, comercio y beneficio mutuo. No se trata solo de apoyo simbólico: el acuerdo busca abrir oportunidades prácticas para que ambas comunidades se fortalezcan con acuerdos útiles y bien coordinados.',
+    pillars: ['Cooperación económica', 'Colaboración comercial', 'Comunicación directa', 'Beneficio mutuo'],
+    agreements: ['Los acuerdos comerciales se harán con claridad y autorización.', 'El respeto y el cumplimiento de pactos son obligatorios.', 'La relación se mantendrá por vía diplomática y profesional.'],
+    benefits: ['Posibilidad de acuerdos económicos favorables.', 'Refuerzo de relaciones comerciales.', 'Mayor estabilidad en operaciones de beneficio conjunto.'],
+    protocol: ['No estafar ni manipular acuerdos con aliados.', 'No prometer recursos sin autorización.', 'Registrar o comunicar acuerdos relevantes al Alto Mando.'],
+    note: 'Una alianza para crecer con cabeza: economía, respeto y palabra.'
+  },
+  {
+    slug: 'cult-of-rose',
+    name: 'Cult of Rose',
+    code: 'CULT-OF-ROSE',
+    emoji: '🌹',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza de comunidad y defensa',
+    level: 'Confianza en crecimiento',
+    colors: { primary: '#FFC8EA', secondary: '#FFFFFF', dark: '#160911' },
+    desc: 'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.',
+    full: 'Cult of Rose y KoTZ comparten una visión de comunidad fuerte, futuro estable y apoyo mutuo. Esta alianza busca preparar el camino para una relación duradera, donde ambas bandas puedan ayudarse en momentos importantes y crecer sin perder su identidad.',
+    pillars: ['Comunidad sólida', 'Apoyo militar', 'Cooperación constante', 'Futuro compartido'],
+    agreements: ['Ambas comunidades se apoyarán cuando la situación lo requiera.', 'Se mantendrá comunicación constante entre líderes.', 'La alianza se cuidará como una relación a largo plazo, no como un acuerdo temporal.'],
+    benefits: ['Apoyo en momentos clave.', 'Crecimiento conjunto de imagen y presencia.', 'Base diplomática para proyectos futuros.'],
+    protocol: ['Respetar a miembros de Cult of Rose como aliados oficiales.', 'Evitar conflictos públicos y dramas innecesarios.', 'Coordinar cualquier apoyo militar con Alto Mando.'],
+    note: 'Una alianza con visión de futuro: comunidad, lealtad y crecimiento.'
+  },
+  {
+    slug: 'fallen-angels',
+    name: 'Fallen Angels',
+    code: 'FALLEN-ANGELS',
+    emoji: '🪽',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza estratégica de crecimiento',
+    level: 'Confianza alta',
+    colors: { primary: '#B88CFF', secondary: '#9FE8FF', dark: '#0C0714' },
+    desc: 'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.',
+    full: 'Fallen Angels es una alianza estratégica pensada para construir algo más grande que una simple relación diplomática. El objetivo es colaborar, organizar proyectos, crecer como comunidades y demostrar una imagen sólida entre bandas.',
+    pillars: ['Crecimiento conjunto', 'Colaboración constante', 'Apoyo mutuo', 'Eventos y proyectos'],
+    agreements: ['KoTZ y Fallen Angels mantienen comunicación directa entre liderazgos.', 'Se priorizarán proyectos y eventos que beneficien a ambas comunidades.', 'La alianza se basa en confianza, cooperación y respeto mutuo.'],
+    benefits: ['Mayor impacto público entre comunidades.', 'Opciones para eventos y colaboraciones conjuntas.', 'Apoyo ante necesidades estratégicas.'],
+    protocol: ['Representar correctamente a KoTZ ante Fallen Angels.', 'No provocar ni generar conflictos con aliados.', 'Coordinar proyectos conjuntos con responsables autorizados.'],
+    note: 'Una alianza para verse fuerte, actuar unidos y crecer con estabilidad.'
+  },
+  {
+    slug: 'the-nato',
+    name: 'The NATO',
+    code: 'THE-NATO',
+    emoji: '💎',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza internacional',
+    level: 'Confianza prioritaria',
+    colors: { primary: '#9FE8FF', secondary: '#FFFFFF', dark: '#06121A' },
+    desc: 'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.',
+    full: 'The NATO representa una alianza internacional importante para KoTZ. El acuerdo nace de una reunión formal entre liderazgos y establece una relación basada en cooperación, apoyo estratégico, respeto mutuo y comunicación directa.',
+    pillars: ['Cooperación internacional', 'Apoyo estratégico', 'Respeto mutuo', 'Comunicación entre liderazgos'],
+    agreements: ['Ambas bandas se reconocen como aliadas oficiales.', 'Los líderes permanecerán conectados para facilitar coordinación.', 'Los acuerdos, intercambios y eventos pactados deberán cumplirse.'],
+    benefits: ['Refuerzo internacional para la red de KoTZ.', 'Mayor capacidad de coordinación y apoyo.', 'Relación diplomática fuerte basada en confianza.'],
+    protocol: ['Respeto obligatorio hacia miembros aliados.', 'Prohibido fuego amigo, traición o filtración de información.', 'Prohibido captar miembros de bandas aliadas.', 'Los desacuerdos se resuelven entre líderes, nunca en público.', 'La alianza puede revocarse por incumplimientos graves o reiterados.'],
+    note: 'Un paso importante para KoTZ: una red internacional basada en lealtad, respeto y cooperación.'
+  }
+];
+
 const roleConfig = {
   admin: [
     process.env.DISCORD_OWNER_ROLE_ID,
@@ -538,6 +669,125 @@ app.patch('/api/shop/offers/:id/status', requireAdmin, async (req, res) => {
     console.error('[KoTZ] Error actualizando oferta:', req.params.id, '\n', err?.stack || err?.message || err);
     return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar la oferta.' });
   }
+});
+
+app.patch('/api/shop/offers/:id/respond', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { action, offeredPrice, message = '' } = req.body || {};
+    if (!['accept-counter','reject-counter','counter-again'].includes(action)) {
+      return res.status(400).json({ ok:false, error:'Respuesta de oferta inválida.' });
+    }
+
+    const userId = String(req.session.user?.id || '');
+
+    if (googleStorage.configured()) {
+      const offers = await googleStorage.listShopOffers();
+      const offer = offers.find(o => String(o.id) === String(req.params.id));
+      if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+      if (req.session.accessLevel !== 'alto-mando' && String(offer.buyerDiscordId || '') !== userId) {
+        return res.status(403).json({ ok:false, error:'No puedes responder una oferta que no es tuya.' });
+      }
+      if (offer.status !== 'countered') {
+        return res.status(400).json({ ok:false, error:'Esta oferta no tiene una contraoferta pendiente.' });
+      }
+
+      if (action === 'accept-counter') {
+        const updated = await googleStorage.updateShopOfferStatus(offer.id, 'accepted', offer.counterOffer || '', req.session.user);
+        return res.json({ ok:true, offer: updated, storage:'google' });
+      }
+
+      if (action === 'reject-counter') {
+        const updated = await googleStorage.updateShopOfferStatus(offer.id, 'cancelled', offer.counterOffer || '', req.session.user);
+        return res.json({ ok:true, offer: updated, storage:'google' });
+      }
+
+      const nextPrice = Number(offeredPrice || 0);
+      if (!nextPrice || nextPrice <= 0) return res.status(400).json({ ok:false, error:'La nueva oferta debe ser mayor que 0.' });
+
+      const member = await googleStorage.getMemberForDiscordUser(req.session.user);
+      await googleStorage.updateShopOfferStatus(offer.id, 'cancelled', offer.counterOffer || '', req.session.user);
+      const nextOffer = await googleStorage.appendShopOffer({
+        itemId: offer.itemId,
+        itemName: offer.itemName,
+        originalPrice: offer.originalPrice,
+        offeredPrice: nextPrice,
+        message: String(message || 'Nueva contraoferta del cliente'),
+        status: 'pending'
+      }, req.session.user, member);
+      return res.json({ ok:true, offer: nextOffer, previousOfferId: offer.id, storage:'google' });
+    }
+
+    const db = readDb();
+    const offer = (db.shopOffers || []).find(o => String(o.id) === String(req.params.id));
+    if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+    if (req.session.accessLevel !== 'alto-mando' && String(offer.buyerDiscordId || '') !== userId) {
+      return res.status(403).json({ ok:false, error:'No puedes responder una oferta que no es tuya.' });
+    }
+    if (offer.status !== 'countered') {
+      return res.status(400).json({ ok:false, error:'Esta oferta no tiene una contraoferta pendiente.' });
+    }
+
+    const reviewer = req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '';
+
+    if (action === 'accept-counter') {
+      offer.status = 'accepted';
+      offer.reviewedBy = reviewer;
+      offer.reviewedAt = new Date().toISOString();
+      writeDb(db);
+      return res.json({ ok:true, offer, storage:'json' });
+    }
+
+    if (action === 'reject-counter') {
+      offer.status = 'cancelled';
+      offer.reviewedBy = reviewer;
+      offer.reviewedAt = new Date().toISOString();
+      writeDb(db);
+      return res.json({ ok:true, offer, storage:'json' });
+    }
+
+    const nextPrice = Number(offeredPrice || 0);
+    if (!nextPrice || nextPrice <= 0) return res.status(400).json({ ok:false, error:'La nueva oferta debe ser mayor que 0.' });
+
+    offer.status = 'cancelled';
+    offer.reviewedBy = reviewer;
+    offer.reviewedAt = new Date().toISOString();
+    const nextOffer = {
+      id:'offer_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      createdAt:new Date().toISOString(),
+      buyerDiscordId:req.session.user?.id || '',
+      buyerUsername:req.session.user?.username || '',
+      buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '',
+      buyerMemberId:offer.buyerMemberId || '',
+      buyerName:offer.buyerName || req.session.user?.displayName || req.session.user?.username || '',
+      itemId:offer.itemId,
+      itemName:offer.itemName,
+      originalPrice:Number(offer.originalPrice || 0),
+      offeredPrice:nextPrice,
+      message:String(message || 'Nueva contraoferta del cliente'),
+      status:'pending',
+      counterOffer:'',
+      reviewedBy:'',
+      reviewedAt:''
+    };
+    db.shopOffers = db.shopOffers || [];
+    db.shopOffers.unshift(nextOffer);
+    writeDb(db);
+    return res.json({ ok:true, offer: nextOffer, previousOfferId: offer.id, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error respondiendo contraoferta:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo responder la contraoferta.' });
+  }
+});
+
+
+app.get('/api/alliances', (req, res) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ ok:false, error:'Inicia sesión con Discord para ver alianzas internas.' });
+  }
+  if (!['usuario', 'alto-mando'].includes(req.session.accessLevel)) {
+    return res.status(403).json({ ok:false, error:'No tienes permisos de miembro KoTZ para ver alianzas internas.' });
+  }
+  return res.json({ ok:true, alliances: KOTZ_ALLIANCES });
 });
 
 app.get('/api/gallery', async (req, res) => {

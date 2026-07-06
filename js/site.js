@@ -35,6 +35,10 @@ let currentMemberLoaded = false;
 let currentMemberLoading = false;
 let shopLoaded = false;
 let shopLoading = false;
+let alliancesLoaded = false;
+let alliancesLoading = false;
+let alliancesError = null;
+let secureAlliances = [];
 
 async function syncDuesFromServer(rerender = false){
   if (serverDuesLoading) return;
@@ -91,11 +95,15 @@ async function syncCurrentMemberFromServer(rerender = false){
     if (res.ok){
       const data = await res.json();
       KotzStore.setCurrentMember(data.member || null);
-      currentMemberLoaded = true;
-      if (rerender && (location.hash.replace('#','') || '/') === '/cuotas') router();
+    } else {
+      KotzStore.setCurrentMember(null);
     }
+    currentMemberLoaded = true;
+    const path = location.hash.replace('#','') || '/';
+    if (rerender && (path === '/cuotas' || path === '/tienda' || path === '/alianzas' || path === '/estado' || path.startsWith('/alianzas/'))) router();
   } catch(e) {
-    // Modo local / sin backend.
+    KotzStore.setCurrentMember(null);
+    currentMemberLoaded = true;
   } finally {
     currentMemberLoading = false;
   }
@@ -123,6 +131,42 @@ async function syncShopFromServer(rerender = false){
   }
 }
 
+
+async function syncAlliancesFromServer(rerender = false){
+  if (alliancesLoading) return;
+  alliancesLoading = true;
+  alliancesError = null;
+  try {
+    const res = await fetch('/api/alliances', { credentials:'same-origin' });
+    if (res.ok){
+      const data = await res.json();
+      secureAlliances = Array.isArray(data.alliances) ? data.alliances : [];
+      alliancesLoaded = true;
+      alliancesError = null;
+    } else {
+      let error = res.status === 401 ? 'login' : res.status === 403 ? 'forbidden' : 'server';
+      try {
+        const data = await res.json();
+        alliancesError = { type:error, message:data.error || 'No se pudieron cargar las alianzas.' };
+      } catch(e) {
+        alliancesError = { type:error, message:'No se pudieron cargar las alianzas.' };
+      }
+      secureAlliances = [];
+      alliancesLoaded = true;
+    }
+    if (rerender) {
+      const path = location.hash.replace('#','') || '/';
+      if (path === '/alianzas' || path === '/estado' || path.startsWith('/alianzas/')) router();
+    }
+  } catch(e) {
+    alliancesError = { type:'server', message:'No se pudo conectar con el servidor de alianzas.' };
+    secureAlliances = [];
+    alliancesLoaded = true;
+  } finally {
+    alliancesLoading = false;
+  }
+}
+
 function setupSiteLogout(){
   const logout = async () => {
     try { await fetch('/api/logout', { method:'POST', credentials:'same-origin' }); } catch(e) {}
@@ -132,14 +176,30 @@ function setupSiteLogout(){
   document.getElementById('logoutBtnMobile')?.addEventListener('click', logout);
 }
 
+
+function resolveRoute(path){
+  if (routes[path]) return routes[path];
+  if (path.startsWith('/alianzas/')) {
+    const slug = path.split('/').filter(Boolean).pop();
+    return () => pageAllianceDetail(slug);
+  }
+  return pageHome;
+}
+
+function isAllianceProtectedPath(path){
+  return path === '/alianzas' || path === '/estado' || path.startsWith('/alianzas/');
+}
+
 function router(){
   const path = location.hash.replace('#','') || '/';
-  const render = routes[path] || pageHome;
+  const render = resolveRoute(path);
   const view = document.getElementById('view');
   view.innerHTML = render();
   view.classList.remove('page-enter'); void view.offsetWidth; view.classList.add('page-enter');
   document.querySelectorAll('.nav-links a').forEach(a => {
-    a.classList.toggle('active', a.getAttribute('href') === '#' + path);
+    const hrefPath = (a.getAttribute('href') || '').replace('#','');
+    const active = hrefPath === path || (path.startsWith('/alianzas/') && hrefPath === '/alianzas');
+    a.classList.toggle('active', active);
   });
   document.getElementById('mobilePanel')?.classList.remove('open');
   window.scrollTo(0,0);
@@ -152,6 +212,7 @@ function afterRender(path){
   if (path === '/galeria') { initGalleryFilters(); if (!serverGalleryLoaded) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
   if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
+  if (isAllianceProtectedPath(path)) { if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!alliancesLoaded && !alliancesLoading) syncAlliancesFromServer(true); }
   if (path === '/organizacion') initSecurityLog();
   if (document.getElementById('embers')) initEmbers();
 }
@@ -334,47 +395,145 @@ function initSecurityLog(){
 
 /* ------------------------------------------------------------ ALIANZAS */
 function pageAlliances(){
-  const alliances = KotzStore.getAlliances();
+  if (!alliancesLoaded) return pageAllianceGate('checking');
+  if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
+
+  const alliances = secureAlliances;
   return `
   <section class="page-head">
     <div class="wrap">
-      <div class="eyebrow">Red internacional</div>
-      <h1 class="h1">No buscamos cantidad.<br>Buscamos <span class="accent">confianza.</span></h1>
-      <p class="lede">Uno de nuestros mayores objetivos es crear una red internacional de alianzas, basada en respeto, comunicación y beneficio mutuo. La coordinación diaria sigue pasando por Discord — aquí mostramos el estado oficial de cada alianza.</p>
+      <div class="eyebrow">Expediente diplomático interno</div>
+      <h1 class="h1">Nuestra red de <span class="accent">alianzas.</span></h1>
+      <p class="lede">Información reservada para miembros de KoTZ. Cada alianza tiene su propio expediente con acuerdos, protocolos, beneficios y límites de actuación.</p>
     </div>
   </section>
-  <section class="section">
+  <section class="section" style="padding-top:0;">
     <div class="wrap">
+      <div class="card pad reveal" style="margin-bottom:28px; border-color:rgba(255,122,24,.28);">
+        <div class="eyebrow">Acceso restringido</div>
+        <p class="lede" style="font-size:.95rem; margin:0;">Estos documentos no son públicos. No compartas capturas, datos internos ni acuerdos con personas ajenas a KoTZ.</p>
+      </div>
       <div class="alliance-grid reveal">
-        ${alliances.map(a => `
-          <div class="alliance-card">
-            <div class="alliance-top">
-              <div class="alliance-logo">${a.emoji || a.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
-              <span class="pill ${a.status === 'Activa' ? 'pill-green' : 'pill-yellow'}">${a.status}</span>
-            </div>
-            <h3 class="h3">${a.name}</h3>
-            <p class="lede" style="font-size:.88rem; margin-bottom:14px;">${a.desc}</p>
-            <div class="alliance-meta">
-              <span>Desde ${a.since}</span>
-              <span>${a.values.join(' · ')}</span>
-            </div>
-          </div>`).join('')}
+        ${alliances.map(a => renderAllianceLinkCard(a)).join('')}
       </div>
     </div>
   </section>`;
 }
 
+function pageAllianceDetail(slug){
+  if (!alliancesLoaded) return pageAllianceGate('checking');
+  if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
+
+  const alliance = secureAlliances.find(a => a.slug === slug);
+  if (!alliance) {
+    return `
+    <section class="page-head"><div class="wrap">
+      <div class="eyebrow">Expediente no encontrado</div>
+      <h1 class="h1">Alianza no <span class="accent">registrada.</span></h1>
+      <p class="lede">No existe un expediente interno para esa alianza.</p>
+      <a class="btn btn-primary" href="#/alianzas">Volver a alianzas</a>
+    </div></section>`;
+  }
+
+  const c1 = alliance.colors?.primary || '#ff7a18';
+  const c2 = alliance.colors?.secondary || '#ff2ea6';
+  return `
+  <section class="page-head" style="background:radial-gradient(circle at 88% 10%, ${c1}24, transparent 34%), radial-gradient(circle at 12% 0%, ${c2}18, transparent 28%);">
+    <div class="wrap">
+      <a href="#/alianzas" class="mini-sub" style="display:inline-block; margin-bottom:18px; text-decoration:none;">← Volver a alianzas</a>
+      <div class="eyebrow" style="color:${c1};">${alliance.type || 'Alianza oficial'}</div>
+      <h1 class="h1">${alliance.name}</h1>
+      <p class="lede">${alliance.full || alliance.desc}</p>
+      <div class="detail-chip-row">
+        <span class="pill pill-green">${alliance.status}</span>
+        <span class="pill" style="border-color:${c1}66; color:${c1};">Desde ${alliance.since}</span>
+        <span class="pill" style="border-color:${c2}66; color:${c2};">${alliance.level || 'Confianza estable'}</span>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="wrap alliance-dossier-wrap">
+      <div class="card pad reveal" style="border-color:${c1}44; box-shadow:0 0 0 1px ${c1}12 inset, 0 20px 60px rgba(0,0,0,.28);">
+        <div class="alliance-top" style="margin-bottom:22px;">
+          <div class="alliance-logo" style="background:linear-gradient(135deg, ${c1}26, ${c2}18); border-color:${c1}55; color:${c1};">${alliance.emoji || '🤝'}</div>
+          <span class="mini-sub">Código diplomático · ${alliance.code || alliance.slug}</span>
+        </div>
+        <div class="dossier-grid">
+          ${renderDossierSection('Pilares de la alianza', alliance.pillars, c1)}
+          ${renderDossierSection('Acuerdos principales', alliance.agreements, c2)}
+          ${renderDossierSection('Beneficios para KoTZ', alliance.benefits, c1)}
+          ${renderDossierSection('Protocolo obligatorio', alliance.protocol, c2)}
+        </div>
+        <div class="alliance-note" style="margin-top:26px; border-left:3px solid ${c1}; padding:16px 18px; background:${c1}10;">
+          <div class="eyebrow" style="color:${c1};">Nota interna</div>
+          <p class="lede" style="font-size:.95rem; margin:0;">${alliance.note || 'Mantener respeto, discreción y comunicación con Alto Mando.'}</p>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderAllianceLinkCard(a){
+  const c1 = a.colors?.primary || '#ff7a18';
+  const c2 = a.colors?.secondary || '#ff2ea6';
+  return `
+    <a href="#/alianzas/${a.slug}" class="alliance-card" style="text-decoration:none; color:inherit; border-color:${c1}33; background:linear-gradient(135deg, ${c1}10, ${c2}08 42%, rgba(12,12,16,.96));">
+      <div class="alliance-top">
+        <div class="alliance-logo" style="background:linear-gradient(135deg, ${c1}24, ${c2}16); border-color:${c1}55; color:${c1};">${a.emoji || '🤝'}</div>
+        <span class="pill ${a.status === 'Activa' ? 'pill-green' : 'pill-yellow'}">${a.status}</span>
+      </div>
+      <div class="eyebrow" style="color:${c1};">${a.type || 'Alianza oficial'}</div>
+      <h3 class="h3">${a.name}</h3>
+      <p class="lede" style="font-size:.88rem; margin-bottom:14px;">${a.desc}</p>
+      <div class="alliance-meta"><span>Desde ${a.since}</span><span>${(a.pillars || a.values || []).slice(0,3).join(' · ')}</span></div>
+      <div class="mini-sub" style="margin-top:16px; color:${c1};">Abrir expediente →</div>
+    </a>`;
+}
+
+function renderDossierSection(title, items = [], color = '#ff7a18'){
+  return `
+    <div class="dossier-section" style="border-top:1px solid ${color}44; padding-top:16px;">
+      <div class="eyebrow" style="color:${color};">${title}</div>
+      <ul class="rule-list" style="margin-top:12px;">
+        ${(items || []).map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>`;
+}
+
+function pageAllianceGate(type = 'checking', message = ''){
+  const isChecking = type === 'checking';
+  const title = isChecking ? 'Verificando acceso...' : 'Alianzas protegidas';
+  const text = isChecking
+    ? 'Estamos comprobando tu sesión de Discord y tu rango dentro de KoTZ.'
+    : (message || 'Este apartado solo está disponible para miembros de KoTZ con sesión de Discord activa.');
+  return `
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Acceso interno</div>
+      <h1 class="h1">${title}</h1>
+      <p class="lede">${text}</p>
+      ${isChecking ? `<div class="mini-sub">Un momento...</div>` : `
+        <div class="hero-ctas" style="justify-content:flex-start; margin-top:22px;">
+          <a class="btn btn-primary" href="/auth/discord?next=${encodeURIComponent('/index.html#/alianzas')}">Iniciar sesión con Discord</a>
+          <a class="btn btn-ghost" href="#/">Volver al inicio</a>
+        </div>`}
+    </div>
+  </section>`;
+}
 
 /* --------------------------------------------------------- ESTADO DIPLOMÁTICO */
 function pageDiplomaticStatus(){
-  const alliances = KotzStore.getAlliances();
+  if (!alliancesLoaded) return pageAllianceGate('checking');
+  if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
+
+  const alliances = secureAlliances;
   const conflicts = KotzStore.getConflicts ? KotzStore.getConflicts() : [];
   return `
   <section class="page-head">
     <div class="wrap">
-      <div class="eyebrow">Estado diplomático</div>
+      <div class="eyebrow">Estado diplomático interno</div>
       <h1 class="h1">Aliados, conflictos y <span class="accent">órdenes activas.</span></h1>
-      <p class="lede">Este apartado sirve para que todos los miembros de KoTZ sepan con quién tenemos alianza, si existe algún conflicto activo y qué conducta deben seguir.</p>
+      <p class="lede">Este apartado sirve para que los miembros de KoTZ sepan con quién tenemos alianza, si existe algún conflicto activo y qué conducta deben seguir.</p>
     </div>
   </section>
   <section class="section" style="padding-top:0;">
@@ -384,16 +543,7 @@ function pageDiplomaticStatus(){
         <h2 class="h2">Nuestra red de confianza</h2>
       </div>
       <div class="alliance-grid reveal" style="margin-bottom:48px;">
-        ${alliances.map(a => `
-          <div class="alliance-card">
-            <div class="alliance-top">
-              <div class="alliance-logo">${a.emoji || '🤝'}</div>
-              <span class="pill ${a.status === 'Activa' ? 'pill-green' : 'pill-yellow'}">${a.status}</span>
-            </div>
-            <h3 class="h3">${a.name}</h3>
-            <p class="lede" style="font-size:.88rem; margin-bottom:14px;">${a.desc}</p>
-            <div class="alliance-meta"><span>Desde ${a.since}</span><span>${a.values.join(' · ')}</span></div>
-          </div>`).join('')}
+        ${alliances.map(a => renderAllianceLinkCard(a)).join('')}
       </div>
 
       <div class="section-head reveal">
@@ -701,7 +851,20 @@ function pageShop(){
       </div>
       <div class="card pad reveal">
         <div class="eyebrow">Mis ofertas</div>
-        ${offers.length ? offers.map(o => `<div class="mini-row"><div><b>${escapeHtml(o.itemName)}</b><span class="mini-sub">Ofreciste ${KotzStore.formatMoney(o.offeredPrice)} · Original ${KotzStore.formatMoney(o.originalPrice)}${o.counterOffer ? ' · Contra: ' + KotzStore.formatMoney(o.counterOffer) : ''}</span></div><span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span></div>`).join('') : `<p class="lede" style="font-size:.9rem;">Aún no has enviado ofertas.</p>`}
+        ${offers.length ? offers.map(o => `
+          <div class="mini-row">
+            <div>
+              <b>${escapeHtml(o.itemName)}</b>
+              <span class="mini-sub">Ofreciste ${KotzStore.formatMoney(o.offeredPrice)} · Original ${KotzStore.formatMoney(o.originalPrice)}${o.counterOffer ? ' · Contra: ' + KotzStore.formatMoney(o.counterOffer) : ''}</span>
+              ${o.status === 'countered' ? `
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                  <button class="btn btn-primary btn-sm" data-shop-counter-accept="${escapeHtml(o.id)}">Aceptar contra</button>
+                  <button class="btn btn-ghost btn-sm" data-shop-counter-again="${escapeHtml(o.id)}">Nueva oferta</button>
+                  <button class="btn btn-danger btn-sm" data-shop-counter-reject="${escapeHtml(o.id)}">Rechazar</button>
+                </div>` : ''}
+            </div>
+            <span class="pill ${pill(o.status)}">${KotzStore.shopStatusLabel(o.status)}</span>
+          </div>`).join('') : `<p class="lede" style="font-size:.9rem;">Aún no has enviado ofertas.</p>`}
       </div>
     </div>
   </section>`;
@@ -730,9 +893,60 @@ async function submitShopOrder(itemId, offer=false){
   }
 }
 
+async function respondShopCounter(offerId, action){
+  const offer = KotzStore.getShopOffers().find(o => String(o.id) === String(offerId));
+  if (!offer) return alert('Oferta no encontrada.');
+
+  let body = { action };
+
+  if (action === 'accept-counter') {
+    const ok = confirm(`¿Aceptar la contraoferta de ${KotzStore.formatMoney(offer.counterOffer)} por ${offer.itemName}?`);
+    if (!ok) return;
+  }
+
+  if (action === 'reject-counter') {
+    const ok = confirm(`¿Rechazar la contraoferta por ${offer.itemName}?`);
+    if (!ok) return;
+  }
+
+  if (action === 'counter-again') {
+    const offeredPrice = prompt(`Nueva oferta para ${offer.itemName}:
+Tu oferta anterior: ${KotzStore.formatMoney(offer.offeredPrice)}
+Contraoferta de Alto Mando: ${KotzStore.formatMoney(offer.counterOffer)}`);
+    if (!offeredPrice) return;
+    body.offeredPrice = Number(offeredPrice);
+    body.message = prompt('Mensaje para Alto Mando (opcional):') || 'Nueva contraoferta del cliente';
+  }
+
+  try {
+    const res = await fetch(`/api/shop/offers/${encodeURIComponent(offerId)}/respond`, {
+      method:'PATCH',
+      credentials:'same-origin',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok){
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'No se pudo responder la contraoferta.');
+    }
+
+    if (action === 'accept-counter') alert('Contraoferta aceptada. Alto Mando verá la oferta como aceptada.');
+    if (action === 'reject-counter') alert('Contraoferta rechazada.');
+    if (action === 'counter-again') alert('Nueva oferta enviada a Alto Mando.');
+
+    await syncShopFromServer(true);
+  } catch(err){
+    alert('Error en tienda: ' + (err.message || err));
+  }
+}
+
 function initShopPage(){
   document.querySelectorAll('[data-shop-buy]').forEach(btn => btn.addEventListener('click', () => submitShopOrder(btn.dataset.shopBuy, false)));
   document.querySelectorAll('[data-shop-offer]').forEach(btn => btn.addEventListener('click', () => submitShopOrder(btn.dataset.shopOffer, true)));
+  document.querySelectorAll('[data-shop-counter-accept]').forEach(btn => btn.addEventListener('click', () => respondShopCounter(btn.dataset.shopCounterAccept, 'accept-counter')));
+  document.querySelectorAll('[data-shop-counter-reject]').forEach(btn => btn.addEventListener('click', () => respondShopCounter(btn.dataset.shopCounterReject, 'reject-counter')));
+  document.querySelectorAll('[data-shop-counter-again]').forEach(btn => btn.addEventListener('click', () => respondShopCounter(btn.dataset.shopCounterAgain, 'counter-again')));
 }
 
 function escapeHtml(value){

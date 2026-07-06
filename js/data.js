@@ -25,13 +25,13 @@
 const KotzData = {
 
   alliances: [
-    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
-    { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
-    { id:'a3', name:'KAOs', emoji:'△', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
-    { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
-    { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
-    { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
-    { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
+    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a3', name:'KAOs', emoji:'△', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
   ],
 
   conflicts: [
@@ -296,7 +296,34 @@ const KotzStore = {
     return map[status] || status || 'Pendiente';
   },
   getRanks(){ return KotzData.ranks; },
-  getWeeklyDues(){ return KotzData.weeklyDues; },
+  getWeeklyDues(){
+    const dues = this.getAllDues().filter(d => d.status === 'approved');
+    if (!dues.length) return KotzData.weeklyDues;
+    const map = new Map();
+    const parse = (value) => {
+      const raw = String(value || '').trim();
+      const iso = new Date(raw);
+      if (!isNaN(iso)) return iso;
+      const m = raw.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+      if (m){
+        const year = m[3] ? Number(m[3].length === 2 ? '20' + m[3] : m[3]) : new Date().getFullYear();
+        return new Date(year, Number(m[2])-1, Number(m[1]));
+      }
+      return new Date();
+    };
+    const startOfWeek = (date) => {
+      const d = new Date(date); d.setHours(0,0,0,0);
+      const day = d.getDay() || 7; d.setDate(d.getDate() - day + 1);
+      return d;
+    };
+    dues.forEach(d => {
+      const start = startOfWeek(parse(d.date || d.createdAt));
+      const key = start.toISOString().slice(0,10);
+      const label = `${String(start.getDate()).padStart(2,'0')}/${String(start.getMonth()+1).padStart(2,'0')}`;
+      map.set(key, (map.get(key) || 0) + Number(d.amount || 300));
+    });
+    return [...map.entries()].sort((a,b) => a[0].localeCompare(b[0])).slice(-6).map(([key, amount]) => ({ week:key.slice(5), label:key, amount }));
+  },
   getMemberGrowth(){ return KotzData.memberGrowth; },
 
   stats(){

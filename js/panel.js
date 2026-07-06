@@ -8,6 +8,9 @@
 
 let isAuthed = false;
 
+const duesFilter = { q:'', status:'all', week:'all', sort:'recent' };
+const sanctionsFilter = { q:'', severity:'all', sort:'recent' };
+
 const panelRoutes = {
   '/resumen': viewResumen,
   '/miembros': viewMiembros,
@@ -247,6 +250,15 @@ function panelRouter(){
   bindPanelEvents(path);
 }
 
+function rerenderAndRefocus(inputId, cursorPosition=null){
+  panelRouter();
+  const input = document.getElementById(inputId);
+  if (input){
+    input.focus();
+    if (cursorPosition !== null && typeof input.setSelectionRange === 'function') input.setSelectionRange(cursorPosition, cursorPosition);
+  }
+}
+
 function mountApp(){
   document.getElementById('loginScreen').style.display = 'none';
   const app = document.getElementById('panelApp');
@@ -429,53 +441,198 @@ function closeMemberModal(){ document.getElementById('memberModalRoot').innerHTM
 /* ---------------------------------------------------------------- CUOTAS */
 function viewCuotas(){
   const dues = KotzStore.getAllDues();
-  const approved = dues.filter(d => d.status === 'approved').length;
-  const pending = dues.filter(d => d.status === 'pending').length;
-  const weekly = KotzStore.getWeeklyDues();
-  const maxW = Math.max(...weekly.map(w => w.amount));
+  const weeks = buildDueWeeks(dues);
+  if (duesFilter.week !== 'all' && !weeks.some(w => w.key === duesFilter.week)) duesFilter.week = 'all';
+
+  const filtered = getFilteredDues(dues);
+  const approved = filtered.filter(d => d.status === 'approved').length;
+  const pending = filtered.filter(d => d.status === 'pending').length;
+  const rejected = filtered.filter(d => d.status === 'rejected').length;
+  const totalApproved = filtered
+    .filter(d => d.status === 'approved')
+    .reduce((acc, d) => acc + Number(d.amount || 300), 0);
+  const maxW = Math.max(1, ...weeks.map(w => w.amount));
+  const selectedWeek = duesFilter.week === 'all' ? null : weeks.find(w => w.key === duesFilter.week);
+
   return `
   <div class="view-head">
     <div class="eyebrow">Finanzas internas</div>
     <h1 class="h2">Cuotas</h1>
+    <p class="lede">Filtra por miembro, estado o semana para revisar cuotas semanales sin mezclar registros antiguos.</p>
   </div>
+
   <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-num">${approved}</div><div class="kpi-label">Cuotas aprobadas</div></div>
-    <div class="kpi-card"><div class="kpi-num">${pending}</div><div class="kpi-label">Pendientes de revisión</div></div>
-    <div class="kpi-card"><div class="kpi-num">${weekly.reduce((a,w)=>a+w.amount,0)} R$</div><div class="kpi-label">Total recaudado</div></div>
+    <div class="kpi-card"><div class="kpi-num">${approved}</div><div class="kpi-label">Aprobadas ${selectedWeek ? '· ' + selectedWeek.label : ''}</div></div>
+    <div class="kpi-card"><div class="kpi-num">${pending}</div><div class="kpi-label">Pendientes</div></div>
+    <div class="kpi-card"><div class="kpi-num">${rejected}</div><div class="kpi-label">Rechazadas</div></div>
+    <div class="kpi-card"><div class="kpi-num">${totalApproved} R$</div><div class="kpi-label">Total aprobado</div></div>
   </div>
+
   <div class="chart-card" style="margin-bottom:28px;">
-    <div class="eyebrow">Recaudación semanal</div>
+    <div class="eyebrow">Cuotas por semana</div>
     <div class="bars">
-      ${weekly.map(w => `<div class="bar-col"><div class="bar" style="height:${(w.amount/maxW*100).toFixed(0)}%"></div><span class="bar-label">${w.week}</span></div>`).join('')}
+      ${weeks.map(w => `<button class="bar-col week-bar ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" title="${escapeAttr(w.label)} · ${w.count} cuota(s) · ${w.amount} R$" style="background:none;border:none;cursor:pointer;">
+        <div class="bar" style="height:${Math.max(8, (w.amount/maxW*100)).toFixed(0)}%"></div>
+        <span class="bar-label">${w.short}</span>
+      </button>`).join('') || `<div class="mini-sub">Todavía no hay cuotas registradas.</div>`}
+    </div>
+    <div class="weekly-strip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px;">
+      ${weeks.map(w => `<button class="mini-row card week-card ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" style="text-align:left;cursor:pointer;">
+        <div><b>${w.label}</b><span class="mini-sub">${w.count} cuota(s) · ${w.approved} aprobada(s)</span></div>
+        <span class="pill ${w.pending ? 'pill-yellow' : 'pill-green'}">${w.amount} R$</span>
+      </button>`).join('') || `<div class="mini-sub">Sin semanas todavía.</div>`}
     </div>
   </div>
+
+  <div class="card pad" style="margin-bottom:20px;">
+    <div class="eyebrow">Filtros</div>
+    <div class="field-row">
+      <div class="field"><label>Miembro</label><input id="duesSearch" type="search" value="${escapeAttr(duesFilter.q)}" placeholder="Buscar por miembro o Discord..."></div>
+      <div class="field"><label>Estado</label>
+        <select id="duesStatusFilter">
+          ${dueStatusOptions(duesFilter.status)}
+        </select>
+      </div>
+      <div class="field"><label>Semana</label>
+        <select id="duesWeekFilter">
+          <option value="all" ${duesFilter.week === 'all' ? 'selected' : ''}>Todas las semanas</option>
+          ${weeks.map(w => `<option value="${escapeAttr(w.key)}" ${duesFilter.week === w.key ? 'selected' : ''}>${w.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Ordenar</label>
+        <select id="duesSortFilter">
+          <option value="recent" ${duesFilter.sort === 'recent' ? 'selected' : ''}>Más recientes</option>
+          <option value="member" ${duesFilter.sort === 'member' ? 'selected' : ''}>Usuario A-Z</option>
+          <option value="status" ${duesFilter.sort === 'status' ? 'selected' : ''}>Estado</option>
+          <option value="week" ${duesFilter.sort === 'week' ? 'selected' : ''}>Semana</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions-cell" style="margin-top:12px;">
+      <button class="btn btn-ghost btn-sm" id="clearDuesFilters">Limpiar filtros</button>
+      <span class="mini-sub">Mostrando ${filtered.length} de ${dues.length} cuotas</span>
+    </div>
+  </div>
+
   <div class="table-wrap card">
     <table class="kotz-table">
-      <thead><tr><th>Miembro</th><th>Fecha</th><th>Servidor</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <thead><tr><th>Miembro</th><th>Semana</th><th>Fecha</th><th>Servidor</th><th>Importe</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody id="duesBody">
-        ${dues.map(d => `
-          <tr>
-            <td><b>${d.memberName}</b></td>
-            <td class="mono-cell">${d.date}</td>
-            <td class="mono-cell">${d.server}</td>
-            <td class="mono-cell">${d.proofImage ? `<a class="btn btn-ghost btn-sm" href="${d.proofImage}" target="_blank" rel="noopener">Ver captura</a>` : (d.proof || '—')}</td>
-            <td><span class="pill ${d.status==='approved'?'pill-green':d.status==='rejected'?'pill-red':'pill-yellow'}">${d.status==='approved'?'Pagado':d.status==='rejected'?'Rechazado':'Pendiente'}</span></td>
+        ${filtered.map(d => {
+          const week = getDueWeekInfo(d);
+          return `<tr>
+            <td><b>${escapeHtml(d.memberName || 'Miembro')}</b><div class="mini-sub">${escapeHtml(d.discordUsername ? '@' + d.discordUsername : '')}</div></td>
+            <td class="mono-cell">${week.label}</td>
+            <td class="mono-cell">${formatShortDate(d.date)}</td>
+            <td class="mono-cell">${escapeHtml(d.server || '—')}</td>
+            <td class="mono-cell"><b>${Number(d.amount || 300)} R$</b></td>
+            <td class="mono-cell">${d.proofImage ? `<a class="btn btn-ghost btn-sm" href="${escapeAttr(d.proofImage)}" target="_blank" rel="noopener">Ver captura</a>` : (escapeHtml(d.proof || '—'))}</td>
+            <td><span class="pill ${dueStatusClass(d.status)}">${dueStatusLabel(d.status)}</span></td>
             <td class="actions-cell">
               ${d.status === 'pending' ? `
-                <button class="btn btn-ok btn-sm" data-action="approve-due" data-member="${d.memberId}" data-due="${d.id}">Aprobar</button>
-                <button class="btn btn-danger btn-sm" data-action="reject-due" data-member="${d.memberId}" data-due="${d.id}">Rechazar</button>
-              ` : `<span class="mini-sub">${d.comment||'—'}</span>`}
+                <button class="btn btn-ok btn-sm" data-action="approve-due" data-member="${escapeAttr(d.memberId)}" data-due="${escapeAttr(d.id)}">Aprobar</button>
+                <button class="btn btn-danger btn-sm" data-action="reject-due" data-member="${escapeAttr(d.memberId)}" data-due="${escapeAttr(d.id)}">Rechazar</button>
+              ` : `<span class="mini-sub">${escapeHtml(d.comment||'—')}</span>`}
             </td>
-          </tr>`).join('')}
+          </tr>`;
+        }).join('') || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin cuotas con esos filtros</td></tr>`}
       </tbody>
     </table>
   </div>`;
 }
 
+function getFilteredDues(dues){
+  const q = normalizeText(duesFilter.q);
+  return dues.filter(d => {
+    const week = getDueWeekInfo(d);
+    const haystack = normalizeText(`${d.memberName || ''} ${d.discordUsername || ''} ${d.server || ''} ${d.date || ''}`);
+    const matchesQ = !q || haystack.includes(q);
+    const matchesStatus = duesFilter.status === 'all' || String(d.status || 'pending') === duesFilter.status;
+    const matchesWeek = duesFilter.week === 'all' || week.key === duesFilter.week;
+    return matchesQ && matchesStatus && matchesWeek;
+  }).sort(sortDues);
+}
+
+function sortDues(a,b){
+  if (duesFilter.sort === 'member') return String(a.memberName || '').localeCompare(String(b.memberName || ''), 'es') || String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||''));
+  if (duesFilter.sort === 'status') return dueStatusOrder(a.status) - dueStatusOrder(b.status) || String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||''));
+  if (duesFilter.sort === 'week') return getDueWeekInfo(b).key.localeCompare(getDueWeekInfo(a).key) || String(a.memberName || '').localeCompare(String(b.memberName || ''), 'es');
+  return String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||''));
+}
+
+function buildDueWeeks(dues){
+  const map = new Map();
+  dues.forEach(d => {
+    const info = getDueWeekInfo(d);
+    if (!map.has(info.key)) map.set(info.key, { ...info, amount:0, count:0, approved:0, pending:0, rejected:0 });
+    const w = map.get(info.key);
+    w.count += 1;
+    if (d.status === 'approved') { w.approved += 1; w.amount += Number(d.amount || 300); }
+    if (d.status === 'pending') w.pending += 1;
+    if (d.status === 'rejected') w.rejected += 1;
+  });
+  return [...map.values()].sort((a,b) => a.key.localeCompare(b.key));
+}
+
+function getDueWeekInfo(due){
+  const date = parseKotzDate(due?.date || due?.createdAt);
+  const start = startOfWeek(date);
+  const end = new Date(start); end.setDate(start.getDate() + 6);
+  const key = start.toISOString().slice(0,10);
+  const short = `${String(start.getDate()).padStart(2,'0')}/${String(start.getMonth()+1).padStart(2,'0')}`;
+  const label = `${short} - ${String(end.getDate()).padStart(2,'0')}/${String(end.getMonth()+1).padStart(2,'0')}`;
+  return { key, short, label, start, end };
+}
+
+function startOfWeek(date){
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1);
+  return d;
+}
+
+function parseKotzDate(value){
+  if (!value) return new Date();
+  if (value instanceof Date && !isNaN(value)) return value;
+  const raw = String(value).trim();
+  const iso = new Date(raw);
+  if (!isNaN(iso)) return iso;
+  const m = raw.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+  if (m){
+    const day = Number(m[1]);
+    const month = Number(m[2]) - 1;
+    const year = m[3] ? Number(m[3].length === 2 ? '20' + m[3] : m[3]) : new Date().getFullYear();
+    const parsed = new Date(year, month, day);
+    if (!isNaN(parsed)) return parsed;
+  }
+  return new Date();
+}
+
+function formatShortDate(value){
+  const date = parseKotzDate(value);
+  return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
+}
+
+function dueStatusLabel(status){
+  return status === 'approved' ? 'Pagado' : status === 'rejected' ? 'Rechazado' : 'Pendiente';
+}
+function dueStatusClass(status){ return status === 'approved' ? 'pill-green' : status === 'rejected' ? 'pill-red' : 'pill-yellow'; }
+function dueStatusOrder(status){ return { pending:0, rejected:1, approved:2 }[status] ?? 3; }
+function dueStatusOptions(current){
+  return [
+    ['all','Todos'], ['pending','Pendientes'], ['approved','Aprobadas'], ['rejected','Rechazadas']
+  ].map(([value,label]) => `<option value="${value}" ${current === value ? 'selected' : ''}>${label}</option>`).join('');
+}
 /* ------------------------------------------------------------- SANCIONES */
 function viewSanciones(){
   const members = KotzStore.getMembers();
-  const sanctions = KotzStore.getAllSanctions().sort((a,b) => b.date.localeCompare(a.date));
+  const sanctions = getFilteredSanctions(KotzStore.getAllSanctions());
+  const total = KotzStore.getAllSanctions().length;
+  const leve = sanctions.filter(s => normalizeSeverityText(s.severity) === 'leve').length;
+  const grave = sanctions.filter(s => normalizeSeverityText(s.severity) === 'grave').length;
+  const muyGrave = sanctions.filter(s => normalizeSeverityText(s.severity) === 'muygrave').length;
+
   return `
   <div class="view-head">
     <div class="eyebrow">Disciplina interna</div>
@@ -486,32 +643,88 @@ function viewSanciones(){
     <form id="sanctionForm">
       <div class="field-row">
         <div class="field"><label>Miembro</label>
-          <select name="memberId" required>${members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}</select>
+          <select name="memberId" required>${members.map(m => `<option value="${escapeAttr(m.id)}">${escapeHtml(m.name || m.rpName)}</option>`).join('')}</select>
         </div>
         <div class="field"><label>Gravedad</label>
           <select name="severity" required><option>Leve</option><option>Grave</option><option>Muy grave</option></select>
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Responsable</label><input type="text" name="responsible" value="${KotzStore.getAuthUser()?.displayName || KotzStore.getAuthUser()?.globalName || KotzStore.getAuthUser()?.username || ''}" required></div>
+        <div class="field"><label>Responsable</label><input type="text" name="responsible" value="${escapeAttr(KotzStore.getAuthUser()?.displayName || KotzStore.getAuthUser()?.globalName || KotzStore.getAuthUser()?.username || '')}" required></div>
         <div class="field"><label>Fecha</label><input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" required></div>
       </div>
       <div class="field"><label>Motivo</label><textarea name="reason" rows="2" required></textarea></div>
       <button type="submit" class="btn btn-primary">Registrar sanción</button>
     </form>
   </div>
+
+  <div class="kpi-grid" style="margin-bottom:20px;">
+    <div class="kpi-card"><div class="kpi-num">${sanctions.length}</div><div class="kpi-label">Mostradas de ${total}</div></div>
+    <div class="kpi-card"><div class="kpi-num">${leve}</div><div class="kpi-label">Leves</div></div>
+    <div class="kpi-card"><div class="kpi-num">${grave}</div><div class="kpi-label">Graves</div></div>
+    <div class="kpi-card"><div class="kpi-num">${muyGrave}</div><div class="kpi-label">Muy graves</div></div>
+  </div>
+
+  <div class="card pad" style="margin-bottom:20px;">
+    <div class="eyebrow">Filtros</div>
+    <div class="field-row">
+      <div class="field"><label>Usuario</label><input id="sanctionsSearch" type="search" value="${escapeAttr(sanctionsFilter.q)}" placeholder="Buscar miembro, responsable o motivo..."></div>
+      <div class="field"><label>Gravedad</label>
+        <select id="sanctionsSeverityFilter">
+          <option value="all" ${sanctionsFilter.severity === 'all' ? 'selected' : ''}>Todas</option>
+          <option value="Leve" ${sanctionsFilter.severity === 'Leve' ? 'selected' : ''}>Leve</option>
+          <option value="Grave" ${sanctionsFilter.severity === 'Grave' ? 'selected' : ''}>Grave</option>
+          <option value="Muy grave" ${sanctionsFilter.severity === 'Muy grave' ? 'selected' : ''}>Muy grave</option>
+        </select>
+      </div>
+      <div class="field"><label>Ordenar</label>
+        <select id="sanctionsSortFilter">
+          <option value="recent" ${sanctionsFilter.sort === 'recent' ? 'selected' : ''}>Más recientes</option>
+          <option value="member" ${sanctionsFilter.sort === 'member' ? 'selected' : ''}>Usuario A-Z</option>
+          <option value="severity" ${sanctionsFilter.sort === 'severity' ? 'selected' : ''}>Gravedad</option>
+          <option value="responsible" ${sanctionsFilter.sort === 'responsible' ? 'selected' : ''}>Responsable A-Z</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions-cell" style="margin-top:12px;">
+      <button class="btn btn-ghost btn-sm" id="clearSanctionsFilters">Limpiar filtros</button>
+    </div>
+  </div>
+
   <div class="table-wrap card">
     <table class="kotz-table">
       <thead><tr><th>Miembro</th><th>Motivo</th><th>Responsable</th><th>Fecha</th><th>Gravedad</th></tr></thead>
       <tbody>
         ${sanctions.map(s => `
-          <tr><td><b>${s.memberName}</b></td><td>${s.reason}</td><td>${s.responsible}</td><td class="mono-cell">${s.date}</td>
-          <td><span class="pill ${s.severity==='Leve'?'pill-yellow':'pill-red'}">${s.severity}</span></td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin sanciones registradas</td></tr>`}
+          <tr><td><b>${escapeHtml(s.memberName || 'Miembro')}</b></td><td>${escapeHtml(s.reason || '—')}</td><td>${escapeHtml(s.responsible || '—')}</td><td class="mono-cell">${formatShortDate(s.date)}</td>
+          <td><span class="pill ${normalizeSeverityText(s.severity)==='leve'?'pill-yellow':'pill-red'}">${escapeHtml(s.severity || 'Leve')}</span></td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin sanciones con esos filtros</td></tr>`}
       </tbody>
     </table>
   </div>`;
 }
 
+function getFilteredSanctions(sanctions){
+  const q = normalizeText(sanctionsFilter.q);
+  return sanctions.filter(s => {
+    const haystack = normalizeText(`${s.memberName || ''} ${s.reason || ''} ${s.responsible || ''} ${s.date || ''}`);
+    const matchesQ = !q || haystack.includes(q);
+    const matchesSeverity = sanctionsFilter.severity === 'all' || String(s.severity || 'Leve') === sanctionsFilter.severity;
+    return matchesQ && matchesSeverity;
+  }).sort(sortSanctions);
+}
+
+function sortSanctions(a,b){
+  if (sanctionsFilter.sort === 'member') return String(a.memberName || '').localeCompare(String(b.memberName || ''), 'es') || String(b.date||'').localeCompare(String(a.date||''));
+  if (sanctionsFilter.sort === 'severity') return severityOrder(b.severity) - severityOrder(a.severity) || String(b.date||'').localeCompare(String(a.date||''));
+  if (sanctionsFilter.sort === 'responsible') return String(a.responsible || '').localeCompare(String(b.responsible || ''), 'es') || String(b.date||'').localeCompare(String(a.date||''));
+  return String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||''));
+}
+
+function normalizeSeverityText(value){
+  return String(value || 'Leve').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[_\s-]+/g,'');
+}
+function severityOrder(value){ return { leve:1, grave:2, muygrave:3 }[normalizeSeverityText(value)] || 0; }
+function normalizeText(value){ return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
 /* -------------------------------------------------------------- GALERIA */
 function viewGaleria(){
   const items = KotzStore.getGallery();
@@ -774,6 +987,12 @@ function bindPanelEvents(path){
     });
   }
   if (path === '/cuotas'){
+    document.getElementById('duesSearch')?.addEventListener('input', e => { const pos = e.target.selectionStart; duesFilter.q = e.target.value; rerenderAndRefocus('duesSearch', pos); });
+    document.getElementById('duesStatusFilter')?.addEventListener('change', e => { duesFilter.status = e.target.value; panelRouter(); });
+    document.getElementById('duesWeekFilter')?.addEventListener('change', e => { duesFilter.week = e.target.value; panelRouter(); });
+    document.getElementById('duesSortFilter')?.addEventListener('change', e => { duesFilter.sort = e.target.value; panelRouter(); });
+    document.getElementById('clearDuesFilters')?.addEventListener('click', () => { Object.assign(duesFilter, { q:'', status:'all', week:'all', sort:'recent' }); panelRouter(); });
+    document.querySelectorAll('[data-action="week-filter"]').forEach(btn => btn.addEventListener('click', () => { duesFilter.week = duesFilter.week === btn.dataset.week ? 'all' : btn.dataset.week; panelRouter(); }));
     document.getElementById('duesBody').addEventListener('click', e => {
       const approve = e.target.closest('[data-action="approve-due"]');
       const reject = e.target.closest('[data-action="reject-due"]');
@@ -782,6 +1001,10 @@ function bindPanelEvents(path){
     });
   }
   if (path === '/sanciones'){
+    document.getElementById('sanctionsSearch')?.addEventListener('input', e => { const pos = e.target.selectionStart; sanctionsFilter.q = e.target.value; rerenderAndRefocus('sanctionsSearch', pos); });
+    document.getElementById('sanctionsSeverityFilter')?.addEventListener('change', e => { sanctionsFilter.severity = e.target.value; panelRouter(); });
+    document.getElementById('sanctionsSortFilter')?.addEventListener('change', e => { sanctionsFilter.sort = e.target.value; panelRouter(); });
+    document.getElementById('clearSanctionsFilters')?.addEventListener('click', () => { Object.assign(sanctionsFilter, { q:'', severity:'all', sort:'recent' }); panelRouter(); });
     document.getElementById('sanctionForm').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
