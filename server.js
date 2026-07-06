@@ -70,7 +70,7 @@ const KOTZ_ALLIANCES = [
     slug: 'kaos',
     name: '𝐾𝐴𝑂𝑠 ム',
     code: 'KAOS',
-    emoji: '△',
+    emoji: 'ム',
     status: 'Activa',
     since: 'Jun 2026',
     type: 'Alianza estratégica',

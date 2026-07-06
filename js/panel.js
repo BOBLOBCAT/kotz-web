@@ -15,7 +15,7 @@ const GALLERY_CATEGORIES = [
   'Fotos oficiales',
   'Galería oficial',
   'Armamento',
-  'Inventario',
+  'io',
   'Reuniones',
   'Operaciones',
   'Alianzas',
@@ -496,13 +496,13 @@ function viewCuotas(){
     <div class="kpi-card"><div class="kpi-num">${approved}</div><div class="kpi-label">Aprobadas ${selectedWeek ? '· ' + selectedWeek.label : ''}</div></div>
     <div class="kpi-card"><div class="kpi-num">${pending}</div><div class="kpi-label">Pendientes</div></div>
     <div class="kpi-card"><div class="kpi-num">${rejected}</div><div class="kpi-label">Rechazadas</div></div>
-    <div class="kpi-card"><div class="kpi-num">${totalApproved} R$</div><div class="kpi-label">Total aprobado</div></div>
+    <div class="kpi-card"><div class="kpi-num">${totalApproved} $</div><div class="kpi-label">Total aprobado</div></div>
   </div>
 
   <div class="chart-card" style="margin-bottom:28px;">
     <div class="eyebrow">Cuotas por semana</div>
     <div class="bars">
-      ${weeks.map(w => `<button class="bar-col week-bar ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" title="${escapeAttr(w.label)} · ${w.count} cuota(s) · ${w.amount} R$" style="background:none;border:none;cursor:pointer;">
+      ${weeks.map(w => `<button class="bar-col week-bar ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" title="${escapeAttr(w.label)} · ${w.count} cuota(s) · ${w.amount} $" style="background:none;border:none;cursor:pointer;">
         <div class="bar" style="height:${Math.max(8, (w.amount/maxW*100)).toFixed(0)}%"></div>
         <span class="bar-label">${w.short}</span>
       </button>`).join('') || `<div class="mini-sub">Todavía no hay cuotas registradas.</div>`}
@@ -510,7 +510,7 @@ function viewCuotas(){
     <div class="weekly-strip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px;">
       ${weeks.map(w => `<button class="mini-row card week-card ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" style="text-align:left;cursor:pointer;">
         <div><b>${w.label}</b><span class="mini-sub">${w.count} cuota(s) · ${w.approved} aprobada(s)</span></div>
-        <span class="pill ${w.pending ? 'pill-yellow' : 'pill-green'}">${w.amount} R$</span>
+        <span class="pill ${w.pending ? 'pill-yellow' : 'pill-green'}">${w.amount} $</span>
       </button>`).join('') || `<div class="mini-sub">Sin semanas todavía.</div>`}
     </div>
   </div>
@@ -556,7 +556,7 @@ function viewCuotas(){
             <td class="mono-cell">${week.label}</td>
             <td class="mono-cell">${formatShortDate(d.date)}</td>
             <td class="mono-cell">${escapeHtml(d.server || '—')}</td>
-            <td class="mono-cell"><b>${Number(d.amount || 300)} R$</b></td>
+            <td class="mono-cell"><b>${Number(d.amount || 300)} $</b></td>
             <td class="mono-cell">${d.proofImage ? `<a class="btn btn-ghost btn-sm" href="${escapeAttr(d.proofImage)}" target="_blank" rel="noopener">Ver captura</a>` : (escapeHtml(d.proof || '—'))}</td>
             <td><span class="pill ${dueStatusClass(d.status)}">${dueStatusLabel(d.status)}</span></td>
             <td class="actions-cell">
