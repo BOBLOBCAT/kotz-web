@@ -70,7 +70,7 @@ const KOTZ_ALLIANCES = [
     slug: 'kaos',
     name: '𝐾𝐴𝑂𝑠 ム',
     code: 'KAOS',
-    emoji: 'ム',
+    emoji: '△',
     status: 'Activa',
     since: 'Jun 2026',
     type: 'Alianza estratégica',
@@ -792,6 +792,7 @@ app.get('/api/alliances', (req, res) => {
 
 app.get('/api/gallery', async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     if (googleStorage.configured()) return res.json({ items: await googleStorage.listGallery(), storage:'google' });
     return res.json({ items: [], storage:'json' });
   } catch(err){

@@ -910,26 +910,35 @@ function deleteGallery(id) {
   const possibleFileId = rawId.startsWith("drive_") ? rawId.replace(/^drive_/, "") : rawId;
   const sheet = getSheet(CONFIG.TABS.GALLERY, GALLERY_HEADERS);
   const values = sheet.getDataRange().getValues();
+  let deleted = false;
 
-  for (let i = 1; i < values.length; i++) {
+  // Borramos de abajo hacia arriba por si hay filas duplicadas del mismo archivo.
+  for (let i = values.length - 1; i >= 1; i--) {
     const rowId = String(values[i][0] || "");
     const rowFileId = String(values[i][4] || "");
 
-    if (rowId === rawId || rowFileId === rawId || rowFileId === possibleFileId) {
+    if (rowId === rawId || rowId === possibleFileId || rowFileId === rawId || rowFileId === possibleFileId || (rowFileId && rawId === "drive_" + rowFileId)) {
       if (rowFileId) trashDriveFileQuietly(rowFileId);
       sheet.deleteRow(i + 1);
-      return true;
+      deleted = true;
     }
   }
 
   // Compatibilidad: fotos que vienen directamente de la carpeta de Drive y no tienen fila en Sheets.
-  if (rawId.startsWith("drive_")) {
+  if (!deleted && rawId.startsWith("drive_")) {
     trashDriveFileQuietly(possibleFileId);
-    return true;
+    deleted = true;
   }
 
-  return false;
+  // Otro caso: el frontend manda directamente el fileId.
+  if (!deleted && isDriveFileUsable(possibleFileId)) {
+    trashDriveFileQuietly(possibleFileId);
+    deleted = true;
+  }
+
+  return deleted;
 }
+
 
 function listGallery() {
   const fromSheet = listGalleryFromSheet();
@@ -951,7 +960,7 @@ function listGalleryFromSheet() {
   const sheet = getSheet(CONFIG.TABS.GALLERY, GALLERY_HEADERS);
   const values = sheet.getDataRange().getValues();
   if (values.length <= 1) return [];
-  return values.slice(1).filter(row => row[0]).map(rowToGallery);
+  return values.slice(1).filter(row => row[0]).map(rowToGallery).filter(isGalleryItemVisible);
 }
 
 function listGalleryFromDrive() {
@@ -961,6 +970,7 @@ function listGalleryFromDrive() {
 
   while (files.hasNext()) {
     const file = files.next();
+    if (typeof file.isTrashed === "function" && file.isTrashed()) continue;
     const mime = file.getMimeType() || "";
     if (!String(mime).startsWith("image/")) continue;
 
@@ -1001,6 +1011,29 @@ function rowToGallery(row) {
     uploadedBy: row[7] || "",
     source: "apps-script"
   };
+}
+
+function isGalleryItemVisible(item) {
+  if (!item) return false;
+  const fileId = String(item.driveFileId || "").trim();
+  const image = String(item.image || item.imageUrl || "").trim();
+
+  // Si la fila apunta a un archivo de Drive borrado/en papelera, no lo devolvemos.
+  if (fileId && !isDriveFileUsable(fileId)) return false;
+
+  // Evita tarjetas fantasma sin imagen.
+  return Boolean(image || fileId);
+}
+
+function isDriveFileUsable(fileId) {
+  if (!fileId) return false;
+  try {
+    const file = DriveApp.getFileById(fileId);
+    if (typeof file.isTrashed === "function" && file.isTrashed()) return false;
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 
 function makeDriveImageUrl(fileId) {

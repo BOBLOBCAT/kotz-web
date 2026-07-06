@@ -27,7 +27,7 @@ const KotzData = {
   alliances: [
     { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
     { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
-    { id:'a3', name:'KAOs', emoji:'ム', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
+    { id:'a3', name:'KAOs', emoji:'△', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
     { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
     { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
     { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
@@ -115,11 +115,37 @@ const KotzStore = {
   getBackendShopOffers(){ return this._backendShopOffers || []; },
   setBackendDues(dues){ this._backendDues = Array.isArray(dues) ? dues : []; },
   getBackendDues(){ return this._backendDues || []; },
-  setBackendGallery(items){ this._backendGallery = Array.isArray(items) ? items : []; },
+  setBackendGallery(items){
+    this._backendGalleryLoaded = true;
+    this._backendGallery = Array.isArray(items) ? items.filter(g => this.isUsableGalleryItem(g)) : [];
+  },
   getBackendGallery(){ return this._backendGallery || []; },
+  hasBackendGalleryLoaded(){ return Boolean(this._backendGalleryLoaded); },
+  getDeletedGalleryIds(){
+    try { return new Set(JSON.parse(localStorage.getItem('kotz_gallery_deleted') || '[]').map(String)); }
+    catch(e){ return new Set(); }
+  },
+  markDeletedGalleryItem(id){
+    if (!id) return;
+    const ids = this.getDeletedGalleryIds();
+    ids.add(String(id));
+    try { localStorage.setItem('kotz_gallery_deleted', JSON.stringify([...ids].slice(-300))); } catch(e) {}
+    this._backendGallery = this.getBackendGallery().filter(g => String(g.id) !== String(id) && String(g.driveFileId || '') !== String(id) && `drive_${g.driveFileId}` !== String(id));
+  },
+  isUsableGalleryItem(g){
+    if (!g) return false;
+    const ids = this.getDeletedGalleryIds();
+    const id = String(g.id || '');
+    const fileId = String(g.driveFileId || g.fileId || '');
+    if (ids.has(id) || ids.has(fileId) || ids.has(`drive_${fileId}`)) return false;
+    const image = String(g.image || g.imageUrl || g.driveFileUrl || '').trim();
+    const title = String(g.title || '').trim();
+    // Evita tarjetas fantasma: sin imagen y sin información real no se muestra.
+    return Boolean(title || image);
+  },
   setBackendSanctions(sanctions){ this._backendSanctions = Array.isArray(sanctions) ? sanctions : []; },
   getBackendSanctions(){ return this._backendSanctions || []; },
-  deleteBackendGalleryItem(id){ this._backendGallery = this.getBackendGallery().filter(g => g.id !== id); },
+  deleteBackendGalleryItem(id){ this.markDeletedGalleryItem(id); },
   setBackendMembers(members){ this._membersLoaded = true; this._backendMembers = Array.isArray(members) ? members.map(m => ({ sanctions:[], dues:[], ...m })) : []; },
   getBackendMembers(){ return this._backendMembers || []; },
   setCurrentMember(member){ this._currentMember = member ? ({ sanctions:[], dues:[], ...member }) : null; },
@@ -224,12 +250,16 @@ const KotzStore = {
   getConflicts(){ return KotzData.conflicts || []; },
   getGallery(){
     try {
-      const serverItems = this.getBackendGallery().map(g => ({...g, image:g.image || g.imageUrl || g.driveFileUrl || '', source:g.source || 'google'}));
-      const extra = this.getExtraGalleryItems();
-      const base = KotzData.gallery;
+      const serverItems = this.getBackendGallery()
+        .map(g => ({...g, image:g.image || g.imageUrl || g.driveFileUrl || '', source:g.source || 'google'}))
+        .filter(g => this.isUsableGalleryItem(g));
+      const extra = this.getExtraGalleryItems().filter(g => this.isUsableGalleryItem(g));
+      // Los ejemplos fijos solo se usan antes de cargar Google. Cuando Google ya responde,
+      // la galería real manda y no se mezclan tarjetas fantasma sin imagen.
+      const base = this.hasBackendGalleryLoaded() ? [] : KotzData.gallery;
       const seen = new Set();
       return [...serverItems, ...extra, ...base].filter(g => {
-        const key = String(g.id || g.driveFileId || g.image || g.imageUrl || `${g.title}|${g.category}`);
+        const key = String(g.driveFileId || g.id || g.image || g.imageUrl || `${g.title}|${g.category}`);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

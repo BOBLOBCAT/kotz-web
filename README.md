@@ -1,22 +1,22 @@
-# KoTZ — Fix galería + tienda
+# KoTZ - Fix galería estable
 
-Cambios:
-- Galería: eliminar fotos guardadas en Google Sheets/Drive funciona.
-- Galería: acepta URL o archivo, y queda más estable al cargar imágenes.
-- Galería: categoría como desplegable con más opciones.
-- Tienda Alto Mando: permite seleccionar imagen desde el ordenador además de URL.
-- Tienda: si subes imagen desde archivo, Apps Script la guarda en Drive y usa el thumbnail.
-
-Archivos a copiar:
+Archivos incluidos:
 - server.js
-- server/googleStorage.js
-- js/panel.js
 - js/site.js
+- js/panel.js
 - js/data.js
 - apps-script-Code.gs
 
-IMPORTANTE:
-En Apps Script, reemplaza Code.gs entero por apps-script-Code.gs y cambia:
-SECRET: "PON_AQUI_EL_MISMO_SECRET_DE_RENDER"
-por el mismo valor de GOOGLE_APPS_SCRIPT_SECRET de Render.
-Luego despliega una NUEVA versión.
+Qué arregla:
+- Al borrar fotos, se eliminan/ocultan al instante y se evita que reaparezcan como tarjetas sin imagen.
+- Apps Script deja de devolver filas cuyo archivo de Drive está en la papelera o no existe.
+- La galería pública ya no mezcla ejemplos fijos cuando Google Drive ya cargó.
+- La galería pública muestra estado de carga si entras directamente a /#/galeria.
+- Más categorías en el desplegable del panel.
+
+Pasos:
+1. Copiar archivos al proyecto local.
+2. Reemplazar Code.gs en Apps Script con apps-script-Code.gs y poner el SECRET real.
+3. Guardar y desplegar nueva versión del Apps Script.
+4. git add -A, commit, push.
+5. Render: Manual Deploy -> Deploy latest commit.

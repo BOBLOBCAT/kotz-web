@@ -31,6 +31,7 @@ let serverDuesLoaded = false;
 let serverDuesLoading = false;
 let serverGalleryLoaded = false;
 let serverGalleryLoading = false;
+let serverGalleryError = null;
 let currentMemberLoaded = false;
 let currentMemberLoading = false;
 let shopLoaded = false;
@@ -61,18 +62,26 @@ async function syncDuesFromServer(rerender = false){
 async function syncGalleryFromServer(rerender = false){
   if (serverGalleryLoading) return;
   serverGalleryLoading = true;
+  serverGalleryError = null;
   try {
-    const res = await fetch('/api/gallery', { credentials:'same-origin' });
+    const res = await fetch('/api/gallery?ts=' + Date.now(), {
+      credentials:'same-origin',
+      cache:'no-store'
+    });
     if (res.ok){
       const data = await res.json();
-      KotzStore.setBackendGallery(data.items || []);
+      KotzStore.setBackendGallery(data.items || data.gallery || []);
       serverGalleryLoaded = true;
-      if (rerender && (location.hash.replace('#','') || '/') === '/galeria') router();
+    } else {
+      serverGalleryLoaded = true;
+      serverGalleryError = 'No se pudo cargar la galería.';
     }
   } catch(e) {
-    // Modo estático / sin backend: seguimos con data.js + localStorage.
+    serverGalleryLoaded = true;
+    serverGalleryError = 'No se pudo conectar con la galería.';
   } finally {
     serverGalleryLoading = false;
+    if (rerender && (location.hash.replace('#','') || '/') === '/galeria') router();
   }
 }
 
@@ -209,7 +218,7 @@ function router(){
 
 function afterRender(path){
   if (path === '/estadisticas') animateCounters();
-  if (path === '/galeria') { initGalleryFilters(); if (!serverGalleryLoaded) syncGalleryFromServer(true); }
+  if (path === '/galeria') { initGalleryFilters(); if (!serverGalleryLoaded && !serverGalleryLoading) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
   if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
   if (isAllianceProtectedPath(path)) { if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!alliancesLoaded && !alliancesLoading) syncAlliancesFromServer(true); }
@@ -748,17 +757,30 @@ function initUserDuesForm(){
 
 /* -------------------------------------------------------------- GALERIA */
 function pageGallery(){
-  const items = KotzStore.getGallery();
+  if (!serverGalleryLoaded) {
+    return `
+    <section class="page-head">
+      <div class="wrap">
+        <div class="eyebrow">Galería</div>
+        <h1 class="h1">Momentos que <span class="accent">construyen historia.</span></h1>
+        <p class="lede">Cargando fotos oficiales desde Google Drive...</p>
+      </div>
+    </section>`;
+  }
+
+  const items = KotzStore.getGallery().filter(g => galleryImageOf(g));
   const cats = ['Todos', ...new Set(items.map(i => i.category || 'Fotos oficiales'))];
   return `
   <section class="page-head">
     <div class="wrap">
       <div class="eyebrow">Galería</div>
       <h1 class="h1">Momentos que <span class="accent">construyen historia.</span></h1>
+      ${serverGalleryError ? `<p class="lede">${escapeHtml(serverGalleryError)}</p>` : ''}
     </div>
   </section>
   <section class="section" style="padding-top:0;">
     <div class="wrap">
+      ${items.length ? `
       <div class="filter-row reveal">
         ${cats.map((c,i) => `<button class="chip ${i===0?'active':''}" data-cat="${escapeAttr(c)}">${escapeHtml(c)}</button>`).join('')}
       </div>
@@ -768,7 +790,7 @@ function pageGallery(){
             <span class="gallery-cat">${escapeHtml(g.category || 'Fotos oficiales')}</span>
             <span class="gallery-title">${escapeHtml(g.title || 'Foto')}</span>
           </div>`).join('')}
-      </div>
+      </div>` : `<div class="card" style="padding:32px;"><p class="lede" style="margin:0;">Todavía no hay fotos disponibles en la galería.</p></div>`}
     </div>
   </section>`;
 }
