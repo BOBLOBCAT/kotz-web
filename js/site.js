@@ -749,7 +749,7 @@ function initUserDuesForm(){
 /* -------------------------------------------------------------- GALERIA */
 function pageGallery(){
   const items = KotzStore.getGallery();
-  const cats = ['Todos', ...new Set(items.map(i => i.category))];
+  const cats = ['Todos', ...new Set(items.map(i => i.category || 'Fotos oficiales'))];
   return `
   <section class="page-head">
     <div class="wrap">
@@ -760,13 +760,13 @@ function pageGallery(){
   <section class="section" style="padding-top:0;">
     <div class="wrap">
       <div class="filter-row reveal">
-        ${cats.map((c,i) => `<button class="chip ${i===0?'active':''}" data-cat="${c}">${c}</button>`).join('')}
+        ${cats.map((c,i) => `<button class="chip ${i===0?'active':''}" data-cat="${escapeAttr(c)}">${escapeHtml(c)}</button>`).join('')}
       </div>
       <div class="gallery-grid reveal" id="galleryGrid">
         ${items.map(g => `
-          <div class="gallery-tile tone-${g.tone}" data-cat="${g.category}" ${g.image ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.78)), url('${g.image}')"` : ''}>
-            <span class="gallery-cat">${g.category}</span>
-            <span class="gallery-title">${g.title}</span>
+          <div class="gallery-tile tone-${Number(g.tone || 1)}" data-cat="${escapeAttr(g.category || 'Fotos oficiales')}" ${galleryTileStyle(g)}>
+            <span class="gallery-cat">${escapeHtml(g.category || 'Fotos oficiales')}</span>
+            <span class="gallery-title">${escapeHtml(g.title || 'Foto')}</span>
           </div>`).join('')}
       </div>
     </div>
@@ -953,6 +953,12 @@ function escapeHtml(value){
   return String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 }
 function escapeAttr(value){ return escapeHtml(value).replace(/'/g, '&#39;'); }
+function galleryImageOf(g){ return g?.image || g?.imageUrl || g?.driveFileUrl || ''; }
+function cssUrl(value){ return String(value || '').replace(/[\"'()]/g, ch => encodeURIComponent(ch)); }
+function galleryTileStyle(g){
+  const image = galleryImageOf(g);
+  return image ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.78)), url("${cssUrl(image)}")"` : '';
+}
 
 /* --------------------------------------------------------- ESTADISTICAS */
 function pageStats(){

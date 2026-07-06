@@ -25,13 +25,13 @@
 const KotzData = {
 
   alliances: [
-    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a3', name:'KAOs', emoji:'△', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
-    { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Expediente restringido a miembros KoTZ.', values:['Privado'] },
+    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
+    { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
+    { id:'a3', name:'KAOs', emoji:'ム', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
+    { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
+    { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
+    { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
+    { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
   ],
 
   conflicts: [
@@ -224,9 +224,16 @@ const KotzStore = {
   getConflicts(){ return KotzData.conflicts || []; },
   getGallery(){
     try {
-      const serverItems = this.getBackendGallery().map(g => ({...g, source:g.source || 'google'}));
+      const serverItems = this.getBackendGallery().map(g => ({...g, image:g.image || g.imageUrl || g.driveFileUrl || '', source:g.source || 'google'}));
       const extra = this.getExtraGalleryItems();
-      return [...serverItems, ...extra, ...KotzData.gallery];
+      const base = KotzData.gallery;
+      const seen = new Set();
+      return [...serverItems, ...extra, ...base].filter(g => {
+        const key = String(g.id || g.driveFileId || g.image || g.imageUrl || `${g.title}|${g.category}`);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     } catch(e){ return KotzData.gallery; }
   },
   getExtraGalleryItems(){

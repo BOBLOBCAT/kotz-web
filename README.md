@@ -1,22 +1,22 @@
-# KoTZ - Alianzas internas protegidas
+# KoTZ — Fix galería + tienda
 
-Cambios incluidos:
-- `/api/alliances` protegido por sesión Discord y rol válido de KoTZ.
-- `#/alianzas` ya no muestra información a visitantes sin login.
-- `#/estado` también queda protegido porque incluye datos diplomáticos.
-- Cada alianza es clicable y abre su expediente interno: `#/alianzas/rose-spines`, `#/alianzas/the-nato`, etc.
-- Las descripciones largas quedan en `server.js`, no en `data.js` público.
+Cambios:
+- Galería: eliminar fotos guardadas en Google Sheets/Drive funciona.
+- Galería: acepta URL o archivo, y queda más estable al cargar imágenes.
+- Galería: categoría como desplegable con más opciones.
+- Tienda Alto Mando: permite seleccionar imagen desde el ordenador además de URL.
+- Tienda: si subes imagen desde archivo, Apps Script la guarda en Drive y usa el thumbnail.
 
 Archivos a copiar:
-- `server.js`
-- `js/site.js`
-- `js/data.js`
+- server.js
+- server/googleStorage.js
+- js/panel.js
+- js/site.js
+- js/data.js
+- apps-script-Code.gs
 
-Después:
-```powershell
-git add server.js js/site.js js/data.js
-git commit -m "Proteger alianzas y añadir expedientes"
-git push
-```
-
-En Render: Manual Deploy -> Deploy latest commit.
+IMPORTANTE:
+En Apps Script, reemplaza Code.gs entero por apps-script-Code.gs y cambia:
+SECRET: "PON_AQUI_EL_MISMO_SECRET_DE_RENDER"
+por el mismo valor de GOOGLE_APPS_SCRIPT_SECRET de Render.
+Luego despliega una NUEVA versión.

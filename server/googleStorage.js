@@ -267,6 +267,7 @@ function normalizeShopItem(item = {}){
     stock: Number(item.stock || 0),
     imageUrl: item.imageUrl || item.image || '',
     image: item.image || item.imageUrl || '',
+    driveFileId: item.driveFileId || item.fileId || '',
     status: item.status || 'Activo',
     featured: item.featured === true || String(item.featured || '').toLowerCase() === 'true' || String(item.featured || '').toLowerCase() === 'si' || String(item.featured || '').toLowerCase() === 'sí',
     notes: item.notes || '',
@@ -411,6 +412,7 @@ function normalizeGalleryItem(g){
     driveFileId: fileId,
     driveFileUrl: g.driveFileUrl || g.fileUrl || '',
     image: g.image || g.imageUrl || fallbackImage || g.driveFileUrl || '',
+    imageUrl: g.imageUrl || g.image || fallbackImage || g.driveFileUrl || '',
     uploadedBy: g.uploadedBy || '',
     source: 'apps-script',
     tone: Number(g.tone || 1)
@@ -427,15 +429,19 @@ async function appendGallery(input, user){
     item: {
       title: input.title,
       category: input.category,
-      image: input.imageData,
+      // Puede venir de archivo comprimido desde el panel o como URL directa.
+      image: input.imageData || input.image || '',
+      imageUrl: input.imageUrl || '',
+      tone: input.tone || 1,
       uploadedBy: user?.displayName || user?.globalName || user?.username || ''
     }
   });
   return normalizeGalleryItem(data.item || {});
 }
 
-async function deleteGallery(){
-  throw new Error('Borrar galería desde Apps Script aún no está implementado.');
+async function deleteGallery(id){
+  const data = await appsScriptPost('deleteGallery', { id });
+  return Boolean(data.deleted);
 }
 
 async function getDriveFile(){

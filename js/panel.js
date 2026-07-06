@@ -11,6 +11,31 @@ let isAuthed = false;
 const duesFilter = { q:'', status:'all', week:'all', sort:'recent' };
 const sanctionsFilter = { q:'', severity:'all', sort:'recent' };
 
+const GALLERY_CATEGORIES = [
+  'Fotos oficiales',
+  'Reuniones',
+  'Operaciones',
+  'Alianzas',
+  'Eventos',
+  'Entrenamientos',
+  'Capturas importantes',
+  'Memes / Comunidad',
+  'Otros'
+];
+
+const SHOP_CATEGORIES = [
+  'Herramienta',
+  'Cuerpo a cuerpo',
+  'Arma corta',
+  'Arma larga',
+  'Arma especial',
+  'Munición',
+  'Protección',
+  'Pack / Oferta',
+  'Servicio RP',
+  'Otros'
+];
+
 const panelRoutes = {
   '/resumen': viewResumen,
   '/miembros': viewMiembros,
@@ -465,13 +490,13 @@ function viewCuotas(){
     <div class="kpi-card"><div class="kpi-num">${approved}</div><div class="kpi-label">Aprobadas ${selectedWeek ? '· ' + selectedWeek.label : ''}</div></div>
     <div class="kpi-card"><div class="kpi-num">${pending}</div><div class="kpi-label">Pendientes</div></div>
     <div class="kpi-card"><div class="kpi-num">${rejected}</div><div class="kpi-label">Rechazadas</div></div>
-    <div class="kpi-card"><div class="kpi-num">${totalApproved} R$</div><div class="kpi-label">Total aprobado</div></div>
+    <div class="kpi-card"><div class="kpi-num">${totalApproved} $</div><div class="kpi-label">Total aprobado</div></div>
   </div>
 
   <div class="chart-card" style="margin-bottom:28px;">
     <div class="eyebrow">Cuotas por semana</div>
     <div class="bars">
-      ${weeks.map(w => `<button class="bar-col week-bar ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" title="${escapeAttr(w.label)} · ${w.count} cuota(s) · ${w.amount} R$" style="background:none;border:none;cursor:pointer;">
+      ${weeks.map(w => `<button class="bar-col week-bar ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" title="${escapeAttr(w.label)} · ${w.count} cuota(s) · ${w.amount} $" style="background:none;border:none;cursor:pointer;">
         <div class="bar" style="height:${Math.max(8, (w.amount/maxW*100)).toFixed(0)}%"></div>
         <span class="bar-label">${w.short}</span>
       </button>`).join('') || `<div class="mini-sub">Todavía no hay cuotas registradas.</div>`}
@@ -479,7 +504,7 @@ function viewCuotas(){
     <div class="weekly-strip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px;">
       ${weeks.map(w => `<button class="mini-row card week-card ${duesFilter.week === w.key ? 'active' : ''}" data-action="week-filter" data-week="${escapeAttr(w.key)}" style="text-align:left;cursor:pointer;">
         <div><b>${w.label}</b><span class="mini-sub">${w.count} cuota(s) · ${w.approved} aprobada(s)</span></div>
-        <span class="pill ${w.pending ? 'pill-yellow' : 'pill-green'}">${w.amount} R$</span>
+        <span class="pill ${w.pending ? 'pill-yellow' : 'pill-green'}">${w.amount} $</span>
       </button>`).join('') || `<div class="mini-sub">Sin semanas todavía.</div>`}
     </div>
   </div>
@@ -525,7 +550,7 @@ function viewCuotas(){
             <td class="mono-cell">${week.label}</td>
             <td class="mono-cell">${formatShortDate(d.date)}</td>
             <td class="mono-cell">${escapeHtml(d.server || '—')}</td>
-            <td class="mono-cell"><b>${Number(d.amount || 300)} R$</b></td>
+            <td class="mono-cell"><b>${Number(d.amount || 300)} $</b></td>
             <td class="mono-cell">${d.proofImage ? `<a class="btn btn-ghost btn-sm" href="${escapeAttr(d.proofImage)}" target="_blank" rel="noopener">Ver captura</a>` : (escapeHtml(d.proof || '—'))}</td>
             <td><span class="pill ${dueStatusClass(d.status)}">${dueStatusLabel(d.status)}</span></td>
             <td class="actions-cell">
@@ -740,7 +765,7 @@ function viewGaleria(){
     <form id="galleryForm">
       <div class="field-row">
         <div class="field"><label>Título</label><input type="text" name="title" placeholder="Foto oficial de KoTZ" required></div>
-        <div class="field"><label>Categoría</label><input type="text" name="category" placeholder="Fotos oficiales" required></div>
+        <div class="field"><label>Categoría</label><select name="category" required>${renderOptions(GALLERY_CATEGORIES, 'Fotos oficiales')}</select></div>
       </div>
 
       <div class="field">
@@ -784,9 +809,9 @@ function viewGaleria(){
 
   <div class="gallery-admin-grid">
     ${items.map(g => `
-      <div class="card pad gallery-admin-card" ${g.image ? `style="background-image:url('${g.image}')"` : ''}>
-        <span class="pill pill-yellow">${g.category}</span>
-        <h3 class="h3" style="margin-top:58px; margin-bottom:8px;">${g.title}</h3>
+      <div class="card pad gallery-admin-card" ${galleryCardStyle(g)}>
+        <span class="pill pill-yellow">${escapeHtml(g.category || 'Fotos oficiales')}</span>
+        <h3 class="h3" style="margin-top:58px; margin-bottom:8px;">${escapeHtml(g.title || 'Foto')}</h3>
         ${(KotzStore.isExtraGalleryItem(g.id) || KotzStore.isBackendGalleryItem(g.id)) ? `<button class="btn btn-danger btn-sm" data-action="delete-photo" data-id="${g.id}">Eliminar</button>` : `<span class="mini-sub">Foto fija / ejemplo</span>`}
       </div>`).join('')}
   </div>`;
@@ -854,7 +879,7 @@ function viewTienda(){
     <div class="eyebrow">Nuevo producto RP</div>
     <form id="shopItemForm" class="form-grid">
       <div class="field"><label>Nombre</label><input name="name" required placeholder="Escopeta, Bate, etc."></div>
-      <div class="field"><label>Categoría</label><input name="category" placeholder="Arma larga / Cuerpo a cuerpo / Herramienta"></div>
+      <div class="field"><label>Categoría</label><select name="category">${renderOptions(SHOP_CATEGORIES, 'Cuerpo a cuerpo')}</select></div>
       <div class="field"><label>Daño</label><input name="damage" type="number" min="0" value="0"></div>
       <div class="field"><label>Durabilidad</label><input name="durability" type="number" min="0" value="0"></div>
       <div class="field"><label>Precio normal</label><input name="basePrice" type="number" min="0" value="0"></div>
@@ -863,6 +888,7 @@ function viewTienda(){
       <div class="field"><label>Stock</label><input name="stock" type="number" min="0" value="1"></div>
       <div class="field"><label>Estado</label><select name="status"><option>Activo</option><option>Oculto</option><option>Agotado</option></select></div>
       <div class="field"><label>Destacado</label><select name="featured"><option value="false">No</option><option value="true">Sí</option></select></div>
+      <div class="field" style="grid-column:1/-1;"><label>Imagen desde ordenador</label><input name="imageFile" type="file" accept="image/*"><p class="mini-sub">Se sube a Google Drive y queda enlazada al producto.</p></div>
       <div class="field" style="grid-column:1/-1;"><label>Imagen URL</label><input name="imageUrl" placeholder="URL de imagen o thumbnail de Drive"></div>
       <div class="field" style="grid-column:1/-1;"><label>Descripción</label><textarea name="description" rows="3" placeholder="Información visible para clientes"></textarea></div>
       <div class="field" style="grid-column:1/-1;"><label>Notas internas</label><textarea name="notes" rows="2" placeholder="Solo Alto Mando"></textarea></div>
@@ -878,11 +904,11 @@ function viewTienda(){
         <tbody>
           ${items.map(i => `
             <tr data-shop-item-row="${i.id}">
-              <td><input class="inline-select" data-field="name" value="${escapeAttr(i.name)}"><br><input class="inline-select" data-field="category" value="${escapeAttr(i.category)}" style="margin-top:8px;"></td>
+              <td><input class="inline-select" data-field="name" value="${escapeAttr(i.name)}"><br><select class="inline-select" data-field="category" style="margin-top:8px;">${renderOptions(SHOP_CATEGORIES, i.category || 'Cuerpo a cuerpo')}</select></td>
               <td><input class="inline-select" data-field="damage" type="number" value="${Number(i.damage||0)}" title="Daño"><br><input class="inline-select" data-field="durability" type="number" value="${Number(i.durability||0)}" style="margin-top:8px;" title="Durabilidad"></td>
               <td><input class="inline-select" data-field="basePrice" type="number" value="${Number(i.basePrice||0)}" title="Normal"><br><input class="inline-select" data-field="memberPrice" type="number" value="${Number(i.memberPrice||0)}" style="margin-top:8px;" title="Miembros"><br><input class="inline-select" data-field="allyPrice" type="number" value="${Number(i.allyPrice||0)}" style="margin-top:8px;" title="Aliados"></td>
               <td><input class="inline-select" data-field="stock" type="number" value="${Number(i.stock||0)}"><br><select class="inline-select" data-field="status" style="margin-top:8px;">${['Activo','Oculto','Agotado'].map(st => `<option ${st===i.status?'selected':''}>${st}</option>`).join('')}</select><br><select class="inline-select" data-field="featured" style="margin-top:8px;"><option value="false" ${!i.featured?'selected':''}>Normal</option><option value="true" ${i.featured?'selected':''}>Destacado</option></select></td>
-              <td><input class="inline-select" data-field="imageUrl" value="${escapeAttr(i.imageUrl||'')}" placeholder="URL"><textarea class="inline-select" data-field="description" rows="2" style="margin-top:8px;" placeholder="Descripción">${escapeHtml(i.description||'')}</textarea></td>
+              <td><input class="inline-select" data-field="imageUrl" value="${escapeAttr(i.imageUrl||'')}" placeholder="URL"><input class="inline-select" type="file" data-shop-image-file accept="image/*" style="margin-top:8px;"><textarea class="inline-select" data-field="description" rows="2" style="margin-top:8px;" placeholder="Descripción">${escapeHtml(i.description||'')}</textarea></td>
               <td><button class="btn btn-primary btn-sm" data-action="save-shop-item" data-id="${i.id}">Guardar</button></td>
             </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--bone-faint);">Sin productos todavía</td></tr>`}
         </tbody>
@@ -918,6 +944,15 @@ function escapeHtml(value){
   return String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 }
 function escapeAttr(value){ return escapeHtml(value).replace(/'/g, '&#39;'); }
+function renderOptions(options, selected){
+  return (options || []).map(opt => `<option value="${escapeAttr(opt)}" ${String(opt)===String(selected)?'selected':''}>${escapeHtml(opt)}</option>`).join('');
+}
+function galleryImageOf(g){ return g?.image || g?.imageUrl || g?.driveFileUrl || ''; }
+function cssUrl(value){ return String(value || '').replace(/[\"'()]/g, ch => encodeURIComponent(ch)); }
+function galleryCardStyle(g){
+  const image = galleryImageOf(g);
+  return image ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.78)), url("${cssUrl(image)}")"` : '';
+}
 
 function collectShopRow(row){
   const payload = {};
@@ -1026,7 +1061,7 @@ function bindPanelEvents(path){
     document.getElementById('shopItemForm')?.addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      await panelSaveShopItem({
+      const payload = {
         name: fd.get('name'),
         category: fd.get('category'),
         description: fd.get('description'),
@@ -1040,11 +1075,17 @@ function bindPanelEvents(path){
         status: fd.get('status'),
         featured: fd.get('featured') === 'true',
         notes: fd.get('notes')
-      });
+      };
+      const imageFile = e.target.elements['imageFile']?.files?.[0];
+      if (imageFile) payload.imageDataUrl = await compressImageFile(imageFile, 1200, 0.82);
+      await panelSaveShopItem(payload);
     });
     document.querySelectorAll('[data-action="save-shop-item"]').forEach(btn => btn.addEventListener('click', async () => {
       const row = btn.closest('[data-shop-item-row]');
-      await panelSaveShopItem(collectShopRow(row), btn.dataset.id);
+      const payload = collectShopRow(row);
+      const imageFile = row?.querySelector('[data-shop-image-file]')?.files?.[0];
+      if (imageFile) payload.imageDataUrl = await compressImageFile(imageFile, 1200, 0.82);
+      await panelSaveShopItem(payload, btn.dataset.id);
     }));
     document.querySelectorAll('[data-action="order-status"]').forEach(btn => btn.addEventListener('click', () => panelSetShopOrderStatus(btn.dataset.id, btn.dataset.status)));
     document.querySelectorAll('[data-action="offer-status"]').forEach(btn => btn.addEventListener('click', () => panelSetShopOfferStatus(btn.dataset.id, btn.dataset.status)));
@@ -1163,15 +1204,19 @@ function bindPanelEvents(path){
 
     document.querySelectorAll('[data-action="delete-photo"]').forEach(btn => btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
+      if (!confirm('¿Seguro que quieres eliminar esta foto de la galería?')) return;
       if (KotzStore.isBackendGalleryItem(id)){
         try {
           const res = await fetch(`/api/gallery/${encodeURIComponent(id)}`, { method:'DELETE', credentials:'same-origin' });
-          if (res.ok){
-            KotzStore.deleteBackendGalleryItem(id);
-            panelRouter();
-            return;
-          }
-        } catch(e) {}
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'No se pudo eliminar desde Google.');
+          await panelSyncGallery();
+          panelRouter();
+          return;
+        } catch(e) {
+          alert(e.message || 'No se pudo eliminar la foto de Google.');
+          return;
+        }
       }
       KotzStore.deleteGalleryItem(id);
       panelRouter();
