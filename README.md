@@ -1,14 +1,17 @@
-# KoTZ - Fix router alianzas
+# KoTZ Diplomacia V3 — WOW Pass
 
-Arregla que al cambiar a `#/alianzas` la URL cambiara pero la vista siguiera en la sección anterior.
+Archivos incluidos:
 
-Causa: `pageAlliances()` llamaba a `normalizeText(...)`, pero esa función no existía en `js/site.js`. El render lanzaba un ReferenceError y el router no llegaba a reemplazar el HTML.
+- `js/site.js`
+- `assets/styles.css`
 
-Cambios:
-- Añadida función `normalizeText()` en `js/site.js`.
-- Router protegido con try/catch para que futuras vistas rotas muestren un error en pantalla y no congelen la página anterior.
-- Se mantiene Diplomacia V2 y el fix de galería.
+Qué cambia:
 
-Archivos:
-- js/site.js
-- assets/styles.css
+- Red diplomática V3 con constelación/orbita interactiva.
+- KPIs más potentes y estilo “centro de mando diplomático”.
+- Tarjetas de aliados con confianza, tags, glow, scan y colores propios.
+- Expedientes individuales rediseñados con hero, pasaporte diplomático, trust meter, timeline, identidad visual y paneles más vivos.
+- Mantiene la protección de alianzas y el router fix.
+- Mantiene el fix de galería de Drive.
+
+No toca Apps Script, `.env`, Google Sheets ni Render variables.

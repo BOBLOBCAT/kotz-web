@@ -447,7 +447,7 @@ function normalizeText(value){
 /* ------------------------------------------------------------ ALIANZAS */
 
 function allianceTags(alliance){
-  const text = normalizeText(`${alliance.type || ''} ${alliance.desc || ''} ${(alliance.pillars || []).join(' ')} ${(alliance.agreements || []).join(' ')}`);
+  const text = normalizeText(`${alliance.type || ''} ${alliance.desc || ''} ${(alliance.pillars || []).join(' ')} ${(alliance.agreements || []).join(' ')} ${(alliance.benefits || []).join(' ')}`);
   const tags = [];
   if (text.includes('econom') || text.includes('comercial')) tags.push('Economía');
   if (text.includes('militar') || text.includes('defensa') || text.includes('apoyo')) tags.push('Defensa');
@@ -456,6 +456,7 @@ function allianceTags(alliance){
   if (text.includes('comunidad') || text.includes('familia')) tags.push('Comunidad');
   if (text.includes('internacional')) tags.push('Internacional');
   if (text.includes('no agresion')) tags.push('No agresión');
+  if (text.includes('evento') || text.includes('proyecto')) tags.push('Eventos');
   if (!tags.length) tags.push('Respeto', 'Cooperación');
   return [...new Set(tags)].slice(0, 6);
 }
@@ -463,7 +464,7 @@ function allianceTags(alliance){
 function alliancePriority(alliance){
   const level = normalizeText(alliance.level || '');
   const type = normalizeText(alliance.type || '');
-  if (level.includes('prioritaria') || type.includes('internacional')) return 'Alta';
+  if (level.includes('prioritaria') || type.includes('internacional')) return 'Prioridad máxima';
   if (level.includes('alta') || type.includes('estrateg')) return 'Alta';
   if (type.includes('econom') || type.includes('comercial')) return 'Media';
   return 'Estable';
@@ -478,16 +479,86 @@ function allianceRisk(alliance){
 
 function allianceCommunication(alliance){
   const text = normalizeText(`${(alliance.pillars || []).join(' ')} ${(alliance.agreements || []).join(' ')}`);
-  return text.includes('lider') || text.includes('directa') ? 'Directa' : 'Coordinada';
+  return text.includes('lider') || text.includes('directa') ? 'Canal directo' : 'Coordinada';
+}
+
+function allianceTrustScore(alliance){
+  const level = normalizeText(alliance.level || '');
+  const type = normalizeText(alliance.type || '');
+  const protocol = (alliance.protocol || []).length;
+  let score = 72 + Math.min(18, protocol * 3);
+  if (level.includes('prioritaria')) score += 8;
+  if (level.includes('alta')) score += 6;
+  if (type.includes('internacional')) score += 5;
+  if (type.includes('estrateg')) score += 4;
+  return Math.max(68, Math.min(99, score));
+}
+
+function allianceFocus(alliance){
+  const tags = allianceTags(alliance);
+  if (tags.includes('Internacional')) return 'Proyección internacional';
+  if (tags.includes('Economía')) return 'Comercio y recursos';
+  if (tags.includes('Estrategia')) return 'Inteligencia y coordinación';
+  if (tags.includes('Defensa')) return 'Apoyo y defensa';
+  if (tags.includes('Comunidad')) return 'Familia y crecimiento';
+  return 'Cooperación estable';
+}
+
+function allianceMotto(alliance){
+  const map = {
+    'rose-spines': 'Respeto limpio. Apoyo firme. Crecimiento conjunto.',
+    'lacrew': 'No agresión, palabra clara y respaldo cuando toca.',
+    'kaos': 'Caos controlado. Información precisa. Movimiento inteligente.',
+    'underworld': 'Trato justo, beneficio mutuo y economía con palabra.',
+    'cult-of-rose': 'Comunidad, futuro y defensa cuando la familia llama.',
+    'fallen-angels': 'Unidos se proyecta más fuerte. Juntos se crece mejor.',
+    'the-nato': 'Orden internacional, protocolo y cooperación estratégica.'
+  };
+  return map[alliance.slug] || 'Confianza, respeto y coordinación bajo la corona.';
 }
 
 function allianceDossierStats(alliance){
   return [
+    ['Confianza', allianceTrustScore(alliance) + '%', 'Lectura interna'],
     ['Pilares', (alliance.pillars || []).length, 'Base del pacto'],
     ['Acuerdos', (alliance.agreements || []).length, 'Reglas activas'],
-    ['Beneficios', (alliance.benefits || []).length, 'Valor para KoTZ'],
     ['Protocolo', (alliance.protocol || []).length, 'Conducta obligatoria']
   ];
+}
+
+function allianceOrbitPosition(index, total){
+  const angle = (index / Math.max(1, total)) * 360 - 90;
+  const radius = index % 2 ? 38 : 44;
+  const x = 50 + Math.cos(angle * Math.PI / 180) * radius;
+  const y = 50 + Math.sin(angle * Math.PI / 180) * radius;
+  return { x:x.toFixed(2), y:y.toFixed(2), angle };
+}
+
+function renderDiplomacyConstellation(alliances){
+  return `
+    <div class="diplomacy-v3-orbit" aria-label="Constelación diplomática KoTZ">
+      <div class="orbit-scan"></div>
+      <svg class="orbit-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        ${alliances.map((a,i) => {
+          const pos = allianceOrbitPosition(i, alliances.length);
+          return `<line x1="50" y1="50" x2="${pos.x}" y2="${pos.y}" style="--line:${a.colors?.primary || '#ff7a18'}"></line>`;
+        }).join('')}
+      </svg>
+      <div class="orbit-core-v3">
+        <img class="crest-img" src="assets/crest.png" alt="KoTZ">
+        <b>KoTZ</b>
+        <span>Command</span>
+      </div>
+      ${alliances.map((a,i) => {
+        const pos = allianceOrbitPosition(i, alliances.length);
+        const c1 = a.colors?.primary || '#ff7a18';
+        const c2 = a.colors?.secondary || '#ff2ea6';
+        return `<a href="#/alianzas/${escapeAttr(a.slug)}" class="orbit-node-v3" style="--x:${pos.x}%; --y:${pos.y}%; --ally:${c1}; --ally2:${c2};" title="${escapeAttr(a.name)}">
+          <span>${a.emoji || '🤝'}</span>
+          <small>${escapeHtml(a.code || a.name)}</small>
+        </a>`;
+      }).join('')}
+    </div>`;
 }
 
 function pageAlliances(){
@@ -495,80 +566,75 @@ function pageAlliances(){
   if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
 
   const alliances = secureAlliances;
-  const priorityCount = alliances.filter(a => String(a.level || '').toLowerCase().includes('alta') || String(a.level || '').toLowerCase().includes('prioritaria')).length;
-  const economicCount = alliances.filter(a => normalizeText(`${a.type || ''} ${(a.pillars || []).join(' ')}`).includes('econom')).length;
+  const priorityCount = alliances.filter(a => alliancePriority(a).includes('Alta') || alliancePriority(a).includes('máxima')).length;
+  const economicCount = alliances.filter(a => allianceTags(a).includes('Economía')).length;
+  const directCount = alliances.filter(a => allianceCommunication(a).includes('directo')).length;
   const colors = alliances.map(a => a.colors?.primary || '#ff7a18');
+  const topAlliances = [...alliances].sort((a,b) => allianceTrustScore(b) - allianceTrustScore(a)).slice(0, 3);
 
   return `
-  <section class="page-head diplomacy-head diplomacy-network-head">
-    <div class="diplomacy-bg-orbs">
-      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${12 + (i*13)%78}%; --y:${18 + (i*17)%62}%; --s:${130 + (i%3)*70}px;"></i>`).join('')}
+  <section class="page-head diplomacy-v3-head">
+    <div class="diplomacy-v3-bg">
+      <div class="v3-grid-noise"></div>
+      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*17)%82}%; --y:${10 + (i*23)%74}%; --s:${180 + (i%4)*70}px;"></i>`).join('')}
     </div>
-    <div class="wrap diplomacy-hero-grid">
-      <div class="diplomacy-hero-copy">
-        <div class="eyebrow">Centro Diplomático · Acceso interno</div>
-        <h1 class="h1">Red de alianzas <span class="accent">KoTZ.</span></h1>
-        <p class="lede">Un mapa interno de confianza, pactos y protocolos. Cada expediente define cómo actuar, qué acuerdos respetar y qué valor aporta cada alianza a la Zona.</p>
-        <div class="detail-chip-row diplomacy-chip-row">
-          <span class="pill pill-green">${alliances.length} alianzas activas</span>
-          <span class="pill pill-yellow">${priorityCount} prioritarias</span>
-          <span class="pill">${economicCount} económicas/comerciales</span>
-          <span class="pill">Estado diplomático estable</span>
+    <div class="wrap diplomacy-v3-hero">
+      <div class="diplomacy-v3-copy">
+        <div class="v3-security-line"><span></span> Acceso interno · Red diplomática verificada · No compartir</div>
+        <div class="eyebrow">Centro Diplomático KoTZ</div>
+        <h1 class="h1">Red de alianzas <span class="accent">vivas.</span></h1>
+        <p class="lede">Esto no es una lista de aliados. Es el mapa de confianza de KoTZ: pactos activos, canales directos, protocolos y relaciones que sostienen la Zona cuando toca actuar con cabeza.</p>
+        <div class="v3-hero-actions">
+          <a class="btn btn-primary" href="#/estado">Estado diplomático</a>
+          <a class="btn btn-ghost" href="#/alianzas/the-nato">Abrir expediente prioritario</a>
         </div>
       </div>
-      <div class="diplomacy-radar" aria-label="Mapa visual de alianzas KoTZ">
-        <div class="radar-ring ring-one"></div>
-        <div class="radar-ring ring-two"></div>
-        <div class="radar-ring ring-three"></div>
-        <div class="radar-core">
-          <img class="crest-img" src="assets/crest.png" alt="KoTZ">
-          <span>KoTZ</span>
-        </div>
-        ${alliances.map((a,i) => {
-          const angle = (i / Math.max(1, alliances.length)) * 360 - 90;
-          const radius = 42;
-          const x = 50 + Math.cos(angle * Math.PI / 180) * radius;
-          const y = 50 + Math.sin(angle * Math.PI / 180) * radius;
-          const c = a.colors?.primary || '#ff7a18';
-          return `<a href="#/alianzas/${a.slug}" class="radar-node" style="--x:${x}%; --y:${y}%; --c:${c};" title="${escapeAttr(a.name)}"><span>${a.emoji || '🤝'}</span></a>`;
-        }).join('')}
-      </div>
+      ${renderDiplomacyConstellation(alliances)}
     </div>
   </section>
 
-  <section class="section diplomacy-section" style="padding-top:0;">
+  <section class="section diplomacy-v3-section" style="padding-top:0;">
     <div class="wrap">
-      <div class="diplomacy-alert reveal">
-        <div>
-          <div class="eyebrow">Protocolo de confidencialidad</div>
-          <p class="lede">No compartas capturas, acuerdos internos ni información diplomática con personas ajenas a KoTZ. La red de aliados es una ventaja estratégica.</p>
-        </div>
-        <a href="#/estado" class="btn btn-ghost btn-sm">Ver estado diplomático</a>
-      </div>
-
-      <div class="diplomacy-kpi-grid reveal">
+      <div class="v3-kpi-command reveal">
         ${[
-          ['Alianzas activas', alliances.length, 'Red estable y verificada'],
-          ['Conflictos con aliados', 0, 'Protocolo limpio'],
-          ['Canales directos', alliances.length, 'Liderazgos conectados'],
-          ['Doctrina común', 'Respeto', 'Base de todos los pactos']
-        ].map(([label,value,sub]) => `
-          <div class="diplomacy-kpi">
+          ['Alianzas activas', alliances.length, 'Red diplomática conectada', '●'],
+          ['Prioritarias', priorityCount, 'Atención de Alto Mando', '◆'],
+          ['Canales directos', directCount, 'Liderazgos comunicados', '↯'],
+          ['Económicas', economicCount, 'Recursos y acuerdos', '$']
+        ].map(([label,value,sub,icon]) => `
+          <div class="v3-kpi-card">
+            <em>${icon}</em>
             <span>${label}</span>
             <b>${value}</b>
             <small>${sub}</small>
           </div>`).join('')}
       </div>
 
-      <div class="section-head reveal diplomacy-list-head">
+      <div class="v3-priority-strip reveal">
         <div>
-          <div class="eyebrow">Expedientes activos</div>
-          <h2 class="h2">Cada alianza tiene <span class="accent">su propio código.</span></h2>
+          <div class="eyebrow">Lectura rápida</div>
+          <h2 class="h3">Expedientes con mayor confianza operativa</h2>
         </div>
-        <p class="lede">Abre un expediente para ver acuerdos, beneficios, protocolos y conducta esperada.</p>
+        <div class="v3-priority-row">
+          ${topAlliances.map(a => `<a href="#/alianzas/${escapeAttr(a.slug)}" style="--ally:${a.colors?.primary || '#ff7a18'}; --ally2:${a.colors?.secondary || '#ff2ea6'};"><span>${a.emoji || '🤝'}</span><b>${escapeHtml(a.name)}</b><small>${allianceTrustScore(a)}%</small></a>`).join('')}
+        </div>
       </div>
-      <div class="alliance-grid diplomacy-grid reveal">
-        ${alliances.map(a => renderAllianceLinkCard(a)).join('')}
+
+      <div class="section-head reveal diplomacy-v3-list-head">
+        <div>
+          <div class="eyebrow">Dossiers diplomáticos</div>
+          <h2 class="h2">Cada aliado tiene <span class="accent">su propio pulso.</span></h2>
+        </div>
+        <p class="lede">Color, foco, nivel de confianza, protocolo y valor estratégico. Abre cualquier expediente para ver su identidad completa.</p>
+      </div>
+
+      <div class="alliance-grid diplomacy-v3-grid reveal">
+        ${alliances.map((a,i) => renderAllianceLinkCard(a, i)).join('')}
+      </div>
+
+      <div class="v3-confidential-footer reveal">
+        <b>Directiva KoTZ</b>
+        <span>Las alianzas se respetan dentro y fuera de los canales. Si hay tensión, se escala a liderazgo. Si hay acuerdo, se cumple.</span>
       </div>
     </div>
   </section>`;
@@ -581,7 +647,7 @@ function pageAllianceDetail(slug){
   const alliance = secureAlliances.find(a => a.slug === slug);
   if (!alliance) {
     return `
-    <section class="page-head diplomacy-head">
+    <section class="page-head diplomacy-v3-head compact">
       <div class="wrap">
         <div class="eyebrow">Expediente no encontrado</div>
         <h1 class="h1">Alianza no <span class="accent">registrada.</span></h1>
@@ -595,120 +661,153 @@ function pageAllianceDetail(slug){
   const c2 = alliance.colors?.secondary || '#ff2ea6';
   const dark = alliance.colors?.dark || '#09090d';
   const tags = allianceTags(alliance);
-  const dossierStats = allianceDossierStats(alliance);
+  const stats = allianceDossierStats(alliance);
   const other = secureAlliances.filter(a => a.slug !== alliance.slug);
+  const trust = allianceTrustScore(alliance);
 
   return `
-  <section class="page-head alliance-detail-hero" style="--ally:${c1}; --ally2:${c2}; --allyDark:${dark};">
-    <div class="alliance-hero-grid-bg"></div>
-    <div class="wrap alliance-hero-layout">
-      <div class="alliance-hero-main">
+  <section class="page-head alliance-v3-hero" style="--ally:${c1}; --ally2:${c2}; --allyDark:${dark};">
+    <div class="alliance-v3-bg">
+      <div class="v3-grid-noise"></div>
+      <div class="v3-hero-sigil">${alliance.emoji || '🤝'}</div>
+    </div>
+    <div class="wrap alliance-v3-hero-grid">
+      <div class="alliance-v3-main">
         <a href="#/alianzas" class="mini-sub back-link">← Volver a red diplomática</a>
-        <div class="eyebrow" style="color:${c1};">${alliance.type || 'Alianza oficial'}</div>
-        <h1 class="h1 alliance-detail-title">${alliance.name}</h1>
-        <p class="lede alliance-detail-lede">${alliance.full || alliance.desc}</p>
+        <div class="v3-security-line"><span></span> Expediente activo · ${escapeHtml(alliance.code || alliance.slug)} · ${escapeHtml(alliance.status || 'Activa')}</div>
+        <div class="eyebrow" style="color:${c1};">${escapeHtml(alliance.type || 'Alianza oficial')}</div>
+        <h1 class="h1 alliance-v3-title">${escapeHtml(alliance.name)}</h1>
+        <p class="lede alliance-v3-lede">${escapeHtml(alliance.full || alliance.desc || '')}</p>
+        <div class="v3-motto">“${escapeHtml(allianceMotto(alliance))}”</div>
         <div class="detail-chip-row diplomacy-chip-row">
-          <span class="pill pill-green">${alliance.status}</span>
-          <span class="pill" style="border-color:${c1}77; color:${c1};">Desde ${alliance.since}</span>
-          <span class="pill" style="border-color:${c2}77; color:${c2};">${alliance.level || 'Confianza estable'}</span>
-          <span class="pill">Código ${alliance.code || alliance.slug}</span>
+          <span class="pill pill-green">${escapeHtml(alliance.status || 'Activa')}</span>
+          <span class="pill" style="border-color:${c1}88; color:${c1};">Desde ${escapeHtml(alliance.since || 'Jun 2026')}</span>
+          <span class="pill" style="border-color:${c2}88; color:${c2};">${escapeHtml(alliance.level || 'Confianza estable')}</span>
+          <span class="pill">Código ${escapeHtml(alliance.code || alliance.slug)}</span>
         </div>
       </div>
 
-      <aside class="alliance-command-card reveal" style="--ally:${c1}; --ally2:${c2};">
-        <div class="alliance-command-icon">${alliance.emoji || '🤝'}</div>
-        <div class="mini-sub">Ficha rápida</div>
-        <div class="command-stat"><span>Prioridad</span><b>${alliancePriority(alliance)}</b></div>
-        <div class="command-stat"><span>Riesgo</span><b>${allianceRisk(alliance)}</b></div>
-        <div class="command-stat"><span>Comunicación</span><b>${allianceCommunication(alliance)}</b></div>
-        <div class="command-stat"><span>Última revisión</span><b>Jul 2026</b></div>
+      <aside class="alliance-v3-passport reveal">
+        <div class="passport-glow"></div>
+        <div class="passport-icon">${alliance.emoji || '🤝'}</div>
+        <div class="mini-sub">Diplomatic Passport</div>
+        <h3>${escapeHtml(alliance.code || alliance.name)}</h3>
+        <div class="trust-meter" style="--trust:${trust}%;"><span></span></div>
+        <div class="passport-score"><b>${trust}%</b><small>Confianza operativa</small></div>
+        <div class="passport-list">
+          <p><span>Prioridad</span><b>${escapeHtml(alliancePriority(alliance))}</b></p>
+          <p><span>Foco</span><b>${escapeHtml(allianceFocus(alliance))}</b></p>
+          <p><span>Riesgo</span><b>${escapeHtml(allianceRisk(alliance))}</b></p>
+          <p><span>Comunicación</span><b>${escapeHtml(allianceCommunication(alliance))}</b></p>
+        </div>
       </aside>
     </div>
   </section>
 
-  <section class="section alliance-dossier-section" style="padding-top:0; --ally:${c1}; --ally2:${c2}; --allyDark:${dark};">
-    <div class="wrap alliance-dossier-layout">
-      <aside class="alliance-side-rail reveal">
-        <div class="rail-title">Identidad</div>
-        <div class="identity-swatch" style="--ally:${c1}; --ally2:${c2};"><span></span><span></span></div>
-        <div class="rail-tags">
-          ${tags.map(t => `<span>${t}</span>`).join('')}
-        </div>
-        <div class="rail-mini-map">
-          <div class="mini-core">KoTZ</div>
-          <div class="mini-link"></div>
-          <div class="mini-ally" style="border-color:${c1}; color:${c1};">${alliance.code || alliance.slug}</div>
-        </div>
-      </aside>
+  <section class="section alliance-v3-body" style="--ally:${c1}; --ally2:${c2}; --allyDark:${dark}; padding-top:0;">
+    <div class="wrap">
+      <div class="alliance-v3-dashboard reveal">
+        ${stats.map(([label,value,sub]) => `
+          <div class="alliance-v3-stat">
+            <span>${escapeHtml(label)}</span>
+            <b>${escapeHtml(value)}</b>
+            <small>${escapeHtml(sub)}</small>
+          </div>`).join('')}
+      </div>
 
-      <div class="alliance-dossier-main">
-        <div class="dossier-metrics reveal">
-          ${dossierStats.map(([label,value,sub]) => `
-            <div class="dossier-metric">
-              <span>${label}</span>
-              <b>${value}</b>
-              <small>${sub}</small>
-            </div>`).join('')}
-        </div>
-
-        <div class="dossier-card-grid reveal">
-          ${renderDossierSection('🛡️ Pilares de la alianza', alliance.pillars, c1, 'Base de confianza')}
-          ${renderDossierSection('📜 Acuerdos principales', alliance.agreements, c2, 'Lo que debe respetarse')}
-          ${renderDossierSection('👑 Beneficios para KoTZ', alliance.benefits, c1, 'Valor estratégico')}
-          ${renderDossierSection('⚠️ Protocolo obligatorio', alliance.protocol, c2, 'Conducta interna')}
-        </div>
-
-        <div class="alliance-note-v2 reveal" style="--ally:${c1}; --ally2:${c2};">
-          <div>
-            <div class="eyebrow">Nota interna</div>
-            <p>${alliance.note || 'Mantener respeto, discreción y comunicación con Alto Mando.'}</p>
+      <div class="alliance-v3-layout">
+        <aside class="alliance-v3-sidebar reveal">
+          <div class="sidebar-title">Identidad visual</div>
+          <div class="v3-color-bars"><span style="background:${c1}"></span><span style="background:${c2}"></span><span style="background:${dark}"></span></div>
+          <div class="rail-tags v3-tags">
+            ${tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}
           </div>
-          <div class="note-seal">${alliance.emoji || '🤝'}</div>
-        </div>
-
-        <div class="conduct-panel reveal">
-          <div class="eyebrow">Conducta esperada de miembros KoTZ</div>
-          <div class="conduct-grid">
-            ${[
-              ['Respeto visible', 'Trata a cualquier aliado como extensión diplomática de KoTZ.'],
-              ['Cero filtraciones', 'Los acuerdos y conversaciones internas no salen del círculo autorizado.'],
-              ['Sin fuego amigo', 'No provocar, atacar, estafar ni crear drama con aliados.'],
-              ['Escalar a líderes', 'Si hay tensión, se informa a Alto Mando antes de actuar.']
-            ].map(([t,d]) => `<div><b>${t}</b><span>${d}</span></div>`).join('')}
+          <div class="v3-mini-timeline">
+            ${renderAllianceTimeline(alliance)}
           </div>
-        </div>
+        </aside>
 
-        <div class="other-alliances reveal">
-          <div class="eyebrow">Cambiar expediente</div>
-          <div class="other-alliance-row">
-            ${other.map(a => `<a href="#/alianzas/${a.slug}" style="--ally:${a.colors?.primary || '#ff7a18'}; --ally2:${a.colors?.secondary || '#ff2ea6'};"><span>${a.emoji || '🤝'}</span>${a.name}</a>`).join('')}
+        <main class="alliance-v3-dossier">
+          <div class="dossier-card-grid v3-dossier-grid reveal">
+            ${renderDossierSection('🛡️ Pilares de la alianza', alliance.pillars, c1, 'Base de confianza')}
+            ${renderDossierSection('📜 Acuerdos principales', alliance.agreements, c2, 'Reglas activas')}
+            ${renderDossierSection('👑 Beneficios para KoTZ', alliance.benefits, c1, 'Valor estratégico')}
+            ${renderDossierSection('⚠️ Protocolo obligatorio', alliance.protocol, c2, 'Conducta interna')}
           </div>
-        </div>
+
+          <div class="v3-note-and-code reveal">
+            <div class="alliance-note-v3">
+              <div class="eyebrow">Nota interna</div>
+              <p>${escapeHtml(alliance.note || 'Mantener respeto, discreción y comunicación con Alto Mando.')}</p>
+            </div>
+            <div class="v3-oath-card">
+              <div class="eyebrow">Código KoTZ con aliados</div>
+              <h3>Respeto, discreción y palabra.</h3>
+              <p>Un miembro de KoTZ no improvisa con alianzas: informa, respeta y representa la corona con cabeza.</p>
+            </div>
+          </div>
+
+          <div class="conduct-panel v3-conduct reveal">
+            <div class="eyebrow">Conducta esperada</div>
+            <div class="conduct-grid">
+              ${[
+                ['Respeto visible', 'Trata a cualquier aliado como extensión diplomática de KoTZ.'],
+                ['Cero filtraciones', 'Los acuerdos y conversaciones internas no salen del círculo autorizado.'],
+                ['Sin fuego amigo', 'No provocar, atacar, estafar ni crear drama con aliados.'],
+                ['Escalar a líderes', 'Si hay tensión, se informa a Alto Mando antes de actuar.']
+              ].map(([t,d]) => `<div><b>${escapeHtml(t)}</b><span>${escapeHtml(d)}</span></div>`).join('')}
+            </div>
+          </div>
+
+          <div class="other-alliances v3-switcher reveal">
+            <div class="eyebrow">Cambiar expediente</div>
+            <div class="other-alliance-row">
+              ${other.map(a => `<a href="#/alianzas/${escapeAttr(a.slug)}" style="--ally:${a.colors?.primary || '#ff7a18'}; --ally2:${a.colors?.secondary || '#ff2ea6'};"><span>${a.emoji || '🤝'}</span>${escapeHtml(a.name)}</a>`).join('')}
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   </section>`;
 }
 
-function renderAllianceLinkCard(a){
+function renderAllianceTimeline(alliance){
+  return [
+    ['Pacto', alliance.since || 'Jun 2026'],
+    ['Canal', allianceCommunication(alliance)],
+    ['Foco', allianceFocus(alliance)],
+    ['Estado', alliance.status || 'Activa']
+  ].map(([label,value]) => `<div><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>`).join('');
+}
+
+function renderAllianceLinkCard(a, index = 0){
   const c1 = a.colors?.primary || '#ff7a18';
   const c2 = a.colors?.secondary || '#ff2ea6';
+  const dark = a.colors?.dark || '#09090d';
   const tags = allianceTags(a).slice(0, 4);
+  const trust = allianceTrustScore(a);
   return `
-    <a href="#/alianzas/${a.slug}" class="alliance-card diplomacy-card" style="--ally:${c1}; --ally2:${c2}; --allyDark:${a.colors?.dark || '#09090d'}; text-decoration:none; color:inherit;">
-      <div class="diplomacy-card-glow"></div>
+    <a href="#/alianzas/${escapeAttr(a.slug)}" class="alliance-card diplomacy-card diplomacy-v3-card" style="--ally:${c1}; --ally2:${c2}; --allyDark:${dark}; --delay:${index * 70}ms; text-decoration:none; color:inherit;">
+      <div class="v3-card-aurora"></div>
+      <div class="v3-card-scan"></div>
       <div class="alliance-top">
-        <div class="alliance-logo diplomacy-logo">${a.emoji || '🤝'}</div>
-        <span class="pill ${a.status === 'Activa' ? 'pill-green' : 'pill-yellow'}">${a.status}</span>
+        <div class="alliance-logo diplomacy-logo v3-card-logo">${a.emoji || '🤝'}</div>
+        <span class="pill ${a.status === 'Activa' ? 'pill-green' : 'pill-yellow'}">${escapeHtml(a.status || 'Activa')}</span>
       </div>
-      <div class="eyebrow" style="color:${c1};">${a.type || 'Alianza oficial'}</div>
-      <h3 class="h3">${a.name}</h3>
-      <p class="lede" style="font-size:.88rem; margin-bottom:14px;">${a.desc}</p>
+      <div class="eyebrow" style="color:${c1};">${escapeHtml(a.type || 'Alianza oficial')}</div>
+      <h3 class="h3">${escapeHtml(a.name)}</h3>
+      <p class="lede" style="font-size:.88rem; margin-bottom:14px;">${escapeHtml(a.desc || '')}</p>
+      <div class="v3-card-trust">
+        <span>Confianza</span>
+        <div class="trust-meter mini" style="--trust:${trust}%;"><i></i></div>
+        <b>${trust}%</b>
+      </div>
       <div class="diplomacy-card-tags">
-        ${tags.map(t => `<span>${t}</span>`).join('')}
+        ${tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}
       </div>
       <div class="alliance-meta diplomacy-meta">
-        <span>Desde ${a.since}</span>
-        <span>${a.level || 'Confianza estable'}</span>
+        <span>Desde ${escapeHtml(a.since || 'Jun 2026')}</span>
+        <span>${escapeHtml(allianceFocus(a))}</span>
       </div>
       <div class="open-dossier">Abrir expediente <span>→</span></div>
     </a>`;
@@ -716,16 +815,16 @@ function renderAllianceLinkCard(a){
 
 function renderDossierSection(title, items = [], color = '#ff7a18', subtitle = ''){
   return `
-    <article class="dossier-section-v2" style="--section:${color};">
+    <article class="dossier-section-v2 dossier-section-v3" style="--section:${color};">
       <div class="dossier-section-head">
         <div>
-          <div class="eyebrow" style="color:${color};">${subtitle}</div>
-          <h3>${title}</h3>
+          <div class="eyebrow" style="color:${color};">${escapeHtml(subtitle)}</div>
+          <h3>${escapeHtml(title)}</h3>
         </div>
         <span>${(items || []).length}</span>
       </div>
       <ul class="rule-list dossier-rule-list">
-        ${(items || []).map(item => `<li>${item}</li>`).join('')}
+        ${(items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('')}
       </ul>
     </article>`;
 }
@@ -737,14 +836,15 @@ function pageAllianceGate(type = 'checking', message = ''){
     ? 'Estamos comprobando tu sesión de Discord y tu rango dentro de KoTZ.'
     : (message || 'Este apartado solo está disponible para miembros de KoTZ con sesión de Discord activa.');
   return `
-  <section class="page-head">
+  <section class="page-head diplomacy-v3-head compact">
+    <div class="diplomacy-v3-bg"><div class="v3-grid-noise"></div><i style="--orb:#ff2ea6;--x:80%;--y:10%;--s:260px;"></i><i style="--orb:#ff7a18;--x:8%;--y:70%;--s:230px;"></i></div>
     <div class="wrap">
       <div class="eyebrow">Acceso interno</div>
       <h1 class="h1">${title}</h1>
-      <p class="lede">${text}</p>
-      ${isChecking ? `<div class="mini-sub">Un momento...</div>` : `
+      <p class="lede">${escapeHtml(text)}</p>
+      ${isChecking ? `<div class="v3-loader"><span></span><span></span><span></span></div>` : `
         <div class="hero-ctas" style="justify-content:flex-start; margin-top:22px;">
-          <a class="btn btn-primary" href="/auth/discord?next=${encodeURIComponent('/index.html#/alianzas')}">Iniciar sesión con Discord</a>
+          <a class="btn btn-primary" href="/auth/discord?next=${encodeURIComponent('/user.html#/alianzas')}">Iniciar sesión con Discord</a>
           <a class="btn btn-ghost" href="#/">Volver al inicio</a>
         </div>`}
     </div>
@@ -759,7 +859,8 @@ function pageDiplomaticStatus(){
   const alliances = secureAlliances;
   const conflicts = KotzStore.getConflicts ? KotzStore.getConflicts() : [];
   return `
-  <section class="page-head diplomacy-head">
+  <section class="page-head diplomacy-v3-head compact">
+    <div class="diplomacy-v3-bg"><div class="v3-grid-noise"></div></div>
     <div class="wrap">
       <div class="eyebrow">Estado diplomático interno</div>
       <h1 class="h1">Aliados, conflictos y <span class="accent">órdenes activas.</span></h1>
@@ -771,17 +872,17 @@ function pageDiplomaticStatus(){
       </div>
     </div>
   </section>
-  <section class="section diplomacy-section" style="padding-top:0;">
+  <section class="section diplomacy-v3-section" style="padding-top:0;">
     <div class="wrap">
-      <div class="section-head reveal diplomacy-list-head">
+      <div class="section-head reveal diplomacy-v3-list-head">
         <div>
           <div class="eyebrow">Alianzas activas</div>
           <h2 class="h2">Red de confianza</h2>
         </div>
         <p class="lede">Cada tarjeta abre el expediente completo de esa alianza.</p>
       </div>
-      <div class="alliance-grid diplomacy-grid reveal" style="margin-bottom:48px;">
-        ${alliances.map(a => renderAllianceLinkCard(a)).join('')}
+      <div class="alliance-grid diplomacy-v3-grid reveal" style="margin-bottom:48px;">
+        ${alliances.map((a,i) => renderAllianceLinkCard(a, i)).join('')}
       </div>
 
       <div class="section-head reveal">
@@ -793,13 +894,13 @@ function pageDiplomaticStatus(){
           <div class="war-card">
             <div class="alliance-top">
               <div class="alliance-logo">${w.emoji || '⚠️'}</div>
-              <span class="pill ${w.status === 'Estable' ? 'pill-green' : 'pill-red'}">${w.status}</span>
+              <span class="pill ${w.status === 'Estable' ? 'pill-green' : 'pill-red'}">${escapeHtml(w.status)}</span>
             </div>
-            <h3 class="h3">${w.name}</h3>
-            <p class="lede" style="font-size:.9rem;">${w.desc}</p>
-            <div class="mini-sub" style="margin-top:14px;">Desde: ${w.since}</div>
+            <h3 class="h3">${escapeHtml(w.name)}</h3>
+            <p class="lede" style="font-size:.9rem;">${escapeHtml(w.desc)}</p>
+            <div class="mini-sub" style="margin-top:14px;">Desde: ${escapeHtml(w.since)}</div>
             <ul class="rule-list">
-              ${(w.rules||[]).map(r => `<li>${r}</li>`).join('')}
+              ${(w.rules||[]).map(r => `<li>${escapeHtml(r)}</li>`).join('')}
             </ul>
           </div>`).join('') || `<div class="card pad diplomacy-empty"><p class="lede">No hay conflictos registrados. La red diplomática está estable.</p></div>`}
       </div>
