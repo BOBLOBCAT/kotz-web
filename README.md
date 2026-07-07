@@ -1,14 +1,14 @@
-# KoTZ Diplomacia V2 - fix acceso alianzas
+# KoTZ - Fix router alianzas
 
-Este parche corrige el bucle de "Verificando acceso..." en `user.html#/alianzas`.
+Arregla que al cambiar a `#/alianzas` la URL cambiara pero la vista siguiera en la sección anterior.
+
+Causa: `pageAlliances()` llamaba a `normalizeText(...)`, pero esa función no existía en `js/site.js`. El render lanzaba un ReferenceError y el router no llegaba a reemplazar el HTML.
 
 Cambios:
-- `/api/alliances` se pide también al iniciar la web tras cargar la sesión.
-- Si la ruta protegida se renderiza mientras ya hay una petición en curso, se agenda un repintado.
-- El repintado de alianzas se hace en `finally`, después de bajar `alliancesLoading=false`.
-- La petición usa `cache:'no-store'` y `?ts=` para evitar caché vieja.
+- Añadida función `normalizeText()` en `js/site.js`.
+- Router protegido con try/catch para que futuras vistas rotas muestren un error en pantalla y no congelen la página anterior.
+- Se mantiene Diplomacia V2 y el fix de galería.
 
-Copiar:
-- `js/site.js`
-
-Luego subir a GitHub y hacer `Manual Deploy -> Deploy latest commit` en Render.
+Archivos:
+- js/site.js
+- assets/styles.css

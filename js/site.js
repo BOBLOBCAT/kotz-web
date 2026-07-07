@@ -216,7 +216,24 @@ function router(){
   const path = location.hash.replace('#','') || '/';
   const render = resolveRoute(path);
   const view = document.getElementById('view');
-  view.innerHTML = render();
+
+  let html = '';
+  try {
+    html = render();
+  } catch (err) {
+    console.error('[KoTZ] Error renderizando ruta', path, err);
+    html = `
+      <section class="page-head">
+        <div class="wrap">
+          <div class="eyebrow">Error de vista</div>
+          <h1 class="h1">No se pudo abrir esta sección.</h1>
+          <p class="lede">La ruta cambió correctamente, pero el render de la página falló. Revisa la consola para ver el error exacto.</p>
+          <a class="btn btn-primary" href="#/">Volver al inicio</a>
+        </div>
+      </section>`;
+  }
+
+  view.innerHTML = html;
   view.classList.remove('page-enter'); void view.offsetWidth; view.classList.add('page-enter');
   document.querySelectorAll('.nav-links a').forEach(a => {
     const hrefPath = (a.getAttribute('href') || '').replace('#','');
@@ -416,6 +433,15 @@ function initSecurityLog(){
     });
   }, { threshold:.3 });
   io.observe(document.getElementById('securityLog'));
+}
+
+
+function normalizeText(value){
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 }
 
 /* ------------------------------------------------------------ ALIANZAS */
