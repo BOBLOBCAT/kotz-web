@@ -218,7 +218,7 @@ function router(){
 
 function afterRender(path){
   if (path === '/estadisticas') animateCounters();
-  if (path === '/galeria') { initGalleryFilters(); if (!serverGalleryLoaded && !serverGalleryLoading) syncGalleryFromServer(true); }
+  if (path === '/galeria') { initGalleryFilters(); verifyGalleryImages(); if (!serverGalleryLoaded && !serverGalleryLoading) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
   if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
   if (isAllianceProtectedPath(path)) { if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!alliancesLoaded && !alliancesLoading) syncAlliancesFromServer(true); }
@@ -786,7 +786,7 @@ function pageGallery(){
       </div>
       <div class="gallery-grid reveal" id="galleryGrid">
         ${items.map(g => `
-          <div class="gallery-tile tone-${Number(g.tone || 1)}" data-cat="${escapeAttr(g.category || 'Fotos oficiales')}" ${galleryTileStyle(g)}>
+          <div class="gallery-tile tone-${Number(g.tone || 1)}" data-cat="${escapeAttr(g.category || 'Fotos oficiales')}" data-check-src="${escapeAttr(galleryImageOf(g))}" ${galleryTileStyle(g)}>
             <span class="gallery-cat">${escapeHtml(g.category || 'Fotos oficiales')}</span>
             <span class="gallery-title">${escapeHtml(g.title || 'Foto')}</span>
           </div>`).join('')}
@@ -805,6 +805,27 @@ function initGalleryFilters(){
       tile.style.display = (cat === 'Todos' || tile.dataset.cat === cat) ? '' : 'none';
     });
   }));
+}
+
+/**
+ * Comprueba en segundo plano que cada foto de la galería carga de verdad.
+ * Si una URL de Drive falla (permisos, archivo borrado manualmente, etc.),
+ * la tarjeta se retira sola en vez de quedarse como un hueco roto para
+ * siempre. No vuelve a pedir nada al backend, solo verifica lo ya pintado.
+ */
+function verifyGalleryImages(){
+  document.querySelectorAll('.gallery-tile[data-check-src]').forEach(tile => {
+    const src = tile.dataset.checkSrc;
+    if (!src) return;
+    const probe = new Image();
+    probe.onload = () => { /* imagen válida, no hacemos nada */ };
+    probe.onerror = () => {
+      tile.style.transition = 'opacity .4s ease';
+      tile.style.opacity = '0';
+      setTimeout(() => tile.remove(), 400);
+    };
+    probe.src = src;
+  });
 }
 
 
@@ -1121,9 +1142,17 @@ function initEmbers(){
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.crest-img').forEach(img => img.src = 'assets/crest.png');
-  loadDiscordSession().then(() => syncCurrentMemberFromServer(false));
-  syncDuesFromServer(false);
-  syncGalleryFromServer(false);
+  // IMPORTANTE: aunque el usuario entre directamente a una ruta como
+  // #/galeria en la primera carga, `router()` (más abajo) ya habrá
+  // renderizado esa página ANTES de que estas peticiones respondan.
+  // rerender=true es lo que hace que, en cuanto llegan los datos reales,
+  // se vuelva a pintar la vista si seguimos en esa misma ruta. Con
+  // rerender=false (como estaba antes) la primera carga se quedaba con
+  // el estado "cargando..." para siempre si no visitabas antes otra
+  // página que le diera tiempo a la petición de terminar en segundo plano.
+  loadDiscordSession().then(() => syncCurrentMemberFromServer(true));
+  syncDuesFromServer(true);
+  syncGalleryFromServer(true);
   setupSiteLogout();
   router();
   const header = document.getElementById('siteHeader');

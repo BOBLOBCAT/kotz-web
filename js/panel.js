@@ -818,7 +818,7 @@ function viewGaleria(){
       <div class="card pad gallery-admin-card" ${galleryCardStyle(g)}>
         <span class="pill pill-yellow">${escapeHtml(g.category || 'Fotos oficiales')}</span>
         <h3 class="h3" style="margin-top:58px; margin-bottom:8px;">${escapeHtml(g.title || 'Foto')}</h3>
-        ${(KotzStore.isExtraGalleryItem(g.id) || KotzStore.isBackendGalleryItem(g.id)) ? `<button class="btn btn-danger btn-sm" data-action="delete-photo" data-id="${g.id}">Eliminar</button>` : `<span class="mini-sub">Foto fija / ejemplo</span>`}
+        ${(KotzStore.isExtraGalleryItem(g.id) || KotzStore.isBackendGalleryItem(g.id)) ? `<button class="btn btn-danger btn-sm" data-action="delete-photo" data-id="${g.id}" data-drive-id="${g.driveFileId || ''}">Eliminar</button>` : `<span class="mini-sub">Foto fija / ejemplo</span>`}
       </div>`).join('')}
   </div>`;
 }
@@ -1210,13 +1210,19 @@ function bindPanelEvents(path){
 
     document.querySelectorAll('[data-action="delete-photo"]').forEach(btn => btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
+      const driveId = btn.dataset.driveId;
       if (!confirm('¿Seguro que quieres eliminar esta foto de la galería?')) return;
       if (KotzStore.isBackendGalleryItem(id)){
         try {
           const res = await fetch(`/api/gallery/${encodeURIComponent(id)}`, { method:'DELETE', credentials:'same-origin' });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || 'No se pudo eliminar desde Google.');
+          // Marcamos como borrados tanto el id de la fila como el id del
+          // archivo de Drive: si el backend todavía no está actualizado
+          // para borrar el archivo de verdad, esto evita que reaparezca
+          // "reencarnado" con un id distinto al escanear la carpeta de Drive.
           KotzStore.markDeletedGalleryItem(id);
+          if (driveId) KotzStore.markDeletedGalleryItem(driveId);
           await panelSyncGallery();
           panelRouter();
           return;
