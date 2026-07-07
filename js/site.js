@@ -247,7 +247,7 @@ function router(){
 }
 
 function afterRender(path){
-  if (path === '/estadisticas') animateCounters();
+  if (path === '/estadisticas') { animateCounters(); initStatsConsole(); }
   if (path === '/galeria') { initGalleryFilters(); verifyGalleryImages(); if (!serverGalleryLoaded && !serverGalleryLoading) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
   if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
@@ -256,6 +256,7 @@ function afterRender(path){
     if (!alliancesLoaded) syncAlliancesFromServer(true);
   }
   if (path === '/organizacion') initSecurityLog();
+  if (path === '/nosotros') initAboutConsole();
   if (document.getElementById('embers')) initEmbers();
 }
 
@@ -320,55 +321,150 @@ function pageHome(){
 
 /* ------------------------------------------------------------ NOSOTROS */
 function pageAbout(){
+  const identityStats = [
+    ['Familia', '01', 'La base no es el número: es la confianza.'],
+    ['Disciplina', '02', 'Roles claros, decisiones claras y respeto interno.'],
+    ['Zona', '03', 'Una identidad propia dentro de PrisonRP.'],
+    ['Futuro', '04', 'Crecimiento controlado, alianzas y estructura.']
+  ];
+  const pillars = [
+    ['👑','Corona','La corona no significa mandar por ego: significa cargar responsabilidad y proteger el nombre KoTZ.'],
+    ['🐍','Cobra','Paciencia, lectura del entorno y reacción precisa. No se improvisa cuando la situación importa.'],
+    ['🤝','Respeto','Dentro y fuera. Un miembro puede ser fuerte, pero si pierde el respeto, pierde la identidad.'],
+    ['⚖️','Orden','Rangos, protocolos, cuotas, sanciones y alianzas existen para que la banda no dependa del caos.'],
+    ['❤️','Familia','Cada persona tiene nombre, historia y peso. KoTZ no busca llenar una lista, busca crear núcleo.'],
+    ['📈','Progreso','Se asciende con actitud, constancia, lealtad y utilidad real para la organización.']
+  ];
+  const timeline = [
+    ['Origen','KoTZ nace con la idea de ser algo más que una banda más del servidor.'],
+    ['Identidad','Se define una imagen seria: corona, zona, respeto, disciplina y familia.'],
+    ['Estructura','Se crean rangos, Alto Mando, cuotas, sanciones, tienda y panel interno.'],
+    ['Diplomacia','Las alianzas pasan a ser parte del sistema, no simples nombres en una lista.'],
+    ['Presente','KoTZ opera como comunidad organizada, con visión y control interno.']
+  ];
+  const protocols = [
+    ['Se espera','Actividad, respeto, comunicación y representación correcta del nombre KoTZ.'],
+    ['Se valora','Lealtad en momentos incómodos, iniciativa y capacidad de ayudar sin buscar foco.'],
+    ['Se corrige','Faltas de respeto, impulsividad, conflicto innecesario o saltarse el conducto interno.'],
+    ['Se protege','Información interna, alianzas, miembros nuevos y decisiones del Alto Mando.']
+  ];
   return `
-  <section class="page-head">
-    <div class="wrap">
-      <div class="eyebrow">Quiénes somos</div>
-      <h1 class="h1">No es una banda.<br>Es una <span class="accent">familia.</span></h1>
+  <section class="about-v2-hero">
+    <div class="about-v2-grid"></div>
+    <div class="about-v2-orb orb-a"></div>
+    <div class="about-v2-orb orb-b"></div>
+    <div class="wrap about-identity-layout">
+      <div class="about-identity-copy reveal">
+        <div class="eyebrow">Identidad KoTZ</div>
+        <h1 class="h1">No somos relleno.<br>Somos <span class="accent">estructura, familia y zona.</span></h1>
+        <p class="lede">KoTZ está pensado para que cada miembro sienta que pertenece a algo con nombre, reglas, historia y futuro. No se trata solo de estar en una banda: se trata de representar una identidad.</p>
+        <div class="identity-actions">
+          <a class="btn btn-primary" href="#/organizacion">Ver estructura</a>
+          <a class="btn btn-ghost" href="#/alianzas">Red diplomática</a>
+        </div>
+        <div class="identity-scanline">
+          <span>FAMILIA</span><i></i><span>HONOR</span><i></i><span>LEALTAD</span><i></i><span>CONTROL</span>
+        </div>
+      </div>
+      <div class="identity-core reveal">
+        <div class="core-rings"><span></span><span></span><span></span></div>
+        <img src="assets/crest.png" alt="Escudo KoTZ">
+        <div class="core-label top">KINGS</div>
+        <div class="core-label bottom">OF THE ZONE</div>
+        <div class="core-node n1">Honor</div>
+        <div class="core-node n2">Zona</div>
+        <div class="core-node n3">Respeto</div>
+        <div class="core-node n4">Familia</div>
+      </div>
     </div>
   </section>
-  <section class="section">
-    <div class="wrap about">
-      <div class="reveal">
-        <p>KoTZ nació con una idea muy clara: crear una comunidad donde las personas disfruten jugando juntas, creciendo juntas y ayudándose unas a otras. <strong>Para nosotros no es simplemente una banda — es una familia.</strong></p>
-        <p>Queremos que cualquier miembro se sienta importante. Valoramos más la calidad que la cantidad: no buscamos tener cientos de miembros, buscamos personas comprometidas.</p>
-        <div class="about-quote">"Cuando alguien escuche KoTZ, que piense en organización, respeto y profesionalidad."</div>
-      </div>
-      <div class="about-visual reveal"><img class="crest-img" src="assets/crest.png" alt="Escudo KoTZ"></div>
-    </div>
-  </section>
-  <div class="wrap"><div class="divider"></div></div>
-  <section class="section">
+
+  <section class="section identity-stats-section">
     <div class="wrap">
-      <div class="section-head center reveal">
-        <div class="eyebrow" style="justify-content:center;">Nuestros pilares</div>
-        <h2 class="h2">Valores que <span class="accent">sostienen la corona.</span></h2>
-      </div>
-      <div class="values-grid reveal">
-        ${[
-          ['👑','Honor','La palabra de un miembro de KoTZ vale más que cualquier acuerdo escrito.'],
-          ['🤝','Respeto','Hacia dentro y hacia fuera. Sin respeto no hay organización posible.'],
-          ['🐍','Lealtad','Como las cobras que nos representan: pacientes, fieles, inquebrantables.'],
-          ['❤️','Familia','Cada miembro importa. No somos un número, somos un nombre.'],
-          ['📈','Crecimiento conjunto','Nadie crece solo. Lo que gana uno, lo gana la Zona entera.'],
-          ['⚖️','Profesionalidad','Los problemas se resuelven hablando. Las decisiones, en equipo.'],
-          ['🌍','Cooperación','Construimos puentes con otras comunidades, no muros.'],
-        ].map(([icon,name,desc]) => `
-          <div class="value-card">
-            <span class="value-icon">${icon}</span>
-            <div class="value-name">${name}</div>
-            <div class="value-desc">${desc}</div>
+      <div class="identity-stat-grid reveal">
+        ${identityStats.map(([title,num,desc],i) => `
+          <div class="identity-stat-card" style="--delay:${i*.12}s">
+            <span>${num}</span>
+            <b>${title}</b>
+            <small>${desc}</small>
           </div>`).join('')}
       </div>
     </div>
   </section>
-  <section class="section philosophy">
+
+  <section class="section about-doctrine-section">
+    <div class="wrap doctrine-layout">
+      <div class="doctrine-copy reveal">
+        <div class="eyebrow">Doctrina interna</div>
+        <h2 class="h2">La fuerza real está en <span class="accent">cómo actuamos cuando nadie mira.</span></h2>
+        <p class="lede">La diferencia entre una banda cualquiera y KoTZ es la forma de responder: con cabeza, con respeto, con estructura y con gente que entiende que el nombre está por encima del ego.</p>
+      </div>
+      <div class="doctrine-terminal reveal" id="aboutConsole">
+        ${['Inicializando identidad KoTZ...','Verificando núcleo de confianza...','Cargando protocolos de respeto...','Sincronizando corona, zona y familia...','Estado: comunidad operativa.'].map((line,i)=>`
+          <div class="about-terminal-line" style="--i:${i}"><span>[0${i+1}]</span> ${line}</div>`).join('')}
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="values-v2-grid reveal">
+        ${pillars.map(([icon,name,desc],i) => `
+          <article class="value-v2-card" style="--i:${i}">
+            <div class="value-v2-icon">${icon}</div>
+            <h3>${name}</h3>
+            <p>${desc}</p>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section origin-section">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" style="justify-content:center;">Historia viva</div>
+        <h2 class="h2">De idea a <span class="accent">organización.</span></h2>
+        <p class="lede" style="margin-inline:auto;">KoTZ no se construyó de golpe. Se fue formando por capas: identidad, miembros, control, diplomacia y sistemas internos.</p>
+      </div>
+      <div class="origin-timeline reveal">
+        ${timeline.map(([title,desc],i)=>`
+          <div class="origin-step" style="--i:${i}">
+            <span>${String(i+1).padStart(2,'0')}</span>
+            <h3>${title}</h3>
+            <p>${desc}</p>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section culture-section">
+    <div class="wrap culture-layout">
+      <div class="culture-card-main reveal">
+        <div class="dossier-tag">Código KoTZ · Uso interno</div>
+        <h2>Representar KoTZ es llevar el nombre incluso cuando no hay nadie del Alto Mando mirando.</h2>
+        <p>Por eso la comunidad se basa en conducta, no solo en estética. Una banda puede tener logo. KoTZ tiene forma de actuar.</p>
+      </div>
+      <div class="culture-protocols reveal">
+        ${protocols.map(([title,desc],i)=>`
+          <div class="culture-protocol" style="--i:${i}">
+            <span>0${i+1}</span>
+            <b>${title}</b>
+            <small>${desc}</small>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section philosophy philosophy-v2">
     <div class="wrap reveal">
-      <div class="eyebrow" style="justify-content:center;">Filosofía</div>
-      <blockquote>La fuerza de una banda no depende únicamente del dinero. Depende de su <span class="accent">organización</span>, su <span class="accent">liderazgo</span> y su capacidad para mantenerse <span class="accent">unida.</span></blockquote>
+      <div class="eyebrow" style="justify-content:center;">Manifiesto</div>
+      <blockquote>La corona no se presume. <span class="accent">Se defiende.</span><br>La zona no se ocupa. <span class="accent">Se construye.</span><br>La familia no se promete. <span class="accent">Se demuestra.</span></blockquote>
       <cite>— Doctrina KoTZ</cite>
     </div>
   </section>`;
+}
+
+function initAboutConsole(){
+  const lines = document.querySelectorAll('#aboutConsole .about-terminal-line');
+  if (!lines.length) return;
+  lines.forEach((line,i) => setTimeout(() => line.classList.add('in'), i * 140));
 }
 
 /* --------------------------------------------------------- ORGANIZACION */
@@ -1515,43 +1611,133 @@ function galleryTileStyle(g){
 function pageStats(){
   const s = KotzStore.stats();
   const growth = KotzStore.getMemberGrowth();
-  const maxGrowth = Math.max(...growth.map(g => g.total));
+  const maxGrowth = Math.max(1, ...growth.map(g => Number(g.total) || 0));
+  const duesApproved = Number(s.duesApproved) || 0;
+  const duesPending = Number(s.duesPending) || 0;
+  const duesTotal = duesApproved + duesPending;
+  const duesPct = duesTotal ? Math.round((duesApproved / duesTotal) * 100) : 0;
+  const activityPct = Math.min(100, Math.round(((Number(s.activeMembers) || 0) / Math.max(1, Number(s.totalMembers) || 1)) * 100));
+  const allianceStrength = Math.min(99, Math.max(65, 72 + (Number(s.alliances) || 0) * 4));
+  const recruitmentPct = Math.min(100, Math.round(((Number(s.recruitsAccepted) || 0) / Math.max(1, (Number(s.totalMembers) || 1))) * 100));
+  const cards = [
+    [s.totalMembers,'Miembros registrados','Núcleo total dentro de la base KoTZ','👥'],
+    [s.activeMembers,'Miembros activos','Presencia útil y movimiento real','⚡'],
+    [s.alliances,'Alianzas activas','Red diplomática reconocida','🤝'],
+    [s.eventsHeld,'Eventos realizados','Actividad generada por la comunidad','📍'],
+    [s.recruitsAccepted,'Reclutas aceptados','Ingresos que pasaron filtro','✅'],
+    [duesPct + '%','Cuotas al día','Control económico interno','💰']
+  ];
+  const gauges = [
+    ['Actividad', activityPct, 'Presencia de miembros activos', '#ff9a1a'],
+    ['Cuotas', duesPct, 'Cumplimiento económico', '#ff4fb5'],
+    ['Diplomacia', allianceStrength, 'Fuerza de alianzas', '#9fe8ff'],
+    ['Reclutamiento', recruitmentPct, 'Entrada validada', '#8cffb5']
+  ];
+  const ops = [
+    ['Red interna','Operativa','Miembros, cuotas y panel privado activos.'],
+    ['Diplomacia','Estable','Alianzas protegidas y expedientes internos visibles.'],
+    ['Economía','En control',`${duesApproved} cuotas aprobadas · ${duesPending} pendientes.`],
+    ['Crecimiento','Selectivo','No se busca cantidad sin filtro: se busca gente útil.']
+  ];
   return `
-  <section class="page-head">
-    <div class="wrap">
-      <div class="eyebrow">Números de la Zona</div>
-      <h1 class="h1">Crecemos <span class="accent">con criterio.</span></h1>
+  <section class="stats-v2-hero">
+    <div class="stats-grid-bg"></div>
+    <div class="stats-radar-bg"><span></span><span></span><span></span></div>
+    <div class="wrap stats-hero-layout">
+      <div class="stats-hero-copy reveal">
+        <div class="eyebrow">Inteligencia de la Zona</div>
+        <h1 class="h1">Estadísticas con <span class="accent">pulso real.</span></h1>
+        <p class="lede">No son solo números. Son señales de actividad, disciplina, crecimiento, economía y fuerza diplomática dentro de KoTZ.</p>
+        <div class="stats-live-strip">
+          <span></span> Sistema de datos interno activo · lectura pública resumida
+        </div>
+      </div>
+      <div class="stats-command-panel reveal" id="statsConsole">
+        <div class="stats-panel-top"><b>KOTZ DATA CORE</b><span>LIVE</span></div>
+        ${['Recopilando miembros...','Calculando actividad...','Leyendo cuotas...','Sincronizando alianzas...','Generando informe visual...'].map((line,i)=>`
+          <div class="stats-console-line" style="--i:${i}"><span>${String(i+1).padStart(2,'0')}</span>${line}</div>`).join('')}
+      </div>
     </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <section class="section stats-overview-section">
     <div class="wrap">
-      <div class="stat-grid reveal">
-        ${[
-          [s.totalMembers,'Miembros'],
-          [s.alliances,'Alianzas activas'],
-          [s.eventsHeld,'Eventos realizados'],
-          [s.activeMembers,'Miembros activos'],
-          [s.recruitsAccepted,'Reclutas aceptados'],
-          [Math.round((s.duesApproved/(s.duesApproved+s.duesPending||1))*100)+'%','Cuotas al día'],
-        ].map(([val,label]) => `
-          <div class="stat-card">
-            <div class="stat-num" data-count="${String(val).replace('%','')}">0${String(val).includes('%')?'%':''}</div>
-            <div class="stat-label">${label}</div>
+      <div class="stats-v2-grid reveal">
+        ${cards.map(([val,label,desc,icon],i) => `
+          <article class="stat-v2-card" style="--i:${i}">
+            <div class="stat-v2-icon">${icon}</div>
+            <div class="stat-num stat-v2-number" data-count="${String(val).replace('%','')}">0${String(val).includes('%')?'%':''}</div>
+            <h3>${label}</h3>
+            <p>${desc}</p>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section stats-gauge-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">Lectura rápida</div>
+        <h2 class="h2">Panel de <span class="accent">rendimiento interno.</span></h2>
+        <p class="lede">Cada medidor resume un área clave de la organización. La idea no es aparentar actividad: es poder leerla rápido.</p>
+      </div>
+      <div class="gauge-grid reveal">
+        ${gauges.map(([label,pct,desc,color],i)=>`
+          <div class="gauge-card" style="--pct:${pct}; --gauge:${color}; --i:${i}">
+            <div class="gauge-ring"><span>${pct}%</span></div>
+            <h3>${label}</h3>
+            <p>${desc}</p>
           </div>`).join('')}
       </div>
+    </div>
+  </section>
 
-      <div class="chart-card reveal" style="margin-top:40px;">
-        <div class="eyebrow">Crecimiento de miembros</div>
-        <div class="bars">
-          ${growth.map(g => `
-            <div class="bar-col">
-              <div class="bar" style="height:${(g.total/maxGrowth*100).toFixed(0)}%"></div>
-              <span class="bar-label">${g.month}</span>
-            </div>`).join('')}
+  <section class="section growth-section-v2">
+    <div class="wrap growth-layout-v2">
+      <div class="growth-copy reveal">
+        <div class="eyebrow">Crecimiento</div>
+        <h2 class="h2">Subir sí, pero <span class="accent">con control.</span></h2>
+        <p class="lede">La curva de crecimiento sirve para ver si KoTZ está aumentando su base sin perder el filtro interno. Crecer demasiado rápido sin estructura rompe cualquier banda.</p>
+      </div>
+      <div class="growth-chart-v2 reveal">
+        <div class="chart-card-head"><b>Crecimiento mensual</b><span>${growth.length} lecturas</span></div>
+        <div class="bars-v2">
+          ${growth.map((g,i) => {
+            const h = Math.max(8, ((Number(g.total)||0) / maxGrowth * 100));
+            return `
+            <div class="bar-col-v2" style="--h:${h.toFixed(0)}%; --i:${i}">
+              <div class="bar-value">${g.total}</div>
+              <div class="bar-v2"></div>
+              <span>${g.month}</span>
+            </div>`;
+          }).join('')}
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="section ops-section">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" style="justify-content:center;">Estado operativo</div>
+        <h2 class="h2">Qué dicen los datos de <span class="accent">KoTZ ahora mismo.</span></h2>
+      </div>
+      <div class="ops-grid reveal">
+        ${ops.map(([title,state,desc],i)=>`
+          <div class="ops-card" style="--i:${i}">
+            <div class="ops-status"><span></span>${state}</div>
+            <h3>${title}</h3>
+            <p>${desc}</p>
+          </div>`).join('')}
+      </div>
+    </div>
   </section>`;
+}
+
+function initStatsConsole(){
+  const lines = document.querySelectorAll('#statsConsole .stats-console-line');
+  if (!lines.length) return;
+  lines.forEach((line,i) => setTimeout(() => line.classList.add('in'), i * 120));
 }
 
 function animateCounters(){
