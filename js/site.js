@@ -373,51 +373,178 @@ function pageAbout(){
 
 /* --------------------------------------------------------- ORGANIZACION */
 function pageOrg(){
-  const ranks = [
-    ['01','Owner',1], ['02','Co-Owner',1], ['03','Capitán',1],
+  const command = [
+    { level:'01', role:'Owner', name:'Roger', tag:'Dirección total', icon:'👑', color:'#ff9b3d', desc:'Marca la visión, toma decisiones finales y protege la identidad de KoTZ.', power:'100' },
+    { level:'02', role:'Co-Owner', name:'Ian Grimstone', tag:'Segundo mando', icon:'♛', color:'#ff4fb8', desc:'Sostiene la operación diaria, reemplaza al Owner y coordina decisiones críticas.', power:'94' },
+    { level:'03', role:'Capitanes', name:'Kyle · Tyler · Gigi · Eva', tag:'Alto Mando', icon:'◆', color:'#9fe8ff', desc:'Dirigen áreas, supervisan rangos y convierten órdenes en movimiento real.', power:'88' },
+    { level:'04', role:'Líderes de área', name:'Comunicación · Reclutamiento · Administración · Venta', tag:'Especialistas', icon:'▣', color:'#d8c84a', desc:'Controlan departamentos concretos y mantienen el ritmo interno de la organización.', power:'82' }
   ];
-  const leaders = ['Líder de Comunicación','Líder de Reclutamiento','Líder de Administración','Líder de Venta de Armas'];
-  const rest = [['05','Tenientes'],['06','Sargento'],['07','Soldado'],['08','Asociado'],['09','Recluta']];
+
+  const ranks = [
+    ['01','Owner','Mando absoluto','Visión, decisiones finales, alianzas mayores y dirección general.','Acceso total','👑','#ff9b3d'],
+    ['02','Co-Owner','Dirección ejecutiva','Coordina Alto Mando, cubre al Owner y valida cambios importantes.','Acceso total','#','#ff4fb8'],
+    ['03','Capitán','Mando operativo','Supervisa miembros, revisa problemas, activa protocolos y lidera áreas.','Alto Mando','◆','#9fe8ff'],
+    ['04','Líder de área','Especialización','Responsable de comunicación, reclutamiento, administración o ventas RP.','Área asignada','▣','#d8c84a'],
+    ['05','Teniente','Coordinación','Ejecuta órdenes, organiza grupos pequeños y reporta al Alto Mando.','Operativo','▲','#8cffb5'],
+    ['06','Sargento','Control de escuadra','Mantiene disciplina, acompaña miembros nuevos y detecta problemas.','Escuadra','●','#b88cff'],
+    ['07','Soldado','Fuerza principal','Participa, aporta cuotas, respeta protocolos y representa la imagen KoTZ.','Miembro completo','■','#ffffff'],
+    ['08','Asociado','Vinculación','Persona cercana a KoTZ en observación o colaboración limitada.','Limitado','◇','#ffcc8a'],
+    ['09','Recluta','Prueba inicial','Nuevo ingreso bajo verificación, aprendizaje y seguimiento.','Básico','○','#999999']
+  ];
+
+  const departments = [
+    ['Comunicación','Control de anuncios, coordinación pública, mensajes oficiales y relación entre miembros.','📢','Canal directo','Alto impacto'],
+    ['Reclutamiento','Entrada de nuevos miembros, filtros, entrevistas y seguimiento de reclutas.','🧲','Verificación','Crecimiento'],
+    ['Administración','Registro de miembros, cuotas, sanciones, estructura interna y paneles de control.','📋','Orden interno','Crítico'],
+    ['Venta RP','Gestión de tienda, precios, ofertas, stock y solicitudes comerciales dentro del rol.','▰','Economía RP','Controlado'],
+    ['Diplomacia','Alianzas, pactos, no agresión, comunicación con líderes aliados y protocolos externos.','🤝','Red KoTZ','Estratégico'],
+    ['Seguridad','Permisos, roles, detección de infiltrados, acceso a información y normas internas.','🛡️','Protección','Prioritario']
+  ];
+
+  const promotion = [
+    ['Recluta','Aprender normas y demostrar respeto'],
+    ['Asociado','Ganar confianza y participar sin causar problemas'],
+    ['Soldado','Cumplir cuotas, actividad y disciplina'],
+    ['Sargento','Ayudar a controlar escuadras y nuevos miembros'],
+    ['Teniente','Coordinar acciones y reportar con criterio'],
+    ['Capitán','Liderar áreas y tomar decisiones con Alto Mando']
+  ];
+
   return `
-  <section class="page-head">
-    <div class="wrap">
-      <div class="eyebrow">Cadena de mando</div>
-      <h1 class="h1">Una jerarquía <span class="accent">clara y estructurada.</span></h1>
-      <p class="lede">Cada rol tiene responsabilidades concretas. Las decisiones importantes se toman entre el equipo de liderazgo, nunca en solitario.</p>
-    </div>
-  </section>
-  <section class="section">
-    <div class="wrap">
-      <div class="org-tree reveal">
-        <div class="org-row"><div class="org-node top"><span class="rank">Nivel 01</span><span class="role">Owner</span></div></div>
-        <div class="org-row"><div class="org-node"><span class="rank">Nivel 02</span><span class="role">Co-Owner</span></div></div>
-        <div class="org-row"><div class="org-node"><span class="rank">Nivel 03</span><span class="role">Capitán</span></div></div>
-        <div class="org-row">
-          ${leaders.map(l => `<div class="org-node"><span class="rank">Nivel 04</span><span class="role">${l}</span></div>`).join('')}
+  <section class="page-head org-v2-hero">
+    <div class="org-holo-grid"></div>
+    <div class="wrap org-hero-layout">
+      <div class="org-hero-copy reveal">
+        <div class="eyebrow">Centro de mando KoTZ</div>
+        <h1 class="h1">Una organización no se improvisa.<br><span class="accent">Se construye, se protege y se lidera.</span></h1>
+        <p class="lede">KoTZ funciona con una cadena de mando clara, departamentos definidos, protocolos de seguridad y un sistema de crecimiento interno. No somos solo miembros conectados: somos una estructura.</p>
+        <div class="org-hero-actions">
+          <a href="#/alianzas" class="btn btn-primary">Ver red diplomática</a>
+          <a href="#/cuotas" class="btn btn-ghost">Panel de cuotas</a>
         </div>
-        ${rest.map(([n,role]) => `<div class="org-row"><div class="org-node"><span class="rank">Nivel ${n}</span><span class="role">${role}</span></div></div>`).join('')}
+      </div>
+      <div class="org-command-core reveal">
+        <div class="org-core-rings"><span></span><span></span><span></span></div>
+        <div class="org-core-badge">
+          <img class="crest-img" src="assets/crest.png" alt="KoTZ">
+          <b>KoTZ</b>
+          <small>Command System</small>
+        </div>
+        ${command.map((c,i) => `<div class="org-orbit-node node-${i+1}" style="--node:${c.color}"><b>${c.role}</b><span>${c.level}</span></div>`).join('')}
       </div>
     </div>
   </section>
-  <section class="section security">
+
+  <section class="section org-overview-section">
+    <div class="wrap">
+      <div class="org-kpi-grid reveal">
+        <div class="org-kpi-card"><span>9</span><b>Niveles</b><small>De Recluta a Owner</small></div>
+        <div class="org-kpi-card"><span>6</span><b>Áreas</b><small>Trabajo especializado</small></div>
+        <div class="org-kpi-card"><span>24/7</span><b>Control</b><small>Roles y permisos activos</small></div>
+        <div class="org-kpi-card"><span>1</span><b>Familia</b><small>Una visión común</small></div>
+      </div>
+
+      <div class="section-head reveal" style="margin-top:64px;">
+        <div class="eyebrow">Alto Mando</div>
+        <h2 class="h2">El núcleo que mueve <span class="accent">la Zona.</span></h2>
+        <p class="lede">La parte superior de KoTZ no solo manda: define prioridades, protege información, resuelve conflictos y mantiene el rumbo.</p>
+      </div>
+
+      <div class="command-cards reveal">
+        ${command.map(c => `
+          <article class="command-role-card" style="--role:${c.color}">
+            <div class="command-card-top"><span>${c.icon}</span><small>NIVEL ${c.level}</small></div>
+            <h3>${c.role}</h3>
+            <b>${c.name}</b>
+            <p>${c.desc}</p>
+            <div class="command-signal"><i style="width:${c.power}%"></i></div>
+            <div class="mini-sub">${c.tag} · Señal ${c.power}%</div>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section org-matrix-section">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" style="justify-content:center;">Jerarquía interna</div>
+        <h2 class="h2">Cada rango tiene <span class="accent">peso, acceso y responsabilidad.</span></h2>
+      </div>
+      <div class="rank-matrix reveal">
+        ${ranks.map(([level,role,tag,desc,access,icon,color]) => `
+          <article class="rank-card-v2" style="--rank:${color}">
+            <div class="rank-card-index">${level}</div>
+            <div class="rank-card-icon">${icon}</div>
+            <div class="rank-card-body">
+              <div class="eyebrow" style="color:var(--rank);">${tag}</div>
+              <h3>${role}</h3>
+              <p>${desc}</p>
+              <span class="rank-access">${access}</span>
+            </div>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section org-departments-section">
     <div class="wrap">
       <div class="section-head reveal">
-        <div class="eyebrow">Protocolo interno</div>
-        <h2 class="h2">La seguridad no es <span class="accent">opcional.</span></h2>
+        <div class="eyebrow">Departamentos</div>
+        <h2 class="h2">La organización se divide en <span class="accent">áreas reales.</span></h2>
+        <p class="lede">Cada área existe para que KoTZ no dependa de una sola persona. Comunicación, economía, diplomacia y seguridad tienen responsables y protocolos.</p>
       </div>
-      <div class="dossier reveal">
-        <div class="dossier-tag">Clasificado · Uso interno</div>
-        <p class="redact">Recientemente detectamos un <b>infiltrado</b> de otra banda que intentaba obtener información interna. Gracias a nuestra organización conseguimos descubrirlo antes de que causara problemas.</p>
-        <p class="redact">A raíz de eso hemos reforzado enormemente nuestros sistemas de control de acceso y verificación.</p>
-        <div class="dossier-grid">
-          <div>
-            <p class="redact" style="margin-bottom:6px;">Estado del protocolo:</p>
-            <p class="redact"><b>Activo</b> — verificación en curso para todo nuevo ingreso.</p>
+      <div class="department-grid reveal">
+        ${departments.map(([name,desc,icon,mode,priority],i) => `
+          <article class="department-card dep-${i+1}">
+            <div class="department-icon">${icon}</div>
+            <div>
+              <h3>${name}</h3>
+              <p>${desc}</p>
+              <div class="department-tags"><span>${mode}</span><span>${priority}</span></div>
+            </div>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section org-promotion-section">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" style="justify-content:center;">Ascenso interno</div>
+        <h2 class="h2">Aquí nadie sube por hablar mucho.<br><span class="accent">Se sube por demostrar.</span></h2>
+      </div>
+      <div class="promotion-timeline reveal">
+        ${promotion.map(([role,desc],i) => `
+          <div class="promotion-step" style="--step:${i+1}">
+            <span>${String(i+1).padStart(2,'0')}</span>
+            <b>${role}</b>
+            <small>${desc}</small>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section security org-security-v2">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">Seguridad interna</div>
+        <h2 class="h2">La información de KoTZ <span class="accent">se protege por niveles.</span></h2>
+        <p class="lede">Después de detectar intentos de infiltración, la organización reforzó permisos, roles, verificación y control de acceso. La confianza existe, pero se gana.</p>
+      </div>
+      <div class="security-grid-v2 reveal">
+        <div class="security-main-card">
+          <div class="dossier-tag">Clasificado · Uso interno</div>
+          <h3>Protocolo de acceso</h3>
+          <p>Todo nuevo ingreso pasa por una fase de observación. El acceso a canales, paneles y datos internos depende del rango, actividad y confianza demostrada.</p>
+          <div class="security-levels">
+            <div><span>01</span><b>Público</b><small>Información visible de la web</small></div>
+            <div><span>02</span><b>Miembro</b><small>Cuotas, tienda y alianzas internas</small></div>
+            <div><span>03</span><b>Alto Mando</b><small>Gestión, sanciones y control</small></div>
           </div>
-          <div class="log" id="securityLog">
-            ${['Verificación previa antes de acceder al servidor','Rol de Pendiente para nuevos ingresos','Canales privados por nivel de acceso','Accesos limitados según rango','Investigación interna ante cualquier sospecha','Protección activa de información sensible']
-              .map((t,i) => `<div class="log-line"><span class="tag">[0${i+1}]</span> ${t}</div>`).join('')}
-          </div>
+        </div>
+        <div class="log security-log-v2" id="securityLog">
+          ${['Verificación previa antes de acceder al servidor','Rol de Pendiente para nuevos ingresos','Canales privados según nivel de confianza','Alianzas protegidas solo para miembros','Panel Alto Mando limitado por roles Discord','Investigación interna ante cualquier sospecha','Registro de sanciones y cuotas persistente','Protección activa de información sensible']
+            .map((t,i) => `<div class="log-line"><span class="tag">[0${i+1}]</span> ${t}</div>`).join('')}
         </div>
       </div>
     </div>
