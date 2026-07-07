@@ -1,17 +1,14 @@
-# KoTZ — Diplomacy V2 + Gallery URL Fix
+# KoTZ Diplomacia V2 - fix acceso alianzas
 
-Archivos incluidos:
+Este parche corrige el bucle de "Verificando acceso..." en `user.html#/alianzas`.
 
+Cambios:
+- `/api/alliances` se pide también al iniciar la web tras cargar la sesión.
+- Si la ruta protegida se renderiza mientras ya hay una petición en curso, se agenda un repintado.
+- El repintado de alianzas se hace en `finally`, después de bajar `alliancesLoading=false`.
+- La petición usa `cache:'no-store'` y `?ts=` para evitar caché vieja.
+
+Copiar:
 - `js/site.js`
-- `assets/styles.css`
 
-Cambios principales:
-
-- Rediseño completo de `#/alianzas` como centro diplomático interno.
-- Mapa visual tipo radar con KoTZ en el centro y aliados alrededor.
-- Tarjetas con colores reales de cada alianza, glow, tags y botón de expediente.
-- Expedientes individuales más visuales: hero propio, ficha rápida, métricas, panel lateral, tarjetas de protocolo, nota interna y navegación a otras alianzas.
-- `#/estado` usa la misma estética V2.
-- Arreglo de galería: evita comillas rotas dentro de `background-image: url(...)` para que los thumbnails de Google Drive no se queden negros.
-
-No toca Apps Script, `.env`, variables de Render ni base de datos.
+Luego subir a GitHub y hacer `Manual Deploy -> Deploy latest commit` en Render.

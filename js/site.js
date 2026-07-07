@@ -38,6 +38,7 @@ let shopLoaded = false;
 let shopLoading = false;
 let alliancesLoaded = false;
 let alliancesLoading = false;
+let alliancesNeedsRerender = false;
 let alliancesError = null;
 let secureAlliances = [];
 
@@ -142,11 +143,21 @@ async function syncShopFromServer(rerender = false){
 
 
 async function syncAlliancesFromServer(rerender = false){
-  if (alliancesLoading) return;
+  if (alliancesLoading) {
+    if (rerender) alliancesNeedsRerender = true;
+    return;
+  }
+
   alliancesLoading = true;
+  alliancesNeedsRerender = Boolean(rerender);
   alliancesError = null;
+
   try {
-    const res = await fetch('/api/alliances', { credentials:'same-origin' });
+    const res = await fetch('/api/alliances?ts=' + Date.now(), {
+      credentials:'same-origin',
+      cache:'no-store'
+    });
+
     if (res.ok){
       const data = await res.json();
       secureAlliances = Array.isArray(data.alliances) ? data.alliances : [];
@@ -163,16 +174,18 @@ async function syncAlliancesFromServer(rerender = false){
       secureAlliances = [];
       alliancesLoaded = true;
     }
-    if (rerender) {
-      const path = location.hash.replace('#','') || '/';
-      if (path === '/alianzas' || path === '/estado' || path.startsWith('/alianzas/')) router();
-    }
   } catch(e) {
     alliancesError = { type:'server', message:'No se pudo conectar con el servidor de alianzas.' };
     secureAlliances = [];
     alliancesLoaded = true;
   } finally {
     alliancesLoading = false;
+
+    const path = location.hash.replace('#','') || '/';
+    const shouldRerender = alliancesNeedsRerender && (path === '/alianzas' || path === '/estado' || path.startsWith('/alianzas/'));
+    alliancesNeedsRerender = false;
+
+    if (shouldRerender) router();
   }
 }
 
@@ -221,7 +234,10 @@ function afterRender(path){
   if (path === '/galeria') { initGalleryFilters(); verifyGalleryImages(); if (!serverGalleryLoaded && !serverGalleryLoading) syncGalleryFromServer(true); }
   if (path === '/cuotas') { initUserDuesForm(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!serverDuesLoaded) syncDuesFromServer(true); }
   if (path === '/tienda') { initShopPage(); if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!shopLoaded) syncShopFromServer(true); }
-  if (isAllianceProtectedPath(path)) { if (!currentMemberLoaded) syncCurrentMemberFromServer(true); if (!alliancesLoaded && !alliancesLoading) syncAlliancesFromServer(true); }
+  if (isAllianceProtectedPath(path)) {
+    if (!currentMemberLoaded) syncCurrentMemberFromServer(true);
+    if (!alliancesLoaded) syncAlliancesFromServer(true);
+  }
   if (path === '/organizacion') initSecurityLog();
   if (document.getElementById('embers')) initEmbers();
 }
@@ -1337,7 +1353,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // rerender=false (como estaba antes) la primera carga se quedaba con
   // el estado "cargando..." para siempre si no visitabas antes otra
   // página que le diera tiempo a la petición de terminar en segundo plano.
-  loadDiscordSession().then(() => syncCurrentMemberFromServer(true));
+  loadDiscordSession().then(() => {
+    syncCurrentMemberFromServer(true);
+    syncAlliancesFromServer(true);
+  });
   syncDuesFromServer(true);
   syncGalleryFromServer(true);
   setupSiteLogout();
