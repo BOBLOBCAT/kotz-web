@@ -270,51 +270,184 @@ function initReveal(){
 
 /* ---------------------------------------------------------------- HOME */
 function pageHome(){
+  const systems = [
+    ['Panel Usuario','Acceso para miembros verificados, cuotas, tienda RP y galería interna.','user.html','Abrir panel','100%','👤'],
+    ['Alto Mando','Control de miembros, sanciones, cuotas, tienda, galería y administración.','panel.html','Entrar mando','Privado','👑'],
+    ['Organización','Cadena de mando, rangos, áreas internas y protocolos de crecimiento.','#/organizacion','Ver estructura','9 rangos','▰'],
+    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','7 aliados','🤝']
+  ];
+  const topAllies = [
+    ['#7','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
+    ['#8','The NATO','Alianza internacional','Prioridad · respeto · coordinación','#9FE8FF'],
+    ['#16','Fallen Angels','Crecimiento conjunto','Eventos · presencia · colaboración','#B88CFF']
+  ];
+  const doctrine = [
+    ['01','Identidad','No entrar por entrar. Representar KoTZ significa cuidar el nombre, la imagen y la zona.'],
+    ['02','Estructura','Cada rango tiene función. Cada área tiene objetivo. Cada decisión deja rastro.'],
+    ['03','Diplomacia','Los aliados se respetan como extensión de la red KoTZ. Sin caos, sin traiciones, sin improvisar.'],
+    ['04','Futuro','La meta no es parecer grandes un día. Es construir algo que aguante, crezca y se recuerde.']
+  ];
+  const dataLines = ['AUTH: VERIFIED','ZONE: ONLINE','DIPLOMACY: ACTIVE','COMMAND: READY','GALLERY: SYNC','SHOP RP: OPEN','RANKS: STABLE','SIGNAL: STRONG'];
   return `
-  <section class="hero">
+  <section class="home-v3-hero">
     <canvas id="embers"></canvas>
-    <div class="hero-glow"></div>
-    <div class="hero-content">
-      <img class="hero-crest crest-img" src="assets/crest.png" alt="Escudo de KoTZ">
-      <h1 class="hero-title">KoTZ</h1>
-      <div class="hero-sub">Kings of The Zone</div>
-      <div class="hero-tagline">Together We Grow.</div>
-      <div class="hero-mottos"><span>One Family</span><span>One Vision</span><span>One Zone</span></div>
-      <div class="hero-ctas">
-        <a href="user.html" class="btn btn-primary">Panel Usuario</a>
-        <a href="#/nosotros" class="btn btn-ghost">Conócenos</a>
-        <a href="panel.html" class="btn btn-ghost">Alto Mando</a>
+    <div class="home-aurora"></div>
+    <div class="home-grid-bg"></div>
+    <div class="home-scan"></div>
+    <div class="home-data-rain" aria-hidden="true">
+      ${dataLines.map((line,i)=>`<span class="home-data-line" style="--i:${i}; --x:${(i*13+7)%92}%">${line}</span>`).join('')}
+    </div>
+
+    <div class="wrap home-hero-layout">
+      <div class="home-hero-copy reveal">
+        <div class="home-status-pill"><span></span> KoTZ NETWORK ONLINE</div>
+        <h1 class="home-title">Kings of<br><span>The Zone</span></h1>
+        <p class="home-lede">Una comunidad de PrisonRP con identidad, mando, diplomacia, economía RP, galería, panel interno y una red que no solo se ve: se siente.</p>
+        <div class="home-hero-actions">
+          <a href="user.html" class="btn btn-primary">Entrar al panel</a>
+          <a href="#/nosotros" class="btn btn-ghost">Conocer KoTZ</a>
+          <a href="panel.html" class="btn btn-ghost">Alto Mando</a>
+        </div>
+        <div class="home-motto-wall">
+          <span>ONE FAMILY</span><span>ONE VISION</span><span>ONE ZONE</span><span>TOGETHER WE GROW</span>
+        </div>
+      </div>
+
+      <div class="home-command-visual reveal" aria-label="Núcleo KoTZ">
+        <div class="home-orbit-ring r1"></div>
+        <div class="home-orbit-ring r2"></div>
+        <div class="home-orbit-ring r3"></div>
+        <div class="home-orbit-pulse"></div>
+        <div class="home-core-card">
+          <img class="crest-img" src="assets/crest.png" alt="Escudo de KoTZ">
+          <b>KoTZ</b>
+          <small>Command Core</small>
+        </div>
+        <a href="#/organizacion" class="home-orbit-node n1"><b>09</b><span>Rangos</span></a>
+        <a href="#/alianzas" class="home-orbit-node n2"><b>07</b><span>Alianzas</span></a>
+        <a href="#/estadisticas" class="home-orbit-node n3"><b>DATA</b><span>Core</span></a>
+        <a href="#/galeria" class="home-orbit-node n4"><b>MEDIA</b><span>Galería</span></a>
       </div>
     </div>
-    <div class="ticker"><div class="ticker-track">
-      ${Array(2).fill(`
-        <span class="ticker-item"><b>PRISON RP</b> · ROBLOX</span>
-        <span class="ticker-item"><b>CLEARANCE</b> · FAMILIA</span>
-        <span class="ticker-item"><b>ALIANZAS</b> · RED INTERNACIONAL</span>
-        <span class="ticker-item"><b>DOCTRINA</b> · CALIDAD SOBRE CANTIDAD</span>
-        <span class="ticker-item"><b>ESTADO</b> · ACTIVOS Y CRECIENDO</span>
-      `).join('')}
-    </div></div>
-    <div class="scroll-cue">Explora KoTZ</div>
+
+    <div class="home-signal-strip">
+      <div class="home-signal-track">
+        ${Array(2).fill(`
+          <span>⚡ SISTEMA INTERNO ACTIVO</span>
+          <span>👑 ALTO MANDO ONLINE</span>
+          <span>🤝 DIPLOMACIA EN MOVIMIENTO</span>
+          <span>📊 ESTADÍSTICAS SINCRONIZADAS</span>
+          <span>🛡️ ACCESO VERIFICADO</span>
+        `).join('')}
+      </div>
+    </div>
   </section>
 
-  <section class="section">
-    <div class="wrap quick-grid">
-      <a href="#/organizacion" class="quick-card reveal">
-        <div class="eyebrow">Cadena de mando</div>
-        <h3 class="h3">Organización</h3>
-        <p class="lede">Una jerarquía clara, de Owner a Recluta.</p>
-      </a>
-      <a href="#/alianzas" class="quick-card reveal">
-        <div class="eyebrow">Red internacional</div>
-        <h3 class="h3">Alianzas</h3>
-        <p class="lede">Bandas de confianza dentro y fuera de España.</p>
-      </a>
-      <a href="#/estadisticas" class="quick-card reveal">
-        <div class="eyebrow">Números reales</div>
-        <h3 class="h3">Estadísticas</h3>
-        <p class="lede">Miembros, eventos y crecimiento de la Zona.</p>
-      </a>
+  <section class="section home-overview-section">
+    <div class="wrap">
+      <div class="home-kpi-grid reveal">
+        <div class="home-kpi-card hot"><small>Red diplomática</small><b>TOP #7 · #8 · #16</b><span>Aliados con posición destacada</span></div>
+        <div class="home-kpi-card"><small>Estructura</small><b>9 rangos</b><span>De Recluta a Owner</span></div>
+        <div class="home-kpi-card"><small>Operación</small><b>24/7</b><span>Panel, roles y registros</span></div>
+        <div class="home-kpi-card"><small>Identidad</small><b>1 familia</b><span>Una visión, una zona</span></div>
+      </div>
+
+      <div class="home-live-layout">
+        <div class="home-live-board reveal">
+          <div class="home-board-top"><span></span><b>KoTZ Live Command</b><em>PUBLIC VIEW</em></div>
+          <div class="home-board-grid">
+            <div><small>Estado</small><b>Operativo</b></div>
+            <div><small>Acceso</small><b>Discord OAuth</b></div>
+            <div><small>Datos</small><b>Google Sync</b></div>
+            <div><small>Zona</small><b>En expansión</b></div>
+          </div>
+          <div class="home-terminal-mini">
+            <p><span>[01]</span> Cargando identidad KoTZ...</p>
+            <p><span>[02]</span> Sincronizando red de alianzas...</p>
+            <p><span>[03]</span> Verificando estructura interna...</p>
+            <p><span>[04]</span> Estado final: comunidad activa.</p>
+          </div>
+        </div>
+        <div class="home-intro-copy reveal">
+          <div class="eyebrow">Inicio remodelado</div>
+          <h2 class="h2">La primera impresión tiene que decir: <span class="accent">aquí hay algo serio.</span></h2>
+          <p class="lede">La página de inicio ahora funciona como una entrada principal a todo el ecosistema KoTZ: muestra identidad, sistemas, estructura, diplomacia y actividad sin parecer una portada vacía.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section home-systems-section">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" style="justify-content:center;">Ecosistema KoTZ</div>
+        <h2 class="h2">Todo conectado dentro de <span class="accent">una sola zona.</span></h2>
+        <p class="lede" style="margin-inline:auto;">Inicio, usuarios, Alto Mando, organización, diplomacia, galería, cuotas, tienda y estadísticas no son páginas sueltas: son módulos de una misma estructura.</p>
+      </div>
+      <div class="home-system-grid reveal">
+        ${systems.map(([name,desc,href,cta,metric,icon],i)=>`
+          <a href="${href}" class="home-system-card" style="--i:${i}">
+            <div class="home-system-icon">${icon}</div>
+            <div class="home-system-metric">${metric}</div>
+            <h3>${name}</h3>
+            <p>${desc}</p>
+            <span>${cta} →</span>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section home-top-section">
+    <div class="wrap home-top-layout">
+      <div class="home-top-copy reveal">
+        <div class="eyebrow">Posiciones destacadas</div>
+        <h2 class="h2">Alianzas que no pasan desapercibidas.</h2>
+        <p class="lede">Las posiciones TOP ahora aparecen desde el inicio para dar más peso a la red diplomática y enseñar rápido que KoTZ no está aislado.</p>
+        <a class="btn btn-primary" href="#/alianzas">Abrir centro diplomático</a>
+      </div>
+      <div class="home-top-grid reveal">
+        ${topAllies.map(([rank,name,type,desc,color],i)=>`
+          <a class="home-top-card" href="#/alianzas/${name === 'KAOS' ? 'kaos' : name === 'The NATO' ? 'the-nato' : 'fallen-angels'}" style="--ally:${color}; --i:${i}">
+            <div class="home-top-rank">${rank}</div>
+            <h3>${name}</h3>
+            <small>${type}</small>
+            <p>${desc}</p>
+            <div class="home-top-line"><i></i></div>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section home-doctrine-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">Doctrina de entrada</div>
+        <h2 class="h2">Antes de explorar la web, entiende <span class="accent">qué representa KoTZ.</span></h2>
+      </div>
+      <div class="home-doctrine-grid reveal">
+        ${doctrine.map(([num,title,desc],i)=>`
+          <article class="home-doctrine-card" style="--i:${i}">
+            <span>${num}</span>
+            <h3>${title}</h3>
+            <p>${desc}</p>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section home-final-gate">
+    <div class="wrap reveal">
+      <div class="home-gate-card">
+        <div class="home-gate-orb"></div>
+        <div class="eyebrow" style="justify-content:center;">Acceso principal</div>
+        <h2 class="h2">La corona no se mira desde fuera.<br><span class="accent">Se entra, se representa y se protege.</span></h2>
+        <p class="lede" style="margin-inline:auto;">Entra al panel si formas parte de KoTZ, revisa la organización si quieres entender la estructura o explora la identidad para ver por qué la zona tiene nombre propio.</p>
+        <div class="home-gate-actions">
+          <a href="user.html" class="btn btn-primary">Panel Usuario</a>
+          <a href="#/organizacion" class="btn btn-ghost">Organización</a>
+          <a href="#/estadisticas" class="btn btn-ghost">Estadísticas</a>
+        </div>
+      </div>
     </div>
   </section>`;
 }

@@ -1,36 +1,27 @@
-# KoTZ — Quiénes Somos + Estadísticas V2 WOW
+# KoTZ Inicio V2 — Landing WOW
 
-Archivos incluidos:
+Incluye una remodelación fuerte de la página de inicio pública.
+
+## Archivos incluidos
 
 - `js/site.js`
 - `assets/styles.css`
-- `README.md`
 
 ## Cambios principales
 
-### Quiénes Somos
+- Hero nuevo tipo entrada / command gate.
+- Núcleo KoTZ animado con órbitas y nodos clicables.
+- Lluvia de datos y scanline de fondo.
+- Ticker animado de estado interno.
+- KPIs superiores con TOP #7, #8 y #16.
+- Panel “KoTZ Live Command”.
+- Cards del ecosistema KoTZ: Usuario, Alto Mando, Organización y Diplomacia.
+- Bloque de alianzas TOP visible desde el inicio.
+- Doctrina de entrada con tarjetas animadas.
+- Bloque final de acceso principal.
+- Responsive para móvil.
 
-- Nuevo hero tipo **Identity Core**.
-- Escudo KoTZ con anillos animados, nodos y glow.
-- Bloque de identidad: familia, disciplina, zona y futuro.
-- Doctrina interna con consola animada.
-- Pilares remodelados con cards premium y efectos hover.
-- Timeline de origen/evolución de KoTZ.
-- Código cultural: qué se espera, qué se valora, qué se corrige y qué se protege.
-- Manifiesto final más cinematográfico.
-
-### Estadísticas
-
-- Nuevo dashboard tipo **KOTZ DATA CORE**.
-- Consola live animada.
-- Tarjetas de datos más grandes y visuales.
-- Medidores circulares para actividad, cuotas, diplomacia y reclutamiento.
-- Gráfico de crecimiento remodelado con animación.
-- Estado operativo resumido por áreas.
-
-## Importante
-
-No toca:
+## No toca
 
 - `.env`
 - Apps Script
@@ -41,4 +32,4 @@ No toca:
 
 ## Aplicación
 
-Copia los archivos encima del proyecto respetando carpetas y sube a GitHub.
+Copia los archivos encima del proyecto y sube a GitHub. Después haz Manual Deploy en Render.
