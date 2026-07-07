@@ -1,17 +1,19 @@
-# KoTZ Diplomacia V3 — WOW Pass
+KoTZ Diplomacia V3 WOW + galería
 
 Archivos incluidos:
-
-- `js/site.js`
-- `assets/styles.css`
+- js/site.js
+- assets/styles.css
 
 Qué cambia:
+- Rediseño mucho más potente de #/alianzas.
+- Centro diplomático KoTZ con mapa/radar animado, KPIs, directiva interna y tarjetas con identidad propia.
+- Expedientes individuales más cinematográficos: Trust Index, timeline diplomática, firma visual, métricas, protocolos y selector de alianzas.
+- Mantiene protección por Discord y rutas actuales.
+- Mantiene el fix de galería para thumbnails de Drive como background-image sin comillas rotas.
 
-- Red diplomática V3 con constelación/orbita interactiva.
-- KPIs más potentes y estilo “centro de mando diplomático”.
-- Tarjetas de aliados con confianza, tags, glow, scan y colores propios.
-- Expedientes individuales rediseñados con hero, pasaporte diplomático, trust meter, timeline, identidad visual y paneles más vivos.
-- Mantiene la protección de alianzas y el router fix.
-- Mantiene el fix de galería de Drive.
-
-No toca Apps Script, `.env`, Google Sheets ni Render variables.
+Aplicación:
+1. Copia js/site.js y assets/styles.css encima del proyecto.
+2. git add -A
+3. git commit -m "Potenciar diplomacia KoTZ V3"
+4. git push
+5. Render -> Manual Deploy -> Deploy latest commit
