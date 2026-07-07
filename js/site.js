@@ -544,6 +544,30 @@ function allianceHeatClass(alliance){
   return 'stable';
 }
 
+
+function allianceTopRank(alliance){
+  const map = {
+    'kaos': 7,
+    'the-nato': 8,
+    'fallen-angels': 16
+  };
+  return map[alliance?.slug] || null;
+}
+
+function allianceTopTier(alliance){
+  const rank = allianceTopRank(alliance);
+  if (!rank) return 'Red estable';
+  if (rank <= 10) return 'Top 10 · Prioridad máxima';
+  if (rank <= 20) return 'Top 20 · Presencia fuerte';
+  return `Top #${rank}`;
+}
+
+function allianceTopPulse(alliance){
+  const rank = allianceTopRank(alliance);
+  if (!rank) return '';
+  return rank <= 10 ? 'elite' : 'ranked';
+}
+
 function pageAlliances(){
   if (!alliancesLoaded) return pageAllianceGate('checking');
   if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
@@ -554,6 +578,7 @@ function pageAlliances(){
   const strategicCount = alliances.filter(a => allianceTags(a).includes('Estrategia') || allianceTags(a).includes('Internacional')).length;
   const colors = alliances.map(a => a.colors?.primary || '#ff7a18');
   const featured = alliances.find(a => a.slug === 'the-nato') || alliances[0];
+  const topAlliances = alliances.filter(a => allianceTopRank(a)).sort((a,b) => allianceTopRank(a) - allianceTopRank(b));
 
   return `
   <section class="page-head diplomacy-v3-head">
@@ -561,6 +586,9 @@ function pageAlliances(){
       ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
     </div>
     <div class="diplomacy-scanlines"></div>
+    <div class="diplomacy-data-rain">
+      ${Array.from({length:18}).map((_,i)=>`<span style="--i:${i}; --delay:${i * -.42}s; --left:${(i*7)%100}%">${i%3===0?'ALLY':'KOTZ'}</span>`).join('')}
+    </div>
     <div class="wrap diplomacy-v3-layout">
       <div class="diplomacy-v3-copy reveal">
         <div class="eyebrow">Centro diplomático KoTZ · Acceso clasificado</div>
@@ -591,6 +619,9 @@ function pageAlliances(){
               return `<line x1="260" y1="260" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="--line:${c}" />`;
             }).join('')}
           </svg>
+          <div class="network-particles">
+            ${alliances.map((a,i)=>`<i style="--ally:${a.colors?.primary || '#ff7a18'}; --delay:${i * -.7}s; --orbit:${24 + (i%3)*10}%;"></i>`).join('')}
+          </div>
           <a class="network-core" href="#/organizacion">
             <img class="crest-img" src="assets/crest.png" alt="KoTZ">
             <span>KoTZ</span>
@@ -601,7 +632,8 @@ function pageAlliances(){
             const x = 50 + Math.cos(angle) * r;
             const y = 50 + Math.sin(angle) * r;
             const c = a.colors?.primary || '#ff7a18';
-            return `<a href="#/alianzas/${a.slug}" class="network-node ${allianceHeatClass(a)}" style="--x:${x.toFixed(1)}%; --y:${y.toFixed(1)}%; --ally:${c}; --ally2:${a.colors?.secondary || '#fff'};" title="${escapeAttr(a.name)}"><span>${a.emoji || '🤝'}</span><small>${escapeHtml(a.code || a.name)}</small></a>`;
+            const rank = allianceTopRank(a);
+            return `<a href="#/alianzas/${a.slug}" class="network-node ${allianceHeatClass(a)} ${rank ? 'top-node ' + allianceTopPulse(a) : ''}" style="--x:${x.toFixed(1)}%; --y:${y.toFixed(1)}%; --ally:${c}; --ally2:${a.colors?.secondary || '#fff'};" title="${escapeAttr(a.name)}"><span>${a.emoji || '🤝'}</span><small>${escapeHtml(a.code || a.name)}</small>${rank ? `<em>#${rank}</em>` : ''}</a>`;
           }).join('')}
         </div>
         <div class="command-footer">
@@ -637,6 +669,24 @@ function pageAlliances(){
         </div>
         <div class="directive-code">CLASSIFIED</div>
       </div>
+
+      ${topAlliances.length ? `
+      <div class="top-rank-board reveal">
+        <div class="top-rank-head">
+          <div>
+            <div class="eyebrow">Alianzas en el TOP</div>
+            <h2 class="h3">Presencia confirmada en posiciones clave</h2>
+          </div>
+          <span>Ranking operativo</span>
+        </div>
+        <div class="top-rank-grid">
+          ${topAlliances.map((a,idx)=>`<a href="#/alianzas/${a.slug}" class="top-rank-card ${allianceTopPulse(a)}" style="--ally:${a.colors?.primary || '#ff7a18'}; --ally2:${a.colors?.secondary || '#fff'}; --delay:${idx * .12}s;">
+            <div class="rank-num">#${allianceTopRank(a)}</div>
+            <div><b>${escapeHtml(a.name)}</b><small>${escapeHtml(allianceTopTier(a))}</small></div>
+            <i>${a.emoji || '🤝'}</i>
+          </a>`).join('')}
+        </div>
+      </div>` : ''}
 
       <div class="section-head reveal diplomacy-list-head">
         <div>
@@ -678,6 +728,7 @@ function pageAllianceDetail(slug){
   const dossierStats = allianceDossierStats(alliance);
   const other = secureAlliances.filter(a => a.slug !== alliance.slug);
   const timeline = allianceTimeline(alliance);
+  const topRank = allianceTopRank(alliance);
 
   return `
   <section class="page-head alliance-v3-hero" style="--ally:${c1}; --ally2:${c2}; --allyDark:${dark};">
@@ -688,13 +739,14 @@ function pageAllianceDetail(slug){
       <div class="alliance-v3-main reveal">
         <a href="#/alianzas" class="mini-sub back-link">← Volver a red diplomática</a>
         <div class="alliance-v3-classification">
-          <span>Expediente activo</span><span>${escapeHtml(alliance.code || alliance.slug)}</span><span>${escapeHtml(alliance.type || 'Alianza oficial')}</span>
+          <span>Expediente activo</span><span>${escapeHtml(alliance.code || alliance.slug)}</span><span>${escapeHtml(alliance.type || 'Alianza oficial')}</span>${topRank ? `<span class="top-classified">TOP #${topRank}</span>` : ''}
         </div>
         <h1 class="h1 alliance-v3-title">${alliance.name}</h1>
         <p class="alliance-v3-motto">${escapeHtml(allianceMotto(alliance))}</p>
         <p class="lede alliance-v3-lede">${escapeHtml(alliance.full || alliance.desc)}</p>
         <div class="detail-chip-row diplomacy-chip-row">
           <span class="pill pill-green">${escapeHtml(alliance.status)}</span>
+          ${topRank ? `<span class="pill top-pill">TOP #${topRank}</span>` : ''}
           <span class="pill" style="border-color:${c1}88; color:${c1};">Desde ${escapeHtml(alliance.since)}</span>
           <span class="pill" style="border-color:${c2}88; color:${c2};">${escapeHtml(alliance.level || 'Confianza estable')}</span>
           <span class="pill">Canal ${escapeHtml(allianceCommunication(alliance))}</span>
@@ -709,7 +761,9 @@ function pageAllianceDetail(slug){
         <div class="mini-sub">Trust Index</div>
         <div class="trust-number">${score}%</div>
         <div class="trust-bar"><span style="width:${score}%"></span></div>
+        ${topRank ? `<div class="top-position-badge ${allianceTopPulse(alliance)}"><span>Posición TOP</span><b>#${topRank}</b><small>${escapeHtml(allianceTopTier(alliance))}</small></div>` : ''}
         <div class="id-grid">
+          ${topRank ? `<div><small>Ranking</small><b>#${topRank}</b></div>` : ''}
           <div><small>Prioridad</small><b>${alliancePriority(alliance)}</b></div>
           <div><small>Riesgo</small><b>${allianceRisk(alliance)}</b></div>
           <div><small>Comunicación</small><b>${allianceCommunication(alliance)}</b></div>
@@ -731,6 +785,7 @@ function pageAllianceDetail(slug){
           <div class="mini-core">KoTZ</div>
           <div class="mini-link"></div>
           <div class="mini-ally" style="border-color:${c1}; color:${c1};">${escapeHtml(alliance.code || alliance.slug)}</div>
+          <div class="signal-stack"><span></span><span></span><span></span><span></span></div>
         </div>
         <a class="btn btn-ghost btn-sm" href="#/estado" style="width:100%; justify-content:center;">Estado diplomático</a>
       </aside>
@@ -793,12 +848,15 @@ function renderAllianceLinkCard(a){
   const c2 = a.colors?.secondary || '#ff2ea6';
   const tags = allianceTags(a).slice(0, 5);
   const score = allianceTrustScore(a);
+  const rank = allianceTopRank(a);
   return `
     <a href="#/alianzas/${a.slug}" class="alliance-card diplomacy-v3-card" style="--ally:${c1}; --ally2:${c2}; --allyDark:${a.colors?.dark || '#09090d'}; text-decoration:none; color:inherit;">
       <div class="v3-card-aura"></div>
+      ${rank ? `<div class="card-rank-watermark">#${rank}</div>` : ''}
       <div class="v3-card-scan"></div>
       <div class="v3-card-top">
         <div class="alliance-logo v3-logo">${a.emoji || '🤝'}</div>
+        ${rank ? `<div class="v3-top-chip ${allianceTopPulse(a)}">TOP #${rank}</div>` : ''}
         <div class="v3-card-state"><span></span>${escapeHtml(a.status)}</div>
       </div>
       <div class="eyebrow" style="color:${c1};">${escapeHtml(a.type || 'Alianza oficial')}</div>

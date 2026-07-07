@@ -1,19 +1,27 @@
-KoTZ Diplomacia V3 WOW + galería
+# KoTZ Diplomacia V4 — TOP + animaciones
+
+Incluye:
+
+- Posiciones TOP visibles:
+  - KAOS: #7
+  - The NATO: #8
+  - Fallen Angels: #16
+- Panel "Alianzas en el TOP" en la página general de aliados.
+- Badges TOP en tarjetas, radar y expedientes individuales.
+- Animaciones extra:
+  - lluvia de datos diplomáticos,
+  - partículas orbitando el radar,
+  - ondas en nodos TOP,
+  - glow elite para TOP 10,
+  - scan animado en tarjetas,
+  - barras de señal en el mini mapa del expediente,
+  - sweeps animados en bloques del dossier,
+  - orbes respirando en la cabecera.
+- Mantiene el fix de galería para thumbnails de Drive.
 
 Archivos incluidos:
-- js/site.js
-- assets/styles.css
 
-Qué cambia:
-- Rediseño mucho más potente de #/alianzas.
-- Centro diplomático KoTZ con mapa/radar animado, KPIs, directiva interna y tarjetas con identidad propia.
-- Expedientes individuales más cinematográficos: Trust Index, timeline diplomática, firma visual, métricas, protocolos y selector de alianzas.
-- Mantiene protección por Discord y rutas actuales.
-- Mantiene el fix de galería para thumbnails de Drive como background-image sin comillas rotas.
+- `js/site.js`
+- `assets/styles.css`
 
-Aplicación:
-1. Copia js/site.js y assets/styles.css encima del proyecto.
-2. git add -A
-3. git commit -m "Potenciar diplomacia KoTZ V3"
-4. git push
-5. Render -> Manual Deploy -> Deploy latest commit
+No toca `.env`, Apps Script, Google Sheets, `server.js` ni `panel.js`.
