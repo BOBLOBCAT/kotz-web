@@ -25,13 +25,14 @@
 const KotzData = {
 
   alliances: [
-    { id:'a1', name:'Rose-Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
+    { id:'a1', name:'Rose Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
     { id:'a2', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
     { id:'a3', name:'KAOs', emoji:'ム', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
     { id:'a4', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
     { id:'a5', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
     { id:'a6', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
     { id:'a7', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
+    { id:'a8', name:'Crows Of Olympus', emoji:'🐦‍⬛', status:'Activa', since:'Jul 2026', desc:'Alianza basada en respeto mutuo, no agresión, comercio, cooperación y protección entre organizaciones.', values:['No agresión','Comercio','Protección'] },
   ],
 
   conflicts: [

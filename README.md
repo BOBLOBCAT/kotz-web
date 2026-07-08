@@ -1,35 +1,21 @@
-# KoTZ Inicio V2 — Landing WOW
+# KoTZ — Crows Of Olympus alianza
 
-Incluye una remodelación fuerte de la página de inicio pública.
+Cambios incluidos:
 
-## Archivos incluidos
+- Añadida la alianza **Crows Of Olympus** en `/api/alliances`.
+- Dossier interno completo para Crows Of Olympus.
+- Colores de banda: negro y naranja.
+- Líder aliado: `Suki_Toast`.
+- Tratado: `07/07/2026` a las `07:17`.
+- En inicio, Diplomacia cambia de `7 aliados` a `8 aliados`.
+- Nodo de alianzas en el núcleo de inicio cambia de `07` a `08`.
+- Estadísticas locales actualizadas a 8 alianzas.
+- Se corrigió el slug de Rose Spines a `rose-spines` para evitar rutas con espacios.
 
-- `js/site.js`
-- `assets/styles.css`
+Archivos que debes copiar encima del proyecto:
 
-## Cambios principales
-
-- Hero nuevo tipo entrada / command gate.
-- Núcleo KoTZ animado con órbitas y nodos clicables.
-- Lluvia de datos y scanline de fondo.
-- Ticker animado de estado interno.
-- KPIs superiores con TOP #7, #8 y #16.
-- Panel “KoTZ Live Command”.
-- Cards del ecosistema KoTZ: Usuario, Alto Mando, Organización y Diplomacia.
-- Bloque de alianzas TOP visible desde el inicio.
-- Doctrina de entrada con tarjetas animadas.
-- Bloque final de acceso principal.
-- Responsive para móvil.
-
-## No toca
-
-- `.env`
-- Apps Script
-- Google Sheets
-- Render variables
 - `server.js`
-- `panel.js`
+- `js/site.js`
+- `js/data.js`
 
-## Aplicación
-
-Copia los archivos encima del proyecto y sube a GitHub. Después haz Manual Deploy en Render.
+No incluye `.env`, `.git`, `node_modules` ni secretos.

@@ -274,7 +274,7 @@ function pageHome(){
     ['Panel Usuario','Acceso para miembros verificados, cuotas, tienda RP y galería interna.','user.html','Abrir panel','100%','👤'],
     ['Alto Mando','Control de miembros, sanciones, cuotas, tienda, galería y administración.','panel.html','Entrar mando','Privado','👑'],
     ['Organización','Cadena de mando, rangos, áreas internas y protocolos de crecimiento.','#/organizacion','Ver estructura','9 rangos','▰'],
-    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','7 aliados','🤝']
+    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','8 aliados','🤝']
   ];
   const topAllies = [
     ['#7','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
@@ -324,7 +324,7 @@ function pageHome(){
           <small>Command Core</small>
         </div>
         <a href="#/organizacion" class="home-orbit-node n1"><b>09</b><span>Rangos</span></a>
-        <a href="#/alianzas" class="home-orbit-node n2"><b>07</b><span>Alianzas</span></a>
+        <a href="#/alianzas" class="home-orbit-node n2"><b>08</b><span>Alianzas</span></a>
         <a href="#/estadisticas" class="home-orbit-node n3"><b>DATA</b><span>Core</span></a>
         <a href="#/galeria" class="home-orbit-node n4"><b>MEDIA</b><span>Galería</span></a>
       </div>
@@ -805,11 +805,11 @@ function normalizeText(value){
 function allianceTags(alliance){
   const text = normalizeText(`${alliance.type || ''} ${alliance.desc || ''} ${(alliance.pillars || []).join(' ')} ${(alliance.agreements || []).join(' ')}`);
   const tags = [];
-  if (text.includes('econom') || text.includes('comercial')) tags.push('Economía');
-  if (text.includes('militar') || text.includes('defensa') || text.includes('apoyo')) tags.push('Defensa');
+  if (text.includes('econom') || text.includes('comercial') || text.includes('comercio')) tags.push('Economía');
+  if (text.includes('militar') || text.includes('defensa') || text.includes('apoyo') || text.includes('proteccion')) tags.push('Defensa');
   if (text.includes('informacion') || text.includes('estrateg')) tags.push('Estrategia');
   if (text.includes('comunicacion') || text.includes('lider')) tags.push('Comunicación');
-  if (text.includes('comunidad') || text.includes('familia')) tags.push('Comunidad');
+  if (text.includes('comunidad') || text.includes('familia') || text.includes('convivencia')) tags.push('Comunidad');
   if (text.includes('internacional')) tags.push('Internacional');
   if (text.includes('no agresion')) tags.push('No agresión');
   if (!tags.length) tags.push('Respeto', 'Cooperación');
@@ -854,6 +854,7 @@ function allianceTrustScore(alliance){
   if (level.includes('prioritaria')) score = 96;
   else if (level.includes('alta')) score = 91;
   else if (level.includes('tactica') || level.includes('estrateg')) score = 86;
+  else if (level.includes('reciente')) score = 79;
   else if (level.includes('operativa') || type.includes('pacto')) score = 80;
   else if (type.includes('econom') || type.includes('comercial')) score = 78;
   return Math.min(99, Math.max(65, score));
@@ -877,12 +878,21 @@ function allianceMotto(alliance){
     'underworld':'Economía discreta, acuerdos claros y beneficio mutuo.',
     'cult-of-rose':'Comunidad, defensa y futuro compartido.',
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
-    'the-nato':'Red internacional, protocolo, lealtad y coordinación.'
+    'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
+    'crows-of-olympus':'Respeto, no agresión, comercio y protección bajo el pacto de Olympus.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
 
 function allianceTimeline(alliance){
+  if (alliance?.slug === 'crows-of-olympus') {
+    return [
+      ['Tratado firmado', `Acuerdo oficial registrado el ${alliance.treatyDate || '07/07/2026'} a las ${alliance.treatyTime || '07:17'}.`],
+      ['No agresión activa', 'Quedan prohibidos ataques, emboscadas, secuestros y actos hostiles entre miembros aliados.'],
+      ['Cooperación abierta', 'El pacto permite apoyo en conflictos, intercambio de información, comercio y protección mutua.'],
+      ['Revisión por líderes', 'Cualquier problema se trata entre responsables antes de romper o escalar el tratado.']
+    ];
+  }
   const type = normalizeText(alliance.type || '');
   const extra = type.includes('econom') ? 'Ruta comercial activa' : type.includes('internacional') ? 'Canal internacional activo' : type.includes('estrateg') ? 'Canal estratégico activo' : 'Coordinación activa';
   return [
@@ -939,7 +949,7 @@ function pageAlliances(){
   return `
   <section class="page-head diplomacy-v3-head">
     <div class="diplomacy-v3-ambient">
-      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
+      ${colors.slice(0,8).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
     </div>
     <div class="diplomacy-scanlines"></div>
     <div class="diplomacy-data-rain">
@@ -1120,6 +1130,8 @@ function pageAllianceDetail(slug){
         ${topRank ? `<div class="top-position-badge ${allianceTopPulse(alliance)}"><span>Posición TOP</span><b>#${topRank}</b><small>${escapeHtml(allianceTopTier(alliance))}</small></div>` : ''}
         <div class="id-grid">
           ${topRank ? `<div><small>Ranking</small><b>#${topRank}</b></div>` : ''}
+          ${alliance.leader ? `<div><small>Líder aliado</small><b>${escapeHtml(alliance.leader)}</b></div>` : ''}
+          ${alliance.treatyDate ? `<div><small>Tratado</small><b>${escapeHtml(alliance.treatyDate)}</b></div>` : ''}
           <div><small>Prioridad</small><b>${alliancePriority(alliance)}</b></div>
           <div><small>Riesgo</small><b>${allianceRisk(alliance)}</b></div>
           <div><small>Comunicación</small><b>${allianceCommunication(alliance)}</b></div>

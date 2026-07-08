@@ -32,7 +32,7 @@ function envList(name){ return String(process.env[name] || '').split(',').map(v 
 const KOTZ_ALLIANCES = [
   {
     slug: 'rose-spines',
-    name: 'Rose-Spines',
+    name: 'Rose Spines',
     code: 'SPINES',
     emoji: '⚔️',
     status: 'Activa',
@@ -41,9 +41,9 @@ const KOTZ_ALLIANCES = [
     level: 'Confianza estable',
     colors: { primary: '#9FE8FF', secondary: '#FFFFFF', dark: '#06121A' },
     desc: 'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.',
-    full: 'Rose-Spines representa una conexión directa entre comunidades que entienden el valor de la confianza. Esta alianza nace para reforzar la defensa mutua, mantener comunicación constante entre liderazgos y construir una relación estable a largo plazo, sin dramas innecesarios ni acciones improvisadas.',
+    full: 'Rose Spines representa una conexión directa entre comunidades que entienden el valor de la confianza. Esta alianza nace para reforzar la defensa mutua, mantener comunicación constante entre liderazgos y construir una relación estable a largo plazo, sin dramas innecesarios ni acciones improvisadas.',
     pillars: ['Defensa y apoyo mutuo', 'Comunicación directa entre líderes', 'Respeto de acuerdos', 'Crecimiento conjunto'],
-    agreements: ['KoTZ y Rose-Spines se reconocen como comunidades aliadas.', 'Ambas partes priorizan la coordinación antes de cualquier movimiento sensible.', 'Los conflictos deberán tratarse por vía interna entre líderes, evitando exposición pública.'],
+    agreements: ['KoTZ y Rose Spines se reconocen como comunidades aliadas.', 'Ambas partes priorizan la coordinación antes de cualquier movimiento sensible.', 'Los conflictos deberán tratarse por vía interna entre líderes, evitando exposición pública.'],
     benefits: ['Apoyo en situaciones de presión externa.', 'Canal de comunicación directa para coordinación rápida.', 'Imagen común de respeto, estabilidad y crecimiento.'],
     protocol: ['No atacar, provocar ni estafar a miembros aliados.', 'No captar miembros de la comunidad aliada.', 'Informar a Alto Mando antes de actuar en nombre de la alianza.'],
     note: 'Una alianza pensada para crecer con calma: respeto primero, fuerza después.'
@@ -155,7 +155,30 @@ const KOTZ_ALLIANCES = [
     benefits: ['Refuerzo internacional para la red de KoTZ.', 'Mayor capacidad de coordinación y apoyo.', 'Relación diplomática fuerte basada en confianza.'],
     protocol: ['Respeto obligatorio hacia miembros aliados.', 'Prohibido fuego amigo, traición o filtración de información.', 'Prohibido captar miembros de bandas aliadas.', 'Los desacuerdos se resuelven entre líderes, nunca en público.', 'La alianza puede revocarse por incumplimientos graves o reiterados.'],
     note: 'Un paso importante para KoTZ: una red internacional basada en lealtad, respeto y cooperación.'
+  },
+
+  {
+    slug: 'crows-of-olympus',
+    name: 'Crows Of Olympus',
+    code: 'CROWS',
+    emoji: '🐦‍⬛',
+    status: 'Activa',
+    since: 'Jul 2026',
+    type: 'Pacto de respeto, no agresión, comercio y protección',
+    level: 'Confianza reciente',
+    colors: { primary: '#FF8A1F', secondary: '#050505', dark: '#080604' },
+    leader: 'Suki_Toast',
+    treatyDate: '07/07/2026',
+    treatyTime: '07:17',
+    desc: 'Nueva alianza oficial con Crows Of Olympus basada en respeto mutuo, convivencia, comercio y protección entre organizaciones.',
+    full: 'Crows Of Olympus entra en la red diplomática de KoTZ como una alianza reciente pero importante. El tratado establece una relación de respeto, no agresión, cooperación y convivencia entre ambas organizaciones, con el objetivo de evitar conflictos innecesarios y abrir una vía estable de apoyo, comercio e información entre liderazgos.',
+    pillars: ['Respeto mutuo', 'No agresión', 'Cooperación en conflictos', 'Intercambio de información', 'Comercio entre organizaciones', 'Protección mutua'],
+    agreements: ['KoTZ y Crows Of Olympus se reconocen como organizaciones aliadas oficiales.', 'Ambas partes se comprometen a evitar provocaciones, insultos o acciones destinadas a generar conflictos.', 'Quedan prohibidos ataques, emboscadas, secuestros o actos hostiles contra miembros aliados mientras el tratado siga vigente.', 'La cooperación podrá incluir apoyo en conflictos, información útil, comercio autorizado y protección mutua.'],
+    benefits: ['Nueva conexión diplomática con una banda de identidad marcada.', 'Canal de comercio y cooperación entre organizaciones.', 'Apoyo y protección mutua en situaciones importantes.', 'Mayor presencia de KoTZ dentro de la red de bandas aliadas.'],
+    protocol: ['No atacar, emboscar, secuestrar ni provocar a miembros de Crows Of Olympus.', 'No iniciar comercio, promesas o acuerdos sensibles sin autorización de responsables.', 'Cualquier tensión se eleva a Alto Mando antes de actuar.', 'El incumplimiento grave permite cancelar el tratado de forma inmediata.'],
+    note: 'Tratado firmado entre Crows Of Olympus y KoTZ: respeto, no agresión, comercio y protección mutua bajo palabra de líderes.'
   }
+
 ];
 
 const roleConfig = {
