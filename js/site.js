@@ -650,7 +650,7 @@ function pageOrg(){
       name:'Administración',
       icon:'🔴',
       color:'#4e0a1a',
-      leaders:'@Roger y @乃尺卂丂ㄩ匚卂 ★',
+      leaders:'@Roger',
       mission:'Encargado de la organización interna, gestión de recursos y supervisión administrativa de la banda.',
       functions:['Gestionar miembros, rangos, cuotas y sanciones.', 'Supervisar recursos, registros y paneles internos.', 'Revisar que los sistemas funcionen correctamente.', 'Mantener la estructura de KoTZ ordenada y actualizada.']
     }
