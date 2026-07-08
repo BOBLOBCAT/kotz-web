@@ -603,31 +603,66 @@ function initAboutConsole(){
 /* --------------------------------------------------------- ORGANIZACION */
 function pageOrg(){
   const command = [
-    { level:'01', role:'Owner', name:'Roger', tag:'Dirección total', icon:'👑', color:'#ff9b3d', desc:'Marca la visión, toma decisiones finales y protege la identidad de KoTZ.', power:'100' },
-    { level:'02', role:'Co-Owner', name:'Ian Grimstone', tag:'Segundo mando', icon:'♛', color:'#ff4fb8', desc:'Sostiene la operación diaria, reemplaza al Owner y coordina decisiones críticas.', power:'94' },
-    { level:'03', role:'Capitanes', name:'Kyle · Tyler · Gigi · Eva', tag:'Alto Mando', icon:'◆', color:'#9fe8ff', desc:'Dirigen áreas, supervisan rangos y convierten órdenes en movimiento real.', power:'88' },
-    { level:'04', role:'Líderes de área', name:'Comunicación · Reclutamiento · Administración · Venta', tag:'Especialistas', icon:'▣', color:'#d8c84a', desc:'Controlan departamentos concretos y mantienen el ritmo interno de la organización.', power:'82' }
+    { level:'01', role:'Owner', name:'Roger', tag:'Dirección total', icon:'👑', color:'#fff600', desc:'Marca la visión, toma decisiones finales y protege la identidad de KoTZ.', power:'100' },
+    { level:'02', role:'Co-Owner', name:'Ian Grimstone', tag:'Segundo mando', icon:'♛', color:'#00ff6a', desc:'Sostiene la operación diaria, reemplaza al Owner y coordina decisiones críticas.', power:'94' },
+    { level:'03', role:'Capitanes', name:'Kyle · Tyler · Gigi · Eva', tag:'Alto Mando', icon:'◆', color:'#ff0000', desc:'Dirigen áreas, supervisan rangos y convierten órdenes en movimiento real.', power:'88' },
+    { level:'04', role:'Líderes de área', name:'Comunicación · Reclutamiento · Administración · Venta', tag:'Especialistas', icon:'▣', color:'#f3b280', desc:'Controlan departamentos concretos y mantienen el ritmo interno de la organización.', power:'82' }
   ];
 
   const ranks = [
-    ['01','Owner','Mando absoluto','Visión, decisiones finales, alianzas mayores y dirección general.','Acceso total','👑','#ff9b3d'],
-    ['02','Co-Owner','Dirección ejecutiva','Coordina Alto Mando, cubre al Owner y valida cambios importantes.','Acceso total','#','#ff4fb8'],
-    ['03','Capitán','Mando operativo','Supervisa miembros, revisa problemas, activa protocolos y lidera áreas.','Alto Mando','◆','#9fe8ff'],
-    ['04','Líder de área','Especialización','Responsable de comunicación, reclutamiento, administración o ventas RP.','Área asignada','▣','#d8c84a'],
-    ['05','Teniente','Coordinación','Ejecuta órdenes, organiza grupos pequeños y reporta al Alto Mando.','Operativo','▲','#8cffb5'],
-    ['06','Sargento','Control de escuadra','Mantiene disciplina, acompaña miembros nuevos y detecta problemas.','Escuadra','●','#b88cff'],
-    ['07','Soldado','Fuerza principal','Participa, aporta cuotas, respeta protocolos y representa la imagen KoTZ.','Miembro completo','■','#ffffff'],
-    ['08','Asociado','Vinculación','Persona cercana a KoTZ en observación o colaboración limitada.','Limitado','◇','#ffcc8a'],
-    ['09','Recluta','Prueba inicial','Nuevo ingreso bajo verificación, aprendizaje y seguimiento.','Básico','○','#999999']
+    ['01','Owner','Mando absoluto','Visión, decisiones finales, alianzas mayores y dirección general.','Acceso total','👑','#fff600'],
+    ['02','Co-Owner','Dirección ejecutiva','Coordina Alto Mando, cubre al Owner y valida cambios importantes.','Acceso total','#','#00ff6a'],
+    ['03','Capitanes','Mando operativo','Supervisan miembros, revisan problemas, activan protocolos y lideran áreas.','Alto Mando','◆','#ff0000'],
+    ['04','Líderes de área','Especialización','Responsables de comunicación, reclutamiento, administración o venta RP.','Área asignada','▣','#f3b280'],
+    ['05','Tenientes','Coordinación','Ejecutan órdenes, organizan grupos pequeños y reportan al Alto Mando.','Operativo','▲','#e1680d'],
+    ['06','Sargentos','Control de escuadra','Mantienen disciplina, acompañan miembros nuevos y detectan problemas.','Escuadra','●','#206694'],
+    ['07','Soldados','Fuerza principal','Participan, aportan cuotas, respetan protocolos y representan la imagen KoTZ.','Miembro completo','■','#6b8e23'],
+    ['08','Asociados','Vinculación','Personas cercanas a KoTZ en observación o colaboración limitada.','Limitado','◇','#938247'],
+    ['09','Reclutas','Prueba inicial','Nuevos ingresos bajo verificación, aprendizaje y seguimiento.','Básico','○','#b9bbbe']
+  ];
+
+  const areaLeaders = [
+    {
+      name:'Comunicación',
+      icon:'🟠',
+      color:'#f3b280',
+      leaders:'@Kyle Crimson (Domesticado) y @Eva Grimblade',
+      mission:'Responsable de la comunicación entre KoTZ, aliados y otras bandas.',
+      functions:['Preparar anuncios y mensajes oficiales.', 'Mantener comunicación clara entre miembros y liderazgo.', 'Coordinar mensajes con aliados u otras bandas cuando Alto Mando lo autorice.', 'Evitar malentendidos públicos y ordenar la información importante.']
+    },
+    {
+      name:'Reclutamiento',
+      icon:'🟢',
+      color:'#448f7c',
+      leaders:'@Ian Grimstone y @Gigi',
+      mission:'Encargado de buscar y reclutar a otros miembros y de la gestión de los nuevos miembros.',
+      functions:['Buscar perfiles útiles para KoTZ.', 'Filtrar entradas, observar actitud y detectar problemas.', 'Guiar a reclutas durante sus primeros pasos.', 'Reportar al Alto Mando quién merece quedarse y quién no.']
+    },
+    {
+      name:'Venta de Armas',
+      icon:'⚫',
+      color:'#2a2525',
+      leaders:'@Tyler price',
+      mission:'Responsable de coordinar el comercio y la distribución de armamento dentro de la organización.',
+      functions:['Controlar solicitudes de compra en la tienda RP.', 'Coordinar precios, stock y entregas.', 'Evitar ventas sin autorización o acuerdos mal cerrados.', 'Mantener la economía RP bajo control interno.']
+    },
+    {
+      name:'Administración',
+      icon:'🔴',
+      color:'#4e0a1a',
+      leaders:'@Roger y @乃尺卂丂ㄩ匚卂 ★',
+      mission:'Encargado de la organización interna, gestión de recursos y supervisión administrativa de la banda.',
+      functions:['Gestionar miembros, rangos, cuotas y sanciones.', 'Supervisar recursos, registros y paneles internos.', 'Revisar que los sistemas funcionen correctamente.', 'Mantener la estructura de KoTZ ordenada y actualizada.']
+    }
   ];
 
   const departments = [
-    ['Comunicación','Control de anuncios, coordinación pública, mensajes oficiales y relación entre miembros.','📢','Canal directo','Alto impacto'],
-    ['Reclutamiento','Entrada de nuevos miembros, filtros, entrevistas y seguimiento de reclutas.','🧲','Verificación','Crecimiento'],
-    ['Administración','Registro de miembros, cuotas, sanciones, estructura interna y paneles de control.','📋','Orden interno','Crítico'],
-    ['Venta RP','Gestión de tienda, precios, ofertas, stock y solicitudes comerciales dentro del rol.','▰','Economía RP','Controlado'],
-    ['Diplomacia','Alianzas, pactos, no agresión, comunicación con líderes aliados y protocolos externos.','🤝','Red KoTZ','Estratégico'],
-    ['Seguridad','Permisos, roles, detección de infiltrados, acceso a información y normas internas.','🛡️','Protección','Prioritario']
+    ['Comunicación','Control de anuncios, coordinación pública, mensajes oficiales y relación entre miembros.','📢','Canal directo','Alto impacto','#f3b280'],
+    ['Reclutamiento','Entrada de nuevos miembros, filtros, entrevistas y seguimiento de reclutas.','🧲','Verificación','Crecimiento','#448f7c'],
+    ['Administración','Registro de miembros, cuotas, sanciones, estructura interna y paneles de control.','📋','Orden interno','Crítico','#4e0a1a'],
+    ['Venta RP','Gestión de tienda, precios, ofertas, stock y solicitudes comerciales dentro del rol.','▰','Economía RP','Controlado','#2a2525'],
+    ['Diplomacia','Alianzas, pactos, no agresión, comunicación con líderes aliados y protocolos externos.','🤝','Red KoTZ','Estratégico','#9fe8ff'],
+    ['Seguridad','Permisos, roles, detección de infiltrados, acceso a información y normas internas.','🛡️','Protección','Prioritario','#ff4fb8']
   ];
 
   const promotion = [
@@ -668,7 +703,7 @@ function pageOrg(){
     <div class="wrap">
       <div class="org-kpi-grid reveal">
         <div class="org-kpi-card"><span>9</span><b>Niveles</b><small>De Recluta a Owner</small></div>
-        <div class="org-kpi-card"><span>6</span><b>Áreas</b><small>Trabajo especializado</small></div>
+        <div class="org-kpi-card"><span>4</span><b>Áreas líderes</b><small>Comunicación, reclutamiento, venta y administración</small></div>
         <div class="org-kpi-card"><span>24/7</span><b>Control</b><small>Roles y permisos activos</small></div>
         <div class="org-kpi-card"><span>1</span><b>Familia</b><small>Una visión común</small></div>
       </div>
@@ -690,6 +725,26 @@ function pageOrg(){
             <div class="mini-sub">${c.tag} · Señal ${c.power}%</div>
           </article>`).join('')}
       </div>
+
+      <details class="area-leaders-drawer reveal">
+        <summary>
+          <span>▣</span>
+          <div>
+            <b>Abrir mapa de líderes de área</b>
+            <small>Responsables, funciones y colores oficiales de cada departamento</small>
+          </div>
+          <i>+</i>
+        </summary>
+        <div class="area-leader-grid">
+          ${areaLeaders.map(area => `
+            <article class="area-leader-card" style="--area:${area.color}">
+              <div class="area-leader-top"><span>${area.icon}</span><b>${area.name}</b></div>
+              <p>${area.mission}</p>
+              <div class="area-leader-members">Integrantes: <strong>${area.leaders}</strong></div>
+              <ul>${area.functions.map(f => `<li>${f}</li>`).join('')}</ul>
+            </article>`).join('')}
+        </div>
+      </details>
     </div>
   </section>
 
@@ -723,8 +778,8 @@ function pageOrg(){
         <p class="lede">Cada área existe para que KoTZ no dependa de una sola persona. Comunicación, economía, diplomacia y seguridad tienen responsables y protocolos.</p>
       </div>
       <div class="department-grid reveal">
-        ${departments.map(([name,desc,icon,mode,priority],i) => `
-          <article class="department-card dep-${i+1}">
+        ${departments.map(([name,desc,icon,mode,priority,color],i) => `
+          <article class="department-card dep-${i+1}" style="--dep:${color}">
             <div class="department-icon">${icon}</div>
             <div>
               <h3>${name}</h3>
@@ -805,11 +860,11 @@ function normalizeText(value){
 function allianceTags(alliance){
   const text = normalizeText(`${alliance.type || ''} ${alliance.desc || ''} ${(alliance.pillars || []).join(' ')} ${(alliance.agreements || []).join(' ')}`);
   const tags = [];
-  if (text.includes('econom') || text.includes('comercial') || text.includes('comercio')) tags.push('Economía');
-  if (text.includes('militar') || text.includes('defensa') || text.includes('apoyo') || text.includes('proteccion')) tags.push('Defensa');
+  if (text.includes('econom') || text.includes('comercial')) tags.push('Economía');
+  if (text.includes('militar') || text.includes('defensa') || text.includes('apoyo')) tags.push('Defensa');
   if (text.includes('informacion') || text.includes('estrateg')) tags.push('Estrategia');
   if (text.includes('comunicacion') || text.includes('lider')) tags.push('Comunicación');
-  if (text.includes('comunidad') || text.includes('familia') || text.includes('convivencia')) tags.push('Comunidad');
+  if (text.includes('comunidad') || text.includes('familia')) tags.push('Comunidad');
   if (text.includes('internacional')) tags.push('Internacional');
   if (text.includes('no agresion')) tags.push('No agresión');
   if (!tags.length) tags.push('Respeto', 'Cooperación');
@@ -848,16 +903,27 @@ function allianceDossierStats(alliance){
 
 
 function allianceTrustScore(alliance){
-  const level = normalizeText(alliance.level || '');
-  const type = normalizeText(alliance.type || '');
+  const map = {
+    'rose-spines': 93,
+    'lacrew': 80,
+    'kaos': 87,
+    'underworld': 100,
+    'cult-of-rose': 100,
+    'fallen-angels': 100,
+    'the-nato': 100,
+    'crows-of-olympus': 100
+  };
+  if (alliance?.slug && map[alliance.slug] != null) return map[alliance.slug];
+  if (Number.isFinite(Number(alliance?.trustScore))) return Number(alliance.trustScore);
+  const level = normalizeText(alliance?.level || '');
+  const type = normalizeText(alliance?.type || '');
   let score = 72;
   if (level.includes('prioritaria')) score = 96;
   else if (level.includes('alta')) score = 91;
   else if (level.includes('tactica') || level.includes('estrateg')) score = 86;
-  else if (level.includes('reciente')) score = 79;
   else if (level.includes('operativa') || type.includes('pacto')) score = 80;
   else if (type.includes('econom') || type.includes('comercial')) score = 78;
-  return Math.min(99, Math.max(65, score));
+  return Math.min(100, Math.max(65, score));
 }
 
 function allianceFocusIcon(alliance){
@@ -879,20 +945,12 @@ function allianceMotto(alliance){
     'cult-of-rose':'Comunidad, defensa y futuro compartido.',
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
     'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
-    'crows-of-olympus':'Respeto, no agresión, comercio y protección bajo el pacto de Olympus.'
+    'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
 
 function allianceTimeline(alliance){
-  if (alliance?.slug === 'crows-of-olympus') {
-    return [
-      ['Tratado firmado', `Acuerdo oficial registrado el ${alliance.treatyDate || '07/07/2026'} a las ${alliance.treatyTime || '07:17'}.`],
-      ['No agresión activa', 'Quedan prohibidos ataques, emboscadas, secuestros y actos hostiles entre miembros aliados.'],
-      ['Cooperación abierta', 'El pacto permite apoyo en conflictos, intercambio de información, comercio y protección mutua.'],
-      ['Revisión por líderes', 'Cualquier problema se trata entre responsables antes de romper o escalar el tratado.']
-    ];
-  }
   const type = normalizeText(alliance.type || '');
   const extra = type.includes('econom') ? 'Ruta comercial activa' : type.includes('internacional') ? 'Canal internacional activo' : type.includes('estrateg') ? 'Canal estratégico activo' : 'Coordinación activa';
   return [
@@ -949,7 +1007,7 @@ function pageAlliances(){
   return `
   <section class="page-head diplomacy-v3-head">
     <div class="diplomacy-v3-ambient">
-      ${colors.slice(0,8).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
+      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
     </div>
     <div class="diplomacy-scanlines"></div>
     <div class="diplomacy-data-rain">
@@ -1130,8 +1188,6 @@ function pageAllianceDetail(slug){
         ${topRank ? `<div class="top-position-badge ${allianceTopPulse(alliance)}"><span>Posición TOP</span><b>#${topRank}</b><small>${escapeHtml(allianceTopTier(alliance))}</small></div>` : ''}
         <div class="id-grid">
           ${topRank ? `<div><small>Ranking</small><b>#${topRank}</b></div>` : ''}
-          ${alliance.leader ? `<div><small>Líder aliado</small><b>${escapeHtml(alliance.leader)}</b></div>` : ''}
-          ${alliance.treatyDate ? `<div><small>Tratado</small><b>${escapeHtml(alliance.treatyDate)}</b></div>` : ''}
           <div><small>Prioridad</small><b>${alliancePriority(alliance)}</b></div>
           <div><small>Riesgo</small><b>${allianceRisk(alliance)}</b></div>
           <div><small>Comunicación</small><b>${allianceCommunication(alliance)}</b></div>
@@ -1277,7 +1333,7 @@ function pageDiplomaticStatus(){
   if (alliancesError) return pageAllianceGate(alliancesError.type || 'denied', alliancesError.message);
 
   const alliances = secureAlliances;
-  const conflicts = KotzStore.getConflicts ? KotzStore.getConflicts() : [];
+  const conflicts = (KotzStore.getConflicts ? KotzStore.getConflicts() : []).filter(w => String(w?.status || '').toLowerCase() !== 'estable');
   return `
   <section class="page-head diplomacy-head">
     <div class="wrap">
@@ -1313,7 +1369,7 @@ function pageDiplomaticStatus(){
           <div class="war-card">
             <div class="alliance-top">
               <div class="alliance-logo">${w.emoji || '⚠️'}</div>
-              <span class="pill ${w.status === 'Estable' ? 'pill-green' : 'pill-red'}">${w.status}</span>
+              <span class="pill pill-red">${w.status}</span>
             </div>
             <h3 class="h3">${w.name}</h3>
             <p class="lede" style="font-size:.9rem;">${w.desc}</p>
@@ -1321,7 +1377,7 @@ function pageDiplomaticStatus(){
             <ul class="rule-list">
               ${(w.rules||[]).map(r => `<li>${r}</li>`).join('')}
             </ul>
-          </div>`).join('') || `<div class="card pad diplomacy-empty"><p class="lede">No hay conflictos registrados. La red diplomática está estable.</p></div>`}
+          </div>`).join('') || `<div class="war-card zero-conflict-card"><div class="alliance-top"><div class="alliance-logo">🕊️</div><span class="pill pill-green">0 conflictos</span></div><h3 class="h3">Sin conflictos activos</h3><p class="lede" style="font-size:.9rem;">KoTZ no tiene conflictos oficiales registrados ahora mismo. Se mantiene el respeto a aliados, la comunicación por liderazgo y el protocolo interno activo.</p><div class="mini-sub" style="margin-top:14px;">Estado: estable</div></div>`}
       </div>
     </div>
   </section>`;
@@ -1754,35 +1810,41 @@ function galleryTileStyle(g){
 
 /* --------------------------------------------------------- ESTADISTICAS */
 function pageStats(){
-  const s = KotzStore.stats();
-  const growth = KotzStore.getMemberGrowth();
+  const s = {
+    totalMembers: 34,
+    activeMembers: 30,
+    alliances: 8,
+    eventsHeld: 1,
+    recruitsAccepted: 34,
+    weeklyDuesPct: 95,
+    activityPct: 78,
+    recruitmentPct: 68,
+    diplomacyPct: 99
+  };
+  const growth = [
+    { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:17 }
+  ];
   const maxGrowth = Math.max(1, ...growth.map(g => Number(g.total) || 0));
-  const duesApproved = Number(s.duesApproved) || 0;
-  const duesPending = Number(s.duesPending) || 0;
-  const duesTotal = duesApproved + duesPending;
-  const duesPct = duesTotal ? Math.round((duesApproved / duesTotal) * 100) : 0;
-  const activityPct = Math.min(100, Math.round(((Number(s.activeMembers) || 0) / Math.max(1, Number(s.totalMembers) || 1)) * 100));
-  const allianceStrength = Math.min(99, Math.max(65, 72 + (Number(s.alliances) || 0) * 4));
-  const recruitmentPct = Math.min(100, Math.round(((Number(s.recruitsAccepted) || 0) / Math.max(1, (Number(s.totalMembers) || 1))) * 100));
   const cards = [
     [s.totalMembers,'Miembros registrados','Núcleo total dentro de la base KoTZ','👥'],
     [s.activeMembers,'Miembros activos','Presencia útil y movimiento real','⚡'],
     [s.alliances,'Alianzas activas','Red diplomática reconocida','🤝'],
-    [s.eventsHeld,'Eventos realizados','Actividad generada por la comunidad','📍'],
-    [s.recruitsAccepted,'Reclutas aceptados','Ingresos que pasaron filtro','✅'],
-    [duesPct + '%','Cuotas al día','Control económico interno','💰']
+    [s.eventsHeld,'Evento realizado','Actividad generada por la comunidad','📍'],
+    [s.recruitsAccepted,'Reclutas aceptados','Ingresos que pasaron filtro y forman parte de KoTZ','✅'],
+    [s.weeklyDuesPct + '%','Cuotas a la semana','Control económico semanal interno','💰']
   ];
   const gauges = [
-    ['Actividad', activityPct, 'Presencia de miembros activos', '#ff9a1a'],
-    ['Cuotas', duesPct, 'Cumplimiento económico', '#ff4fb5'],
-    ['Diplomacia', allianceStrength, 'Fuerza de alianzas', '#9fe8ff'],
-    ['Reclutamiento', recruitmentPct, 'Entrada validada', '#8cffb5']
+    ['Actividad', s.activityPct, 'Presencia de miembros activos', '#ff9a1a'],
+    ['Cuotas', s.weeklyDuesPct, 'Cumplimiento económico semanal', '#ff4fb5'],
+    ['Diplomacia', s.diplomacyPct, 'Fuerza de alianzas', '#9fe8ff'],
+    ['Reclutamiento', s.recruitmentPct, '34 miembros sobre 50 plazas máximas', '#8cffb5']
   ];
   const ops = [
-    ['Red interna','Operativa','Miembros, cuotas y panel privado activos.'],
-    ['Diplomacia','Estable','Alianzas protegidas y expedientes internos visibles.'],
-    ['Economía','En control',`${duesApproved} cuotas aprobadas · ${duesPending} pendientes.`],
-    ['Crecimiento','Selectivo','No se busca cantidad sin filtro: se busca gente útil.']
+    ['Red interna','Operativa','34 miembros registrados · 30 activos.'],
+    ['Diplomacia','Estable','8 alianzas activas · 0 conflictos registrados.'],
+    ['Economía','En control','95% de cuotas semanales al día.'],
+    ['Crecimiento','Selectivo','34 de 50 plazas ocupadas: reclutamiento al 68%.']
   ];
   return `
   <section class="stats-v2-hero">
@@ -1799,7 +1861,7 @@ function pageStats(){
       </div>
       <div class="stats-command-panel reveal" id="statsConsole">
         <div class="stats-panel-top"><b>KOTZ DATA CORE</b><span>LIVE</span></div>
-        ${['Recopilando miembros...','Calculando actividad...','Leyendo cuotas...','Sincronizando alianzas...','Generando informe visual...'].map((line,i)=>`
+        ${['Recopilando miembros...','Calculando actividad...','Leyendo cuotas semanales...','Sincronizando alianzas...','Generando informe visual...'].map((line,i)=>`
           <div class="stats-console-line" style="--i:${i}"><span>${String(i+1).padStart(2,'0')}</span>${line}</div>`).join('')}
       </div>
     </div>
@@ -1842,10 +1904,10 @@ function pageStats(){
       <div class="growth-copy reveal">
         <div class="eyebrow">Crecimiento</div>
         <h2 class="h2">Subir sí, pero <span class="accent">con control.</span></h2>
-        <p class="lede">La curva de crecimiento sirve para ver si KoTZ está aumentando su base sin perder el filtro interno. Crecer demasiado rápido sin estructura rompe cualquier banda.</p>
+        <p class="lede">Junio añadió 17 miembros y julio otros 17. El crecimiento sirve para medir si KoTZ aumenta su base sin perder el filtro interno.</p>
       </div>
       <div class="growth-chart-v2 reveal">
-        <div class="chart-card-head"><b>Crecimiento mensual</b><span>${growth.length} lecturas</span></div>
+        <div class="chart-card-head"><b>Altas mensuales</b><span>${growth.length} lecturas</span></div>
         <div class="bars-v2">
           ${growth.map((g,i) => {
             const h = Math.max(8, ((Number(g.total)||0) / maxGrowth * 100));
