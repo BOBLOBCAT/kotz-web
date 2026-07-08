@@ -626,7 +626,7 @@ function pageOrg(){
       name:'Comunicación',
       icon:'🟠',
       color:'#f3b280',
-      leaders:'@Kyle Crimson (Domesticado) y @Eva Grimblade',
+      leaders:'@Kyle Crimson y @Eva Grimblade',
       mission:'Responsable de la comunicación entre KoTZ, aliados y otras bandas.',
       functions:['Preparar anuncios y mensajes oficiales.', 'Mantener comunicación clara entre miembros y liderazgo.', 'Coordinar mensajes con aliados u otras bandas cuando Alto Mando lo autorice.', 'Evitar malentendidos públicos y ordenar la información importante.']
     },
