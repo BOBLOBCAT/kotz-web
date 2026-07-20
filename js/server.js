@@ -20,12 +20,189 @@ const DB_PATH = path.join(__dirname, 'server-data.json');
 const DISCORD_API = 'https://discord.com/api/v10';
 
 function readDb(){
-  if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({ dues: [] }, null, 2));
+  if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({ dues: [], sanctions: [], shopItems: [], shopOrders: [], shopOffers: [] }, null, 2));
   try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); }
-  catch { return { dues: [] }; }
+  catch { return { dues: [], sanctions: [], shopItems: [], shopOrders: [], shopOffers: [] }; }
 }
 function writeDb(db){ fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2)); }
 function envList(name){ return String(process.env[name] || '').split(',').map(v => v.trim()).filter(Boolean); }
+
+
+
+const KOTZ_ALLIANCES = [
+  {
+    slug: 'rose-spines',
+    name: 'Rose Spines',
+    code: 'SPINES',
+    emoji: '⚔️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza de apoyo mutuo',
+    level: 'Confianza estable',
+    trustScore: 93,
+    colors: { primary: '#9FE8FF', secondary: '#FFFFFF', dark: '#06121A' },
+    desc: 'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.',
+    full: 'Rose Spines representa una conexión directa entre comunidades que entienden el valor de la confianza. Esta alianza nace para reforzar la defensa mutua, mantener comunicación constante entre liderazgos y construir una relación estable a largo plazo, sin dramas innecesarios ni acciones improvisadas.',
+    pillars: ['Defensa y apoyo mutuo', 'Comunicación directa entre líderes', 'Respeto de acuerdos', 'Crecimiento conjunto'],
+    agreements: ['KoTZ y Rose Spines se reconocen como comunidades aliadas.', 'Ambas partes priorizan la coordinación antes de cualquier movimiento sensible.', 'Los conflictos deberán tratarse por vía interna entre líderes, evitando exposición pública.'],
+    benefits: ['Apoyo en situaciones de presión externa.', 'Canal de comunicación directa para coordinación rápida.', 'Imagen común de respeto, estabilidad y crecimiento.'],
+    protocol: ['No atacar, provocar ni estafar a miembros aliados.', 'No captar miembros de la comunidad aliada.', 'Informar a Alto Mando antes de actuar en nombre de la alianza.'],
+    note: 'Una alianza pensada para crecer con calma: respeto primero, fuerza después.'
+  },
+  {
+    slug: 'lacrew',
+    name: 'LaCREW',
+    code: 'LACREW',
+    emoji: '🛡️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Pacto de no agresión y cooperación',
+    level: 'Confianza operativa',
+    trustScore: 100,
+    colors: { primary: '#7B4DFF', secondary: '#09050F', dark: '#07040D' },
+    desc: 'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.',
+    full: 'LaCREW mantiene con KoTZ una alianza práctica, directa y orientada a la cooperación. El acuerdo se centra en evitar conflictos innecesarios, compartir apoyo cuando sea conveniente y mantener una relación útil para ambas bandas.',
+    pillars: ['Pacto de no agresión', 'Apoyo económico puntual', 'Cooperación entre bandas', 'Confianza entre líderes'],
+    agreements: ['No agresión entre miembros de ambas organizaciones.', 'Apoyo económico o logístico cuando sea viable y aprobado por liderazgo.', 'Contacto directo entre responsables para resolver dudas o tensiones.'],
+    benefits: ['Reduce riesgos de conflictos internos entre bandas.', 'Permite acuerdos económicos cuando ambas partes ganan.', 'Refuerza presencia y estabilidad diplomática de KoTZ.'],
+    protocol: ['Cualquier problema se eleva a líderes antes de escalar.', 'No se realizan acuerdos económicos sin autorización.', 'Se mantiene respeto público y privado hacia miembros aliados.'],
+    note: 'Una alianza útil, discreta y orientada al beneficio mutuo.'
+  },
+  {
+    slug: 'kaos',
+    name: '𝐾𝐴𝑂𝑠 ム',
+    code: 'KAOS',
+    emoji: 'ム',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza estratégica',
+    level: 'Confianza táctica',
+    trustScore: 87,
+    colors: { primary: '#D8C84A', secondary: '#050505', dark: '#080807' },
+    desc: 'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.',
+    full: 'KAOs y KoTZ sostienen una alianza enfocada en estrategia, información y coordinación rápida. Su valor está en la capacidad de actuar con cabeza, compartir información relevante y mantener una línea clara de respeto mutuo.',
+    pillars: ['Apoyo mutuo', 'Intercambio de información', 'Coordinación rápida', 'Respeto y no agresión'],
+    agreements: ['Ambas partes se comprometen a no agredirse ni provocar conflictos.', 'La información relevante se comparte únicamente por canales de confianza.', 'Los líderes coordinan cualquier situación que pueda afectar a la alianza.'],
+    benefits: ['Mejor lectura del entorno diplomático.', 'Respuesta más rápida ante situaciones delicadas.', 'Refuerzo estratégico para ambas comunidades.'],
+    protocol: ['No filtrar información aliada.', 'No actuar usando el nombre de KAOs o KoTZ sin permiso.', 'Cualquier tensión se informa al Alto Mando.'],
+    note: 'Estrategia, respeto y comunicación: esa es la base del acuerdo.'
+  },
+  {
+    slug: 'underworld',
+    name: 'Underworld',
+    code: 'UNDERWORLD',
+    emoji: '⚖️',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza económica y comercial',
+    level: 'Confianza comercial',
+    trustScore: 100,
+    colors: { primary: '#FFC4E1', secondary: '#9AD7FF', dark: '#120814' },
+    desc: 'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.',
+    full: 'Underworld es una alianza centrada en cooperación económica, comercio y beneficio mutuo. No se trata solo de apoyo simbólico: el acuerdo busca abrir oportunidades prácticas para que ambas comunidades se fortalezcan con acuerdos útiles y bien coordinados.',
+    pillars: ['Cooperación económica', 'Colaboración comercial', 'Comunicación directa', 'Beneficio mutuo'],
+    agreements: ['Los acuerdos comerciales se harán con claridad y autorización.', 'El respeto y el cumplimiento de pactos son obligatorios.', 'La relación se mantendrá por vía diplomática y profesional.'],
+    benefits: ['Posibilidad de acuerdos económicos favorables.', 'Refuerzo de relaciones comerciales.', 'Mayor estabilidad en operaciones de beneficio conjunto.'],
+    protocol: ['No estafar ni manipular acuerdos con aliados.', 'No prometer recursos sin autorización.', 'Registrar o comunicar acuerdos relevantes al Alto Mando.'],
+    note: 'Una alianza para crecer con cabeza: economía, respeto y palabra.'
+  },
+  {
+    slug: 'cult-of-rose',
+    name: 'Cult of Rose',
+    code: 'CULT-OF-ROSE',
+    emoji: '🌹',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza de comunidad y defensa',
+    level: 'Confianza en crecimiento',
+    trustScore: 100,
+    colors: { primary: '#FFC8EA', secondary: '#FFFFFF', dark: '#160911' },
+    desc: 'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.',
+    full: 'Cult of Rose y KoTZ comparten una visión de comunidad fuerte, futuro estable y apoyo mutuo. Esta alianza busca preparar el camino para una relación duradera, donde ambas bandas puedan ayudarse en momentos importantes y crecer sin perder su identidad.',
+    pillars: ['Comunidad sólida', 'Apoyo militar', 'Cooperación constante', 'Futuro compartido'],
+    agreements: ['Ambas comunidades se apoyarán cuando la situación lo requiera.', 'Se mantendrá comunicación constante entre líderes.', 'La alianza se cuidará como una relación a largo plazo, no como un acuerdo temporal.'],
+    benefits: ['Apoyo en momentos clave.', 'Crecimiento conjunto de imagen y presencia.', 'Base diplomática para proyectos futuros.'],
+    protocol: ['Respetar a miembros de Cult of Rose como aliados oficiales.', 'Evitar conflictos públicos y dramas innecesarios.', 'Coordinar cualquier apoyo militar con Alto Mando.'],
+    note: 'Una alianza con visión de futuro: comunidad, lealtad y crecimiento.'
+  },
+  {
+    slug: 'fallen-angels',
+    name: 'Fallen Angels',
+    code: 'FALLEN-ANGELS',
+    emoji: '🪽',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza estratégica de crecimiento',
+    level: 'Confianza alta',
+    trustScore: 100,
+    colors: { primary: '#B88CFF', secondary: '#9FE8FF', dark: '#0C0714' },
+    desc: 'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.',
+    full: 'Fallen Angels es una alianza estratégica pensada para construir algo más grande que una simple relación diplomática. El objetivo es colaborar, organizar proyectos, crecer como comunidades y demostrar una imagen sólida entre bandas.',
+    pillars: ['Crecimiento conjunto', 'Colaboración constante', 'Apoyo mutuo', 'Eventos y proyectos'],
+    agreements: ['KoTZ y Fallen Angels mantienen comunicación directa entre liderazgos.', 'Se priorizarán proyectos y eventos que beneficien a ambas comunidades.', 'La alianza se basa en confianza, cooperación y respeto mutuo.'],
+    benefits: ['Mayor impacto público entre comunidades.', 'Opciones para eventos y colaboraciones conjuntas.', 'Apoyo ante necesidades estratégicas.'],
+    protocol: ['Representar correctamente a KoTZ ante Fallen Angels.', 'No provocar ni generar conflictos con aliados.', 'Coordinar proyectos conjuntos con responsables autorizados.'],
+    note: 'Una alianza para verse fuerte, actuar unidos y crecer con estabilidad.'
+  },
+  {
+    slug: 'the-nato',
+    name: 'The NATO',
+    code: 'THE-NATO',
+    emoji: '💎',
+    status: 'Activa',
+    since: 'Jun 2026',
+    type: 'Alianza internacional',
+    level: 'Confianza prioritaria',
+    trustScore: 100,
+    colors: { primary: '#9FE8FF', secondary: '#FFFFFF', dark: '#06121A' },
+    desc: 'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.',
+    full: 'The NATO representa una alianza internacional importante para KoTZ. El acuerdo nace de una reunión formal entre liderazgos y establece una relación basada en cooperación, apoyo estratégico, respeto mutuo y comunicación directa.',
+    pillars: ['Cooperación internacional', 'Apoyo estratégico', 'Respeto mutuo', 'Comunicación entre liderazgos'],
+    agreements: ['Ambas bandas se reconocen como aliadas oficiales.', 'Los líderes permanecerán conectados para facilitar coordinación.', 'Los acuerdos, intercambios y eventos pactados deberán cumplirse.'],
+    benefits: ['Refuerzo internacional para la red de KoTZ.', 'Mayor capacidad de coordinación y apoyo.', 'Relación diplomática fuerte basada en confianza.'],
+    protocol: ['Respeto obligatorio hacia miembros aliados.', 'Prohibido fuego amigo, traición o filtración de información.', 'Prohibido captar miembros de bandas aliadas.', 'Los desacuerdos se resuelven entre líderes, nunca en público.', 'La alianza puede revocarse por incumplimientos graves o reiterados.'],
+    note: 'Un paso importante para KoTZ: una red internacional basada en lealtad, respeto y cooperación.'
+  },
+  {
+    slug: 'crows-of-olympus',
+    name: 'Crows Of Olympus',
+    code: 'OLYMPUS-CROWS',
+    emoji: '⚜️',
+    status: 'Activa',
+    since: 'Jul 2026',
+    type: 'Pacto de respeto, no agresión, comercio y protección',
+    level: 'Confianza reciente',
+    trustScore: 100,
+    colors: { primary: '#FF7A18', secondary: '#050505', dark: '#080604' },
+    desc: 'Nueva alianza oficial con Crows Of Olympus basada en respeto mutuo, convivencia, comercio y protección entre organizaciones.',
+    full: 'Crows Of Olympus entra en la red diplomática de KoTZ como una alianza de respeto, cooperación y convivencia. El tratado busca evitar conflictos innecesarios, mantener una relación estable y definir normas claras para que ambas organizaciones puedan colaborar sin romper la paz interna.',
+    pillars: ['Respeto mutuo', 'Pacto de no agresión', 'Cooperación entre organizaciones', 'Comercio y protección mutua'],
+    agreements: ['KoTZ y Crows Of Olympus se reconocen como organizaciones aliadas.', 'Ninguna parte iniciará ataques, emboscadas, secuestros ni actos hostiles contra miembros aliados.', 'La cooperación podrá incluir apoyo en conflictos, intercambio de información, comercio y protección mutua.'],
+    benefits: ['Nuevo canal diplomático con una organización activa.', 'Apoyo y protección mutua en situaciones importantes.', 'Más fuerza comercial y presencia dentro de la red de KoTZ.'],
+    protocol: ['Mantener respeto hacia miembros de Crows Of Olympus.', 'No provocar, atacar ni generar conflictos sin autorización.', 'Cualquier incumplimiento o tensión se eleva directamente a liderazgo.'],
+    note: 'Tratado firmado el 07/07/2026 a las 07:17. Crows Of Olympus queda integrado como aliado oficial de KoTZ.',
+    leader: 'Suki_Toast'
+  },
+  {
+    slug: 'neta',
+    name: 'Ñeta',
+    code: 'NETA',
+    emoji: '🩸',
+    status: 'Activa',
+    since: 'Jul 2026',
+    type: 'Pacto de respeto, no agresión y apoyo estratégico',
+    level: 'Confianza futura',
+    trustScore: 100,
+    colors: { primary: '#FF1E2D', secondary: '#050505', dark: '#0B0305' },
+    desc: 'Nueva alianza oficial con Ñeta basada en respeto mutuo, no agresión, cooperación y visión de futuro.',
+    full: 'Ñeta entra en la red diplomática de KoTZ como una alianza con intención de durar. El acuerdo se centra en respeto mutuo, pacto de no agresión, cooperación en situaciones importantes, intercambio de información cuando sea necesario y apoyo estratégico cuando la situación lo requiera.',
+    pillars: ['Respeto mutuo', 'Pacto de no agresión', 'Cooperación en situaciones importantes', 'Visión de futuro'],
+    agreements: ['KoTZ y Ñeta se reconocen como organizaciones aliadas.', 'Ambas partes mantendrán respeto y evitarán provocaciones o acciones sin autorización.', 'La cooperación podrá incluir información, apoyo estratégico y coordinación cuando la situación lo requiera.'],
+    benefits: ['Refuerza la red diplomática oficial de KoTZ.', 'Abre una base estable para cooperación futura.', 'Aporta apoyo estratégico en situaciones importantes.'],
+    protocol: ['No provocar, atacar ni generar conflictos con miembros de Ñeta.', 'Cualquier problema se tratará con responsables autorizados.', 'No actuar en nombre de la alianza sin permiso de liderazgo.'],
+    note: 'Alianza creada para construir una relación seria, estable y beneficiosa para ambas partes.'
+  }
+];
 
 const roleConfig = {
   admin: [
@@ -52,6 +229,12 @@ function getAccessLevel(roles = []){
   if (hasAnyRole(roles, roleConfig.user)) return 'usuario';
   return 'denegado';
 }
+function pickShopPrice(item, mode = 'member'){
+  if (mode === 'ally') return Number(item.allyPrice || item.memberPrice || item.basePrice || 0);
+  if (mode === 'base') return Number(item.basePrice || item.memberPrice || item.allyPrice || 0);
+  return Number(item.memberPrice || item.basePrice || item.allyPrice || 0);
+}
+function isActiveShopItem(item){ return String(item?.status || 'Activo').toLowerCase() === 'activo'; }
 function requireDiscordConfig(){
   return Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET && process.env.DISCORD_GUILD_ID);
 }
@@ -73,10 +256,6 @@ app.use((err, req, res, next) => {
   }
   return next(err);
 });
-
-if (googleStorage.configured() && !googleStorage.hasValidPrivateKeyFormat()) {
-  console.warn('[KoTZ] Aviso: GOOGLE_PRIVATE_KEY está definida pero no tiene formato PEM válido (revisa los saltos de línea \\n en el .env). Las cuotas fallarán al guardar en Google.');
-}
 
 app.use(session({
   name: 'kotz.sid',
@@ -200,6 +379,45 @@ app.get('/api/storage/status', async (req, res) => {
   }
 });
 
+
+app.get('/api/members', requireAdmin, async (req, res) => {
+  try {
+    if (!googleStorage.configured()) return res.json({ members: [], storage:'disabled' });
+    const members = await googleStorage.listMembers();
+    return res.json({ ok:true, members, storage:'google' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo miembros:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.friendlyGoogleError(err), storage:'google' });
+  }
+});
+
+app.get('/api/members/me', requireUserOrAdmin, async (req, res) => {
+  try {
+    if (!googleStorage.configured()) return res.json({ ok:true, member:null, storage:'disabled' });
+    const member = await googleStorage.getMemberForDiscordUser(req.session.user);
+    return res.json({ ok:true, member, storage:'google' });
+  } catch(err){
+    console.error('[KoTZ] Error buscando miembro por Discord:', req.session.user?.username, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.friendlyGoogleError(err), storage:'google' });
+  }
+});
+
+app.patch('/api/members/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!googleStorage.configured()) return res.status(501).json({ ok:false, error:'Google Storage no está configurado.' });
+    const allowed = ['rpName','name','discordUsername','discord','discordId','rank','joinDate','joined','status','profileUrl','notes'];
+    const patch = {};
+    for (const key of allowed){
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, key)) patch[key] = req.body[key];
+    }
+    const member = await googleStorage.updateMember(req.params.id, patch, req.session.user);
+    return res.json({ ok:true, member, storage:'google' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando miembro:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.friendlyGoogleError(err), storage:'google' });
+  }
+});
+
 app.get('/api/dues', requireUserOrAdmin, async (req, res) => {
   try {
     if (googleStorage.configured()) return res.json({ dues: await googleStorage.listDues(), storage:'google' });
@@ -292,8 +510,335 @@ app.patch('/api/dues/:id/status', requireAdmin, async (req, res) => {
   }
 });
 
+app.get('/api/sanctions', requireAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) return res.json({ ok:true, sanctions: await googleStorage.listSanctions(), storage:'google' });
+    return res.json({ ok:true, sanctions: readDb().sanctions || [], storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo sanciones:', '\n', err?.stack || err?.message || err);
+    const friendly = googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer las sanciones.';
+    return res.status(502).json({ ok:false, error: friendly, storage: googleStorage.configured() ? 'google' : 'json' });
+  }
+});
+
+app.post('/api/sanctions', requireAdmin, async (req, res) => {
+  const { memberId, memberName, severity, date, responsible, reason } = req.body || {};
+
+  if (!memberId || !memberName || !date || !reason) {
+    return res.status(400).json({ ok:false, error:'Faltan campos obligatorios (memberId, memberName, date o reason).' });
+  }
+
+  if (googleStorage.configured()){
+    try {
+      const sanction = await googleStorage.appendSanction({ memberId, memberName, severity, date, responsible, reason }, req.session.user);
+      return res.json({ ok:true, sanction, storage:'google' });
+    } catch(err){
+      console.error('[KoTZ] Error guardando sanción en Google:', { memberId, memberName, severity, date, responsible }, '\n', err?.stack || err?.message || err);
+      return res.status(502).json({ ok:false, error: googleStorage.friendlyGoogleError(err), storage:'google' });
+    }
+  }
+
+  try {
+    const db = readDb();
+    const sanction = {
+      id: 'sanction_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      createdAt: new Date().toISOString(),
+      memberId: String(memberId),
+      memberName: String(memberName),
+      severity: String(severity || 'Leve'),
+      date: String(date),
+      responsible: String(responsible || ''),
+      reason: String(reason),
+      createdByDiscordId: req.session.user?.id || '',
+      createdByUsername: req.session.user?.username || '',
+      createdByDisplayName: req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '',
+      source: 'server'
+    };
+    db.sanctions = db.sanctions || [];
+    db.sanctions.unshift(sanction);
+    writeDb(db);
+    return res.json({ ok:true, sanction, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error guardando sanción en server-data.json:', '\n', err?.stack || err?.message || err);
+    return res.status(500).json({ ok:false, error:'No se pudo guardar la sanción en el servidor.' });
+  }
+});
+
+
+/* ------------------------------------------------------------ SHOP / TIENDA RP */
+
+app.get('/api/shop/items', requireUserOrAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) {
+      const items = await googleStorage.listShopItems();
+      const visible = req.session.accessLevel === 'alto-mando' ? items : items.filter(isActiveShopItem);
+      return res.json({ ok:true, items: visible, storage:'google' });
+    }
+    const items = readDb().shopItems || [];
+    return res.json({ ok:true, items: req.session.accessLevel === 'alto-mando' ? items : items.filter(isActiveShopItem), storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo tienda:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo leer la tienda.' });
+  }
+});
+
+app.post('/api/shop/items', requireAdmin, async (req, res) => {
+  try {
+    const item = req.body || {};
+    if (!item.name) return res.status(400).json({ ok:false, error:'Falta el nombre del producto.' });
+    if (googleStorage.configured()) return res.json({ ok:true, item: await googleStorage.appendShopItem(item, req.session.user), storage:'google' });
+    const db = readDb();
+    const entry = { id:'shop_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), ...item };
+    db.shopItems = db.shopItems || []; db.shopItems.unshift(entry); writeDb(db);
+    return res.json({ ok:true, item:entry, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando producto:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear el producto.' });
+  }
+});
+
+app.patch('/api/shop/items/:id', requireAdmin, async (req, res) => {
+  try {
+    if (googleStorage.configured()) return res.json({ ok:true, item: await googleStorage.updateShopItem(req.params.id, req.body || {}, req.session.user), storage:'google' });
+    const db = readDb();
+    const item = (db.shopItems || []).find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ ok:false, error:'Producto no encontrado.' });
+    Object.assign(item, req.body || {}, { updatedAt:new Date().toISOString() }); writeDb(db);
+    return res.json({ ok:true, item, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando producto:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar el producto.' });
+  }
+});
+
+app.get('/api/shop/orders', requireUserOrAdmin, async (req, res) => {
+  try {
+    const all = googleStorage.configured() ? await googleStorage.listShopOrders() : (readDb().shopOrders || []);
+    const orders = req.session.accessLevel === 'alto-mando' ? all : all.filter(o => String(o.buyerDiscordId || '') === String(req.session.user?.id || ''));
+    return res.json({ ok:true, orders, storage: googleStorage.configured() ? 'google' : 'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo pedidos:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer los pedidos.' });
+  }
+});
+
+app.post('/api/shop/orders', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { itemId, quantity = 1, message = '', priceMode = 'member' } = req.body || {};
+    if (!itemId) return res.status(400).json({ ok:false, error:'Falta itemId.' });
+    const items = googleStorage.configured() ? await googleStorage.listShopItems() : (readDb().shopItems || []);
+    const item = items.find(i => String(i.id) === String(itemId));
+    if (!item || !isActiveShopItem(item)) return res.status(404).json({ ok:false, error:'Producto no disponible.' });
+    const qty = Math.max(1, Number(quantity || 1));
+    if (Number(item.stock || 0) < qty) return res.status(400).json({ ok:false, error:'No hay stock suficiente.' });
+    const member = googleStorage.configured() ? await googleStorage.getMemberForDiscordUser(req.session.user) : null;
+    const orderInput = { itemId:item.id, itemName:item.name, price: pickShopPrice(item, priceMode), quantity:qty, status:'pending', message:String(message || '') };
+    if (googleStorage.configured()) return res.json({ ok:true, order: await googleStorage.appendShopOrder(orderInput, req.session.user, member), storage:'google' });
+    const db = readDb();
+    const order = { id:'order_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), buyerDiscordId:req.session.user?.id || '', buyerUsername:req.session.user?.username || '', buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '', buyerMemberId:member?.id || '', buyerName:member?.name || req.session.user?.displayName || req.session.user?.username || '', ...orderInput };
+    db.shopOrders = db.shopOrders || []; db.shopOrders.unshift(order); writeDb(db);
+    return res.json({ ok:true, order, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando pedido:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear el pedido.' });
+  }
+});
+
+app.patch('/api/shop/orders/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!['pending','approved','rejected','delivered','cancelled'].includes(status)) return res.status(400).json({ ok:false, error:'Estado inválido.' });
+
+    if (googleStorage.configured()) {
+      const before = (await googleStorage.listShopOrders()).find(o => String(o.id) === String(req.params.id));
+      const order = await googleStorage.updateShopOrderStatus(req.params.id, status, req.session.user);
+      if (status === 'approved' && before && before.status !== 'approved') {
+        const item = (await googleStorage.listShopItems()).find(i => String(i.id) === String(order.itemId));
+        if (item) await googleStorage.updateShopItem(item.id, { stock: Math.max(0, Number(item.stock || 0) - Number(order.quantity || 1)) }, req.session.user);
+      }
+      return res.json({ ok:true, order, storage:'google' });
+    }
+
+    const db = readDb();
+    const order = (db.shopOrders || []).find(o => o.id === req.params.id);
+    if (!order) return res.status(404).json({ ok:false, error:'Pedido no encontrado.' });
+    order.status = status; order.reviewedBy = req.session.user?.displayName || req.session.user?.username || ''; order.reviewedAt = new Date().toISOString(); writeDb(db);
+    return res.json({ ok:true, order, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando pedido:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar el pedido.' });
+  }
+});
+
+app.get('/api/shop/offers', requireUserOrAdmin, async (req, res) => {
+  try {
+    const all = googleStorage.configured() ? await googleStorage.listShopOffers() : (readDb().shopOffers || []);
+    const offers = req.session.accessLevel === 'alto-mando' ? all : all.filter(o => String(o.buyerDiscordId || '') === String(req.session.user?.id || ''));
+    return res.json({ ok:true, offers, storage: googleStorage.configured() ? 'google' : 'json' });
+  } catch(err){
+    console.error('[KoTZ] Error leyendo ofertas:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudieron leer las ofertas.' });
+  }
+});
+
+app.post('/api/shop/offers', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { itemId, offeredPrice, message = '', priceMode = 'member' } = req.body || {};
+    if (!itemId || !offeredPrice) return res.status(400).json({ ok:false, error:'Falta itemId u offeredPrice.' });
+    const items = googleStorage.configured() ? await googleStorage.listShopItems() : (readDb().shopItems || []);
+    const item = items.find(i => String(i.id) === String(itemId));
+    if (!item || !isActiveShopItem(item)) return res.status(404).json({ ok:false, error:'Producto no disponible.' });
+    const member = googleStorage.configured() ? await googleStorage.getMemberForDiscordUser(req.session.user) : null;
+    const offerInput = { itemId:item.id, itemName:item.name, originalPrice: pickShopPrice(item, priceMode), offeredPrice:Number(offeredPrice), message:String(message || ''), status:'pending' };
+    if (googleStorage.configured()) return res.json({ ok:true, offer: await googleStorage.appendShopOffer(offerInput, req.session.user, member), storage:'google' });
+    const db = readDb();
+    const offer = { id:'offer_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'), createdAt:new Date().toISOString(), buyerDiscordId:req.session.user?.id || '', buyerUsername:req.session.user?.username || '', buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '', buyerMemberId:member?.id || '', buyerName:member?.name || req.session.user?.displayName || req.session.user?.username || '', ...offerInput };
+    db.shopOffers = db.shopOffers || []; db.shopOffers.unshift(offer); writeDb(db);
+    return res.json({ ok:true, offer, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error creando oferta:', '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo crear la oferta.' });
+  }
+});
+
+app.patch('/api/shop/offers/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status, counterOffer = '' } = req.body || {};
+    if (!['pending','accepted','rejected','countered','cancelled'].includes(status)) return res.status(400).json({ ok:false, error:'Estado inválido.' });
+    if (googleStorage.configured()) return res.json({ ok:true, offer: await googleStorage.updateShopOfferStatus(req.params.id, status, counterOffer, req.session.user), storage:'google' });
+    const db = readDb();
+    const offer = (db.shopOffers || []).find(o => o.id === req.params.id);
+    if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+    offer.status = status; offer.counterOffer = counterOffer; offer.reviewedBy = req.session.user?.displayName || req.session.user?.username || ''; offer.reviewedAt = new Date().toISOString(); writeDb(db);
+    return res.json({ ok:true, offer, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error actualizando oferta:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo actualizar la oferta.' });
+  }
+});
+
+app.patch('/api/shop/offers/:id/respond', requireUserOrAdmin, async (req, res) => {
+  try {
+    const { action, offeredPrice, message = '' } = req.body || {};
+    if (!['accept-counter','reject-counter','counter-again'].includes(action)) {
+      return res.status(400).json({ ok:false, error:'Respuesta de oferta inválida.' });
+    }
+
+    const userId = String(req.session.user?.id || '');
+
+    if (googleStorage.configured()) {
+      const offers = await googleStorage.listShopOffers();
+      const offer = offers.find(o => String(o.id) === String(req.params.id));
+      if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+      if (req.session.accessLevel !== 'alto-mando' && String(offer.buyerDiscordId || '') !== userId) {
+        return res.status(403).json({ ok:false, error:'No puedes responder una oferta que no es tuya.' });
+      }
+      if (offer.status !== 'countered') {
+        return res.status(400).json({ ok:false, error:'Esta oferta no tiene una contraoferta pendiente.' });
+      }
+
+      if (action === 'accept-counter') {
+        const updated = await googleStorage.updateShopOfferStatus(offer.id, 'accepted', offer.counterOffer || '', req.session.user);
+        return res.json({ ok:true, offer: updated, storage:'google' });
+      }
+
+      if (action === 'reject-counter') {
+        const updated = await googleStorage.updateShopOfferStatus(offer.id, 'cancelled', offer.counterOffer || '', req.session.user);
+        return res.json({ ok:true, offer: updated, storage:'google' });
+      }
+
+      const nextPrice = Number(offeredPrice || 0);
+      if (!nextPrice || nextPrice <= 0) return res.status(400).json({ ok:false, error:'La nueva oferta debe ser mayor que 0.' });
+
+      const member = await googleStorage.getMemberForDiscordUser(req.session.user);
+      await googleStorage.updateShopOfferStatus(offer.id, 'cancelled', offer.counterOffer || '', req.session.user);
+      const nextOffer = await googleStorage.appendShopOffer({
+        itemId: offer.itemId,
+        itemName: offer.itemName,
+        originalPrice: offer.originalPrice,
+        offeredPrice: nextPrice,
+        message: String(message || 'Nueva contraoferta del cliente'),
+        status: 'pending'
+      }, req.session.user, member);
+      return res.json({ ok:true, offer: nextOffer, previousOfferId: offer.id, storage:'google' });
+    }
+
+    const db = readDb();
+    const offer = (db.shopOffers || []).find(o => String(o.id) === String(req.params.id));
+    if (!offer) return res.status(404).json({ ok:false, error:'Oferta no encontrada.' });
+    if (req.session.accessLevel !== 'alto-mando' && String(offer.buyerDiscordId || '') !== userId) {
+      return res.status(403).json({ ok:false, error:'No puedes responder una oferta que no es tuya.' });
+    }
+    if (offer.status !== 'countered') {
+      return res.status(400).json({ ok:false, error:'Esta oferta no tiene una contraoferta pendiente.' });
+    }
+
+    const reviewer = req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '';
+
+    if (action === 'accept-counter') {
+      offer.status = 'accepted';
+      offer.reviewedBy = reviewer;
+      offer.reviewedAt = new Date().toISOString();
+      writeDb(db);
+      return res.json({ ok:true, offer, storage:'json' });
+    }
+
+    if (action === 'reject-counter') {
+      offer.status = 'cancelled';
+      offer.reviewedBy = reviewer;
+      offer.reviewedAt = new Date().toISOString();
+      writeDb(db);
+      return res.json({ ok:true, offer, storage:'json' });
+    }
+
+    const nextPrice = Number(offeredPrice || 0);
+    if (!nextPrice || nextPrice <= 0) return res.status(400).json({ ok:false, error:'La nueva oferta debe ser mayor que 0.' });
+
+    offer.status = 'cancelled';
+    offer.reviewedBy = reviewer;
+    offer.reviewedAt = new Date().toISOString();
+    const nextOffer = {
+      id:'offer_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      createdAt:new Date().toISOString(),
+      buyerDiscordId:req.session.user?.id || '',
+      buyerUsername:req.session.user?.username || '',
+      buyerDisplayName:req.session.user?.displayName || req.session.user?.globalName || req.session.user?.username || '',
+      buyerMemberId:offer.buyerMemberId || '',
+      buyerName:offer.buyerName || req.session.user?.displayName || req.session.user?.username || '',
+      itemId:offer.itemId,
+      itemName:offer.itemName,
+      originalPrice:Number(offer.originalPrice || 0),
+      offeredPrice:nextPrice,
+      message:String(message || 'Nueva contraoferta del cliente'),
+      status:'pending',
+      counterOffer:'',
+      reviewedBy:'',
+      reviewedAt:''
+    };
+    db.shopOffers = db.shopOffers || [];
+    db.shopOffers.unshift(nextOffer);
+    writeDb(db);
+    return res.json({ ok:true, offer: nextOffer, previousOfferId: offer.id, storage:'json' });
+  } catch(err){
+    console.error('[KoTZ] Error respondiendo contraoferta:', req.params.id, '\n', err?.stack || err?.message || err);
+    return res.status(502).json({ ok:false, error: googleStorage.configured() ? googleStorage.friendlyGoogleError(err) : 'No se pudo responder la contraoferta.' });
+  }
+});
+
+
+app.get('/api/alliances', (req, res) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ ok:false, error:'Inicia sesión con Discord para ver alianzas internas.' });
+  }
+  if (!['usuario', 'alto-mando'].includes(req.session.accessLevel)) {
+    return res.status(403).json({ ok:false, error:'No tienes permisos de miembro KoTZ para ver alianzas internas.' });
+  }
+  return res.json({ ok:true, alliances: KOTZ_ALLIANCES });
+});
+
 app.get('/api/gallery', async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     if (googleStorage.configured()) return res.json({ items: await googleStorage.listGallery(), storage:'google' });
     return res.json({ items: [], storage:'json' });
   } catch(err){

@@ -26,13 +26,14 @@ const KotzData = {
 
   alliances: [
     { id:'a1', slug:'rose-spines', name:'Rose Spines', emoji:'⚔️', status:'Activa', since:'Jun 2026', trustScore:93, desc:'Alianza basada en apoyo mutuo, respeto y crecimiento conjunto entre comunidades hispanohablantes.', values:['Respeto','Apoyo mutuo','Crecimiento'] },
-    { id:'a2', slug:'lacrew', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', trustScore:80, desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
+    { id:'a2', slug:'lacrew', name:'LaCREW', emoji:'🛡️', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Pacto de no agresión, apoyo económico cuando sea necesario y cooperación entre bandas.', values:['Comunicación','Defensa','Confianza'] },
     { id:'a3', slug:'kaos', name:'KAOs', emoji:'ム', status:'Activa', since:'Jun 2026', trustScore:87, desc:'Alianza estratégica de apoyo mutuo, información compartida y cooperación entre líderes.', values:['Estrategia','Respeto','Información'] },
     { id:'a4', slug:'underworld', name:'Underworld', emoji:'⚖️', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Acuerdo económico y comercial para beneficio mutuo y fortalecimiento entre bandas.', values:['Economía','Comercio','Respeto'] },
     { id:'a5', slug:'cult-of-rose', name:'Cult-of-Rose', emoji:'🌹', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza enfocada en comunidad, futuro, apoyo militar y crecimiento conjunto.', values:['Futuro','Apoyo militar','Familia'] },
     { id:'a6', slug:'fallen-angels', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
     { id:'a7', slug:'the-nato', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
-    { id:'a8', slug:'crows-of-olympus', name:'Crows Of Olympus', emoji:'🦅', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Crows Of Olympus basada en respeto, no agresión, comercio y protección mutua.', values:['Respeto','Comercio','Protección'] },
+    { id:'a8', slug:'crows-of-olympus', name:'Crows Of Olympus', emoji:'⚜️', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Crows Of Olympus basada en respeto, no agresión, comercio y protección mutua.', values:['Respeto','Comercio','Protección'] },
+    { id:'a9', slug:'neta', name:'Ñeta', emoji:'🩸', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Ñeta basada en respeto, no agresión, cooperación, información y apoyo estratégico.', values:['Respeto','No agresión','Futuro'] },
   ],
 
   conflicts: [],
@@ -88,7 +89,7 @@ const KotzData = {
 
   memberGrowth: [
     { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
-    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:17 },
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:30 }, { month:'Jul', total:16 },
   ],
 };
 /* ==========================================================================
@@ -365,20 +366,20 @@ const KotzStore = {
   stats(){
     const dues = this.getAllDues();
     return {
-      totalMembers: 34,
-      activeMembers: 30,
+      totalMembers: 46,
+      activeMembers: 46,
       pendingMembers: 0,
-      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 8,
+      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 9,
       duesPending: dues.filter(d => d.status === 'pending').length,
       duesApproved: dues.filter(d => d.status === 'approved').length,
       openSanctions: this.getAllSanctions().length,
       shopPending: this.getPendingShopOrders().length + this.getPendingShopOffers().length,
       eventsHeld: 1,
-      recruitsAccepted: 34,
+      recruitsAccepted: 46,
       weeklyDuesPct: 95,
       activityPct: 78,
-      recruitmentPct: 68,
-      diplomacyPct: 99
+      recruitmentPct: 92,
+      diplomacyPct: 98
     };
   }
 };

@@ -274,12 +274,12 @@ function pageHome(){
     ['Panel Usuario','Acceso para miembros verificados, cuotas, tienda RP y galería interna.','user.html','Abrir panel','100%','👤'],
     ['Alto Mando','Control de miembros, sanciones, cuotas, tienda, galería y administración.','panel.html','Entrar mando','Privado','👑'],
     ['Organización','Cadena de mando, rangos, áreas internas y protocolos de crecimiento.','#/organizacion','Ver estructura','9 rangos','▰'],
-    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','8 aliados','🤝']
+    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','9 aliados','🤝']
   ];
   const topAllies = [
-    ['#7','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
-    ['#8','The NATO','Alianza internacional','Prioridad · respeto · coordinación','#9FE8FF'],
-    ['#16','Fallen Angels','Crecimiento conjunto','Eventos · presencia · colaboración','#B88CFF']
+    ['#8','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
+    ['#9','The NATO','Alianza internacional','Prioridad · respeto · coordinación','#9FE8FF'],
+    ['#17','Fallen Angels','Crecimiento conjunto','Eventos · presencia · colaboración','#B88CFF']
   ];
   const doctrine = [
     ['01','Identidad','No entrar por entrar. Representar KoTZ significa cuidar el nombre, la imagen y la zona.'],
@@ -324,7 +324,7 @@ function pageHome(){
           <small>Command Core</small>
         </div>
         <a href="#/organizacion" class="home-orbit-node n1"><b>09</b><span>Rangos</span></a>
-        <a href="#/alianzas" class="home-orbit-node n2"><b>08</b><span>Alianzas</span></a>
+        <a href="#/alianzas" class="home-orbit-node n2"><b>09</b><span>Alianzas</span></a>
         <a href="#/estadisticas" class="home-orbit-node n3"><b>DATA</b><span>Core</span></a>
         <a href="#/galeria" class="home-orbit-node n4"><b>MEDIA</b><span>Galería</span></a>
       </div>
@@ -346,7 +346,7 @@ function pageHome(){
   <section class="section home-overview-section">
     <div class="wrap">
       <div class="home-kpi-grid reveal">
-        <div class="home-kpi-card hot"><small>Red diplomática</small><b>TOP #7 · #8 · #16</b><span>Aliados con posición destacada</span></div>
+        <div class="home-kpi-card hot"><small>Red diplomática</small><b>KoTZ #15 · aliados #8/#9/#17</b><span>Ranking actual y aliados destacados</span></div>
         <div class="home-kpi-card"><small>Estructura</small><b>9 rangos</b><span>De Recluta a Owner</span></div>
         <div class="home-kpi-card"><small>Operación</small><b>24/7</b><span>Panel, roles y registros</span></div>
         <div class="home-kpi-card"><small>Identidad</small><b>1 familia</b><span>Una visión, una zona</span></div>
@@ -650,7 +650,7 @@ function pageOrg(){
       name:'Administración',
       icon:'🔴',
       color:'#4e0a1a',
-      leaders:'@Roger',
+      leaders:'@Roger y @乃尺卂丂ㄩ匚卂 ★',
       mission:'Encargado de la organización interna, gestión de recursos y supervisión administrativa de la banda.',
       functions:['Gestionar miembros, rangos, cuotas y sanciones.', 'Supervisar recursos, registros y paneles internos.', 'Revisar que los sistemas funcionen correctamente.', 'Mantener la estructura de KoTZ ordenada y actualizada.']
     }
@@ -945,7 +945,8 @@ function allianceMotto(alliance){
     'cult-of-rose':'Comunidad, defensa y futuro compartido.',
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
     'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
-    'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.'
+    'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.',
+    'neta':'Respeto, cooperación, apoyo estratégico y futuro compartido.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
@@ -971,9 +972,9 @@ function allianceHeatClass(alliance){
 
 function allianceTopRank(alliance){
   const map = {
-    'kaos': 7,
-    'the-nato': 8,
-    'fallen-angels': 16
+    'kaos': 8,
+    'the-nato': 9,
+    'fallen-angels': 17
   };
   return map[alliance?.slug] || null;
 }
@@ -1074,8 +1075,8 @@ function pageAlliances(){
       <div class="diplomacy-v3-strip reveal">
         ${[
           ['Alianzas activas', alliances.length, 'Red verificada'],
+          ['Posición KoTZ', '#15', 'A menos de 1.000 puntos del puesto'],
           ['Prioridad alta', priorityCount, 'Respuesta rápida'],
-          ['Económicas', economicCount, 'Beneficio mutuo'],
           ['Confianza media', Math.round(alliances.reduce((acc,a)=>acc+allianceTrustScore(a),0)/Math.max(1,alliances.length)) + '%', 'Pactos estables']
         ].map(([label,value,sub]) => `
           <div class="diplomacy-v3-kpi">
@@ -1811,19 +1812,19 @@ function galleryTileStyle(g){
 /* --------------------------------------------------------- ESTADISTICAS */
 function pageStats(){
   const s = {
-    totalMembers: 34,
-    activeMembers: 30,
-    alliances: 8,
+    totalMembers: 46,
+    activeMembers: 46,
+    alliances: 9,
     eventsHeld: 1,
-    recruitsAccepted: 34,
+    recruitsAccepted: 46,
     weeklyDuesPct: 95,
     activityPct: 78,
-    recruitmentPct: 68,
-    diplomacyPct: 99
+    recruitmentPct: 92,
+    diplomacyPct: 98
   };
   const growth = [
     { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
-    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:17 }
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:30 }, { month:'Jul', total:16 }
   ];
   const maxGrowth = Math.max(1, ...growth.map(g => Number(g.total) || 0));
   const cards = [
@@ -1838,13 +1839,13 @@ function pageStats(){
     ['Actividad', s.activityPct, 'Presencia de miembros activos', '#ff9a1a'],
     ['Cuotas', s.weeklyDuesPct, 'Cumplimiento económico semanal', '#ff4fb5'],
     ['Diplomacia', s.diplomacyPct, 'Fuerza de alianzas', '#9fe8ff'],
-    ['Reclutamiento', s.recruitmentPct, '34 miembros sobre 50 plazas máximas', '#8cffb5']
+    ['Reclutamiento', s.recruitmentPct, '46 miembros sobre 50 plazas máximas', '#8cffb5']
   ];
   const ops = [
-    ['Red interna','Operativa','34 miembros registrados · 30 activos.'],
-    ['Diplomacia','Estable','8 alianzas activas · 0 conflictos registrados.'],
+    ['Red interna','Operativa','46 miembros registrados · 46 activos.'],
+    ['Diplomacia','Estable','9 alianzas activas · 0 conflictos registrados.'],
     ['Economía','En control','95% de cuotas semanales al día.'],
-    ['Crecimiento','Selectivo','34 de 50 plazas ocupadas: reclutamiento al 68%.']
+    ['Crecimiento','Selectivo','46 de 50 plazas ocupadas: reclutamiento al 92%.']
   ];
   return `
   <section class="stats-v2-hero">
@@ -1904,7 +1905,7 @@ function pageStats(){
       <div class="growth-copy reveal">
         <div class="eyebrow">Crecimiento</div>
         <h2 class="h2">Subir sí, pero <span class="accent">con control.</span></h2>
-        <p class="lede">Junio añadió 17 miembros y julio otros 17. El crecimiento sirve para medir si KoTZ aumenta su base sin perder el filtro interno.</p>
+        <p class="lede">Junio añadió 30 miembros y julio otros 16. El crecimiento sirve para medir si KoTZ aumenta su base sin perder el filtro interno.</p>
       </div>
       <div class="growth-chart-v2 reveal">
         <div class="chart-card-head"><b>Altas mensuales</b><span>${growth.length} lecturas</span></div>
