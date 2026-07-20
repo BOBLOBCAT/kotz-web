@@ -33,8 +33,8 @@ const KotzData = {
     { id:'a6', slug:'fallen-angels', name:'Fallen-Angels', emoji:'🪽', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza estratégica para crecer unidos, colaborar y mostrar una imagen fuerte entre comunidades.', values:['Unión','Colaboración','Crecimiento'] },
     { id:'a7', slug:'the-nato', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
     { id:'a8', slug:'crows-of-olympus', name:'Crows Of Olympus', emoji:'⚜️', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Crows Of Olympus basada en respeto, no agresión, comercio y protección mutua.', values:['Respeto','Comercio','Protección'] },
-    { id:'a9', slug:'neta', name:'Ñeta', emoji:'🩸', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Ñeta basada en respeto, no agresión, cooperación, información y apoyo estratégico.', values:['Respeto','No agresión','Futuro'] },
-  ],
+      { id:'a9', slug:'neta', name:'Ñeta', emoji:'🩸', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Ñeta basada en respeto, no agresión, cooperación, información y apoyo estratégico.', values:['Respeto','No agresión','Futuro'] },
+],
 
   conflicts: [],
 
@@ -89,7 +89,7 @@ const KotzData = {
 
   memberGrowth: [
     { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
-    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:30 }, { month:'Jul', total:16 },
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:29 },
   ],
 };
 /* ==========================================================================
@@ -379,7 +379,7 @@ const KotzStore = {
       weeklyDuesPct: 95,
       activityPct: 78,
       recruitmentPct: 92,
-      diplomacyPct: 98
+      diplomacyPct: 99
     };
   }
 };

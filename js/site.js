@@ -346,7 +346,7 @@ function pageHome(){
   <section class="section home-overview-section">
     <div class="wrap">
       <div class="home-kpi-grid reveal">
-        <div class="home-kpi-card hot"><small>Red diplomática</small><b>KoTZ #15 · aliados #8/#9/#17</b><span>Ranking actual y aliados destacados</span></div>
+        <div class="home-kpi-card hot"><small>Red diplomática</small><b>KoTZ #15 · aliados #8/#9/#17</b><span>Ranking operativo actualizado</span></div>
         <div class="home-kpi-card"><small>Estructura</small><b>9 rangos</b><span>De Recluta a Owner</span></div>
         <div class="home-kpi-card"><small>Operación</small><b>24/7</b><span>Panel, roles y registros</span></div>
         <div class="home-kpi-card"><small>Identidad</small><b>1 familia</b><span>Una visión, una zona</span></div>
@@ -650,7 +650,7 @@ function pageOrg(){
       name:'Administración',
       icon:'🔴',
       color:'#4e0a1a',
-      leaders:'@Roger y @乃尺卂丂ㄩ匚卂 ★',
+      leaders:'@Roger',
       mission:'Encargado de la organización interna, gestión de recursos y supervisión administrativa de la banda.',
       functions:['Gestionar miembros, rangos, cuotas y sanciones.', 'Supervisar recursos, registros y paneles internos.', 'Revisar que los sistemas funcionen correctamente.', 'Mantener la estructura de KoTZ ordenada y actualizada.']
     }
@@ -905,13 +905,14 @@ function allianceDossierStats(alliance){
 function allianceTrustScore(alliance){
   const map = {
     'rose-spines': 93,
-    'lacrew': 80,
+    'lacrew': 100,
     'kaos': 87,
     'underworld': 100,
     'cult-of-rose': 100,
     'fallen-angels': 100,
     'the-nato': 100,
-    'crows-of-olympus': 100
+    'crows-of-olympus': 100,
+    'neta': 100
   };
   if (alliance?.slug && map[alliance.slug] != null) return map[alliance.slug];
   if (Number.isFinite(Number(alliance?.trustScore))) return Number(alliance.trustScore);
@@ -946,7 +947,7 @@ function allianceMotto(alliance){
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
     'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
     'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.',
-    'neta':'Respeto, cooperación, apoyo estratégico y futuro compartido.'
+    'neta':'Respeto, cooperación, información y futuro bajo acuerdo oficial.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
@@ -1008,7 +1009,7 @@ function pageAlliances(){
   return `
   <section class="page-head diplomacy-v3-head">
     <div class="diplomacy-v3-ambient">
-      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
+      ${colors.slice(0,9).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
     </div>
     <div class="diplomacy-scanlines"></div>
     <div class="diplomacy-data-rain">
@@ -1075,8 +1076,9 @@ function pageAlliances(){
       <div class="diplomacy-v3-strip reveal">
         ${[
           ['Alianzas activas', alliances.length, 'Red verificada'],
-          ['Posición KoTZ', '#15', 'A menos de 1.000 puntos del puesto'],
+          ['Ranking KoTZ', '#15', 'Posición operativa'],
           ['Prioridad alta', priorityCount, 'Respuesta rápida'],
+          ['Económicas', economicCount, 'Beneficio mutuo'],
           ['Confianza media', Math.round(alliances.reduce((acc,a)=>acc+allianceTrustScore(a),0)/Math.max(1,alliances.length)) + '%', 'Pactos estables']
         ].map(([label,value,sub]) => `
           <div class="diplomacy-v3-kpi">
@@ -1820,11 +1822,11 @@ function pageStats(){
     weeklyDuesPct: 95,
     activityPct: 78,
     recruitmentPct: 92,
-    diplomacyPct: 98
+    diplomacyPct: 99
   };
   const growth = [
     { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
-    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:30 }, { month:'Jul', total:16 }
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:29 }
   ];
   const maxGrowth = Math.max(1, ...growth.map(g => Number(g.total) || 0));
   const cards = [
@@ -1905,7 +1907,7 @@ function pageStats(){
       <div class="growth-copy reveal">
         <div class="eyebrow">Crecimiento</div>
         <h2 class="h2">Subir sí, pero <span class="accent">con control.</span></h2>
-        <p class="lede">Junio añadió 30 miembros y julio otros 16. El crecimiento sirve para medir si KoTZ aumenta su base sin perder el filtro interno.</p>
+        <p class="lede">Junio añadió 17 miembros y julio otros 29. El crecimiento sirve para medir si KoTZ aumenta su base sin perder el filtro interno.</p>
       </div>
       <div class="growth-chart-v2 reveal">
         <div class="chart-card-head"><b>Altas mensuales</b><span>${growth.length} lecturas</span></div>
