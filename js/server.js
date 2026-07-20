@@ -182,8 +182,8 @@ const KOTZ_ALLIANCES = [
     protocol: ['Mantener respeto hacia miembros de Crows Of Olympus.', 'No provocar, atacar ni generar conflictos sin autorización.', 'Cualquier incumplimiento o tensión se eleva directamente a liderazgo.'],
     note: 'Tratado firmado el 07/07/2026 a las 07:17. Crows Of Olympus queda integrado como aliado oficial de KoTZ.',
     leader: 'Suki_Toast'
-  }
-,
+
+  },
   {
     slug: 'neta',
     name: 'Ñeta',
@@ -192,16 +192,16 @@ const KOTZ_ALLIANCES = [
     status: 'Activa',
     since: 'Jul 2026',
     type: 'Alianza de respeto, cooperación y futuro',
-    level: 'Confianza prioritaria',
+    level: 'Confianza alta',
     trustScore: 100,
-    colors: { primary: '#FF1F3D', secondary: '#050505', dark: '#090307' },
-    desc: 'Nueva alianza oficial con Ñeta basada en respeto, no agresión, cooperación, información y apoyo estratégico.',
-    full: 'Ñeta entra en la red diplomática de KoTZ como una alianza con visión de futuro. El acuerdo se basa en respeto mutuo, pacto de no agresión, cooperación en situaciones importantes, intercambio de información cuando sea necesario y apoyo estratégico cuando la situación lo requiera.',
-    pillars: ['Respeto mutuo', 'Pacto de no agresión', 'Cooperación importante', 'Visión de futuro'],
-    agreements: ['Respeto mutuo entre ambas partes.', 'Pacto de no agresión entre KoTZ y Ñeta.', 'Cooperación en situaciones importantes.', 'Intercambio de información cuando sea necesario.', 'Apoyo estratégico cuando la situación lo requiera.', 'Sentar las bases de una alianza duradera de cara al futuro.'],
-    benefits: ['Nueva línea diplomática estable con una organización aliada.', 'Apoyo estratégico en situaciones importantes.', 'Base de futuro para una relación duradera, seria y beneficiosa.'],
-    protocol: ['Tratar cualquier problema directamente con responsables autorizados.', 'Evitar provocaciones, dramas innecesarios o acciones sin autorización.', 'Mantener respeto y comunicación antes de escalar cualquier malentendido.'],
-    note: 'Ñeta queda integrada como alianza oficial de KoTZ: respeto, palabra y futuro.',
+    colors: { primary: '#FF1E1E', secondary: '#050505', dark: '#090202' },
+    desc: 'Nueva alianza oficial con Ñeta basada en respeto mutuo, pacto de no agresión, cooperación, información y apoyo estratégico.',
+    full: 'Ñeta entra en la red diplomática de KoTZ como una alianza seria, estable y con visión de futuro. El acuerdo no busca ser algo momentáneo, sino sentar las bases de una relación duradera entre ambas organizaciones, basada en respeto, comunicación, cooperación y apoyo estratégico cuando la situación lo requiera.',
+    pillars: ['Respeto mutuo', 'Pacto de no agresión', 'Cooperación en situaciones importantes', 'Visión de futuro compartida'],
+    agreements: ['KoTZ y Ñeta se reconocen como organizaciones aliadas.', 'Ambas partes mantendrán respeto mutuo y evitarán provocaciones o conflictos innecesarios.', 'Se podrá compartir información cuando sea necesario y aprobado por liderazgo.', 'El apoyo estratégico se dará cuando la situación lo requiera y exista coordinación entre responsables.'],
+    benefits: ['Nueva base diplomática para una alianza duradera.', 'Cooperación estable en situaciones importantes.', 'Apoyo estratégico y comunicación entre liderazgos.'],
+    protocol: ['No atacar, provocar ni faltar al respeto a miembros de Ñeta.', 'No actuar en nombre de la alianza sin autorización.', 'Cualquier problema o malentendido se trata directamente con responsables, evitando dramas públicos.'],
+    note: 'Respeto, palabra y futuro. Ñeta queda registrada como alianza oficial de KoTZ.',
     leader: 'Liderazgo Ñeta'
   }
 ];

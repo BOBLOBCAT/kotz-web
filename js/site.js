@@ -346,7 +346,7 @@ function pageHome(){
   <section class="section home-overview-section">
     <div class="wrap">
       <div class="home-kpi-grid reveal">
-        <div class="home-kpi-card hot"><small>Red diplomática</small><b>KoTZ #15 · aliados #8/#9/#17</b><span>Ranking operativo actualizado</span></div>
+        <div class="home-kpi-card hot"><small>Red diplomática</small><b>TOP #8 · #9 · #17</b><span>Aliados con posición destacada · KoTZ #15</span></div>
         <div class="home-kpi-card"><small>Estructura</small><b>9 rangos</b><span>De Recluta a Owner</span></div>
         <div class="home-kpi-card"><small>Operación</small><b>24/7</b><span>Panel, roles y registros</span></div>
         <div class="home-kpi-card"><small>Identidad</small><b>1 familia</b><span>Una visión, una zona</span></div>
@@ -947,7 +947,7 @@ function allianceMotto(alliance){
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
     'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
     'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.',
-    'neta':'Respeto, cooperación, información y futuro bajo acuerdo oficial.'
+    'neta':'Respeto, palabra y futuro dentro de una alianza duradera.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
@@ -1009,7 +1009,7 @@ function pageAlliances(){
   return `
   <section class="page-head diplomacy-v3-head">
     <div class="diplomacy-v3-ambient">
-      ${colors.slice(0,9).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
+      ${colors.slice(0,7).map((c,i) => `<i style="--orb:${c}; --x:${8 + (i*14)%84}%; --y:${12 + (i*19)%70}%; --s:${180 + (i%4)*72}px; --delay:${i * -1.7}s;"></i>`).join('')}
     </div>
     <div class="diplomacy-scanlines"></div>
     <div class="diplomacy-data-rain">
@@ -1076,7 +1076,7 @@ function pageAlliances(){
       <div class="diplomacy-v3-strip reveal">
         ${[
           ['Alianzas activas', alliances.length, 'Red verificada'],
-          ['Ranking KoTZ', '#15', 'Posición operativa'],
+          ['KoTZ', '#15', 'Posición operativa'],
           ['Prioridad alta', priorityCount, 'Respuesta rápida'],
           ['Económicas', economicCount, 'Beneficio mutuo'],
           ['Confianza media', Math.round(alliances.reduce((acc,a)=>acc+allianceTrustScore(a),0)/Math.max(1,alliances.length)) + '%', 'Pactos estables']

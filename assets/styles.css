@@ -848,7 +848,7 @@ footer{ border-top:1px solid var(--line); padding:56px 0 32px; }
 @keyframes v3NodeMax{ to{ box-shadow:0 0 58px color-mix(in srgb, var(--ally) 62%, transparent); } }
 .command-footer{ margin-top:14px; color:var(--bone-faint); font-size:.62rem; }
 .diplomacy-v3-section{ background:linear-gradient(180deg,#050507,#030304); }
-.diplomacy-v3-strip{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
+.diplomacy-v3-strip{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; margin-bottom:28px; }
 .diplomacy-v3-kpi{
   position:relative;
   overflow:hidden;
