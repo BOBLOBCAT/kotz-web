@@ -37,6 +37,7 @@ const KotzData = {
     { id:'a10', slug:'onyxis', name:'Onyxis', emoji:'🦉', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Onyxis para guerras, eventos y apoyo mutuo ante presión externa.', values:['Guerras','Eventos','Apoyo'] },
     { id:'a11', slug:'redut', name:'Redut', emoji:'🦾', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Redut basada en respeto, eventos conjuntos y protección mutua.', values:['Respeto','Eventos','Protección'] },
     { id:'a12', slug:'wagner', name:'Wagner', emoji:'☣️', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Wagner orientada a eventos, apoyo y protección cuando sea necesario.', values:['Eventos','Apoyo','Protección'] },
+    { id:'a13', slug:'fenix', name:'Fenix ESP', emoji:'🐦‍🔥', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Fenix ESP basada en eventos conjuntos, protección y ayuda entre ambas bandas.', values:['Eventos','Protección','Ayuda'] },
   ],
 
   conflicts: [],
@@ -372,7 +373,7 @@ const KotzStore = {
       totalMembers: 46,
       activeMembers: 46,
       pendingMembers: 0,
-      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 12,
+      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 13,
       duesPending: dues.filter(d => d.status === 'pending').length,
       duesApproved: dues.filter(d => d.status === 'approved').length,
       openSanctions: this.getAllSanctions().length,

@@ -1,29 +1,45 @@
-# KoTZ — Añadir Onyxis, Redut y Wagner
+# KoTZ — Fenix ESP + rankings actualizados
 
-Parche creado para añadir tres alianzas oficiales nuevas a la red diplomática:
+Parche generado para añadir Fenix ESP como alianza oficial y actualizar rankings/contadores.
 
-- Onyxis — 🦉 — morado y negro — líder Tomm Tominator
-- Redut — 🦾 — rojo y negro — líder Tomás Reis, sublíder Tomás
-- Wagner — ☣️ — negro y rojo — líder Huesos Litvin, sublíder Henry Young
+## Cambios
 
-También se actualiza:
+- Añadida alianza: Fenix ESP.
+- Emoji Discord: 🐦‍🔥.
+- Colores Fenix: negro / rojo-naranja / fuego.
+- Acuerdo: eventos, protección y ayuda entre ambas bandas.
+- Alianzas activas: 13.
+- Rankings actualizados:
+  - The NATO: #8
+  - KAOs: #10
+  - Fenix ESP: #14
+  - KoTZ: #15 operativo
+  - Fallen Angels: #21
+  - Redut: #23
+- Homepage actualizada de 12 a 13 alianzas.
+- Estadísticas actualizadas de 12 a 13 alianzas.
 
-- Inicio: 12 aliados / 12 alianzas.
-- Estadísticas: 12 alianzas activas.
-- Confianza media: se mantiene calculada automáticamente desde las alianzas.
-- Data fallback: julio 29 miembros, 46 miembros, 46 reclutas, 12 alianzas.
-
-Fénix NO se añade como alianza activa porque el texto indica que todavía está en valoración futura y no hay nada cerrado.
-
-Archivos incluidos:
+## Archivos incluidos
 
 - server.js
 - js/site.js
 - js/data.js
 - assets/styles.css
 
-Validación ejecutada:
+## Subida
 
-- node --check server.js
-- node --check js/site.js
-- node --check js/data.js
+```powershell
+cd C:\Users\boblo\Downloads\kotz-web
+git add -A
+git status
+git commit -m "Anadir Fenix y actualizar rankings"
+git push
+```
+
+Si GitHub rechaza:
+
+```powershell
+git push origin main --force
+```
+
+Render: Manual Deploy → Deploy latest commit.

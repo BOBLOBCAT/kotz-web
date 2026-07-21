@@ -265,6 +265,26 @@ const KOTZ_ALLIANCES = [
     note: 'Wagner queda registrada como alianza de eventos, apoyo y protección.',
     leader: 'Huesos Litvin',
     subleader: 'Henry Young'
+  },
+  {
+    slug: 'fenix',
+    name: 'Fenix ESP',
+    code: 'FENIX',
+    emoji: '🐦‍🔥',
+    status: 'Activa',
+    since: 'Jul 2026',
+    type: 'Alianza de eventos, protección y ayuda mutua',
+    level: 'Confianza reciente',
+    trustScore: 100,
+    colors: { primary: '#FF3B1F', secondary: '#FFB000', dark: '#120302' },
+    desc: 'Nueva alianza con Fenix ESP basada en eventos conjuntos, protección y ayuda entre ambas bandas.',
+    full: 'Fenix ESP entra en la red diplomática de KoTZ como una alianza orientada a actividad, protección y apoyo entre bandas. El acuerdo busca organizar eventos conjuntos, mantener una relación útil y activar ayuda mutua cuando la situación lo requiera, siempre con coordinación entre responsables.',
+    pillars: ['Eventos conjuntos', 'Protección mutua', 'Ayuda entre bandas', 'Coordinación directa'],
+    agreements: ['KoTZ y Fenix ESP se reconocen como organizaciones aliadas.', 'Ambas partes podrán organizar eventos conjuntos cuando exista coordinación previa.', 'La protección y ayuda mutua se activará cuando la situación lo requiera y sea aprobada por liderazgo.', 'Cualquier tensión se tratará directamente entre responsables para evitar malentendidos públicos.'],
+    benefits: ['Más actividad mediante eventos entre bandas.', 'Refuerzo de protección y apoyo cuando sea necesario.', 'Nueva relación diplomática con una banda posicionada en el TOP.'],
+    protocol: ['No provocar ni atacar a miembros de Fenix ESP.', 'No prometer apoyo o protección sin autorización.', 'Coordinar eventos y ayudas con liderazgo.', 'Resolver cualquier problema por vía privada entre responsables.'],
+    note: 'Fenix ESP queda registrada como alianza oficial de KoTZ para eventos, protección y ayuda mutua.',
+    leader: 'Liderazgo Fenix'
   }
 ];
 

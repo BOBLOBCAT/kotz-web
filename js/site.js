@@ -274,12 +274,14 @@ function pageHome(){
     ['Panel Usuario','Acceso para miembros verificados, cuotas, tienda RP y galería interna.','user.html','Abrir panel','100%','👤'],
     ['Alto Mando','Control de miembros, sanciones, cuotas, tienda, galería y administración.','panel.html','Entrar mando','Privado','👑'],
     ['Organización','Cadena de mando, rangos, áreas internas y protocolos de crecimiento.','#/organizacion','Ver estructura','9 rangos','▰'],
-    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','12 aliados','🤝']
+    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','13 aliados','🤝']
   ];
   const topAllies = [
-    ['#8','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
-    ['#9','The NATO','Alianza internacional','Prioridad · respeto · coordinación','#9FE8FF'],
-    ['#17','Fallen Angels','Crecimiento conjunto','Eventos · presencia · colaboración','#B88CFF']
+    ['#8','The NATO','Alianza internacional','Prioridad · respeto · coordinación','#9FE8FF','the-nato'],
+    ['#10','KAOs ム','Alianza estratégica','Información · táctica · apoyo','#D8C84A','kaos'],
+    ['#14','Fenix ESP','Eventos y protección','Ayuda · protección · eventos','#FF3B1F','fenix'],
+    ['#21','Fallen Angels','Crecimiento conjunto','Eventos · presencia · colaboración','#B88CFF','fallen-angels'],
+    ['#23','Redut','Respeto y protección','Eventos · protección · respeto','#FF1E1E','redut']
   ];
   const doctrine = [
     ['01','Identidad','No entrar por entrar. Representar KoTZ significa cuidar el nombre, la imagen y la zona.'],
@@ -324,7 +326,7 @@ function pageHome(){
           <small>Command Core</small>
         </div>
         <a href="#/organizacion" class="home-orbit-node n1"><b>09</b><span>Rangos</span></a>
-        <a href="#/alianzas" class="home-orbit-node n2"><b>12</b><span>Alianzas</span></a>
+        <a href="#/alianzas" class="home-orbit-node n2"><b>13</b><span>Alianzas</span></a>
         <a href="#/estadisticas" class="home-orbit-node n3"><b>DATA</b><span>Core</span></a>
         <a href="#/galeria" class="home-orbit-node n4"><b>MEDIA</b><span>Galería</span></a>
       </div>
@@ -406,8 +408,8 @@ function pageHome(){
         <a class="btn btn-primary" href="#/alianzas">Abrir centro diplomático</a>
       </div>
       <div class="home-top-grid reveal">
-        ${topAllies.map(([rank,name,type,desc,color],i)=>`
-          <a class="home-top-card" href="#/alianzas/${name === 'KAOS' ? 'kaos' : name === 'The NATO' ? 'the-nato' : 'fallen-angels'}" style="--ally:${color}; --i:${i}">
+        ${topAllies.map(([rank,name,type,desc,color,slug],i)=>`
+          <a class="home-top-card" href="#/alianzas/${slug}" style="--ally:${color}; --i:${i}">
             <div class="home-top-rank">${rank}</div>
             <h3>${name}</h3>
             <small>${type}</small>
@@ -915,7 +917,8 @@ function allianceTrustScore(alliance){
     'neta': 100,
     'onyxis': 100,
     'redut': 100,
-    'wagner': 100
+    'wagner': 100,
+    'fenix': 100
   };
   if (alliance?.slug && map[alliance.slug] != null) return map[alliance.slug];
   if (Number.isFinite(Number(alliance?.trustScore))) return Number(alliance.trustScore);
@@ -953,7 +956,8 @@ function allianceMotto(alliance){
     'neta':'Respeto, palabra y futuro dentro de una alianza duradera.',
     'onyxis':'Guerras, eventos y respaldo cuando la presión aprieta.',
     'redut':'Respeto entre bandas, eventos y protección mutua.',
-    'wagner':'Eventos, apoyo y protección con coordinación directa.'
+    'wagner':'Eventos, apoyo y protección con coordinación directa.',
+    'fenix':'Eventos, protección y ayuda mutua entre bandas.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
@@ -979,9 +983,11 @@ function allianceHeatClass(alliance){
 
 function allianceTopRank(alliance){
   const map = {
-    'kaos': 8,
-    'the-nato': 9,
-    'fallen-angels': 17
+    'the-nato': 8,
+    'kaos': 10,
+    'fenix': 14,
+    'fallen-angels': 21,
+    'redut': 23
   };
   return map[alliance?.slug] || null;
 }
@@ -1822,7 +1828,7 @@ function pageStats(){
   const s = {
     totalMembers: 46,
     activeMembers: 46,
-    alliances: 12,
+    alliances: 13,
     eventsHeld: 1,
     recruitsAccepted: 46,
     weeklyDuesPct: 95,
@@ -1851,7 +1857,7 @@ function pageStats(){
   ];
   const ops = [
     ['Red interna','Operativa','46 miembros registrados · 46 activos.'],
-    ['Diplomacia','Estable','12 alianzas activas · 0 conflictos registrados.'],
+    ['Diplomacia','Estable','13 alianzas activas · 0 conflictos registrados.'],
     ['Economía','En control','95% de cuotas semanales al día.'],
     ['Crecimiento','Selectivo','46 de 50 plazas ocupadas: reclutamiento al 92%.']
   ];
