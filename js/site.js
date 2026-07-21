@@ -274,7 +274,7 @@ function pageHome(){
     ['Panel Usuario','Acceso para miembros verificados, cuotas, tienda RP y galería interna.','user.html','Abrir panel','100%','👤'],
     ['Alto Mando','Control de miembros, sanciones, cuotas, tienda, galería y administración.','panel.html','Entrar mando','Privado','👑'],
     ['Organización','Cadena de mando, rangos, áreas internas y protocolos de crecimiento.','#/organizacion','Ver estructura','9 rangos','▰'],
-    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','9 aliados','🤝']
+    ['Diplomacia','Alianzas protegidas, expedientes, posiciones TOP y red internacional.','#/alianzas','Ver red','12 aliados','🤝']
   ];
   const topAllies = [
     ['#8','KAOS','Alianza estratégica','Información · táctica · apoyo','#D8C84A'],
@@ -324,7 +324,7 @@ function pageHome(){
           <small>Command Core</small>
         </div>
         <a href="#/organizacion" class="home-orbit-node n1"><b>09</b><span>Rangos</span></a>
-        <a href="#/alianzas" class="home-orbit-node n2"><b>09</b><span>Alianzas</span></a>
+        <a href="#/alianzas" class="home-orbit-node n2"><b>12</b><span>Alianzas</span></a>
         <a href="#/estadisticas" class="home-orbit-node n3"><b>DATA</b><span>Core</span></a>
         <a href="#/galeria" class="home-orbit-node n4"><b>MEDIA</b><span>Galería</span></a>
       </div>
@@ -912,7 +912,10 @@ function allianceTrustScore(alliance){
     'fallen-angels': 100,
     'the-nato': 100,
     'crows-of-olympus': 100,
-    'neta': 100
+    'neta': 100,
+    'onyxis': 100,
+    'redut': 100,
+    'wagner': 100
   };
   if (alliance?.slug && map[alliance.slug] != null) return map[alliance.slug];
   if (Number.isFinite(Number(alliance?.trustScore))) return Number(alliance.trustScore);
@@ -947,7 +950,10 @@ function allianceMotto(alliance){
     'fallen-angels':'Unidad estratégica, imagen fuerte y proyectos conjuntos.',
     'the-nato':'Red internacional, protocolo, lealtad y coordinación.',
     'crows-of-olympus':'Respeto, comercio, protección y cero agresión bajo tratado.',
-    'neta':'Respeto, palabra y futuro dentro de una alianza duradera.'
+    'neta':'Respeto, palabra y futuro dentro de una alianza duradera.',
+    'onyxis':'Guerras, eventos y respaldo cuando la presión aprieta.',
+    'redut':'Respeto entre bandas, eventos y protección mutua.',
+    'wagner':'Eventos, apoyo y protección con coordinación directa.'
   };
   return map[alliance.slug] || 'Confianza, respeto y cooperación bajo la corona.';
 }
@@ -1816,7 +1822,7 @@ function pageStats(){
   const s = {
     totalMembers: 46,
     activeMembers: 46,
-    alliances: 9,
+    alliances: 12,
     eventsHeld: 1,
     recruitsAccepted: 46,
     weeklyDuesPct: 95,
@@ -1845,7 +1851,7 @@ function pageStats(){
   ];
   const ops = [
     ['Red interna','Operativa','46 miembros registrados · 46 activos.'],
-    ['Diplomacia','Estable','9 alianzas activas · 0 conflictos registrados.'],
+    ['Diplomacia','Estable','12 alianzas activas · 0 conflictos registrados.'],
     ['Economía','En control','95% de cuotas semanales al día.'],
     ['Crecimiento','Selectivo','46 de 50 plazas ocupadas: reclutamiento al 92%.']
   ];

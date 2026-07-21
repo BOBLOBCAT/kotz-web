@@ -1,43 +1,29 @@
-# KoTZ — Actualización estadísticas, confianza y organización
+# KoTZ — Añadir Onyxis, Redut y Wagner
 
-Cambios incluidos:
+Parche creado para añadir tres alianzas oficiales nuevas a la red diplomática:
 
-- Estadísticas públicas actualizadas:
-  - 34 miembros registrados.
-  - 30 miembros activos.
-  - 8 alianzas activas.
-  - 1 evento realizado.
-  - 34 reclutas aceptados.
-  - 95% de cuotas a la semana.
-  - Actividad 78%.
-  - Cuotas 95%.
-  - Diplomacia 99%.
-  - Reclutamiento 68% (34/50 plazas).
-  - Junio 17 miembros y julio otros 17.
-- Confianza por alianza actualizada:
-  - The NATO 100%.
-  - Crows Of Olympus 100%.
-  - Fallen Angels 100%.
-  - Cult of Rose 100%.
-  - Underworld 100%.
-  - LaCREW 80%.
-  - KAOs 87%.
-  - Rose Spines 93%.
-  - Confianza media automática: 95%.
-- Estado diplomático con 0 conflictos activos.
-- Organización remodelada:
-  - Colores oficiales por rango.
-  - Nuevo desplegable de líderes de área.
-  - Comunicación: Kyle Crimson (Domesticado) y Eva Grimblade.
-  - Reclutamiento: Ian Grimstone y Gigi.
-  - Venta de armas: Tyler price.
-  - Administración: Roger y 乃尺卂丂ㄩ匚卂 ★.
-- Crows Of Olympus se mantiene como alianza oficial con colores negro/naranja.
+- Onyxis — 🦉 — morado y negro — líder Tomm Tominator
+- Redut — 🦾 — rojo y negro — líder Tomás Reis, sublíder Tomás
+- Wagner — ☣️ — negro y rojo — líder Huesos Litvin, sublíder Henry Young
 
-Archivos tocados:
+También se actualiza:
+
+- Inicio: 12 aliados / 12 alianzas.
+- Estadísticas: 12 alianzas activas.
+- Confianza media: se mantiene calculada automáticamente desde las alianzas.
+- Data fallback: julio 29 miembros, 46 miembros, 46 reclutas, 12 alianzas.
+
+Fénix NO se añade como alianza activa porque el texto indica que todavía está en valoración futura y no hay nada cerrado.
+
+Archivos incluidos:
+
 - server.js
 - js/site.js
 - js/data.js
 - assets/styles.css
 
-No incluye .env ni node_modules.
+Validación ejecutada:
+
+- node --check server.js
+- node --check js/site.js
+- node --check js/data.js

@@ -34,6 +34,9 @@ const KotzData = {
     { id:'a7', slug:'the-nato', name:'The-NATO', emoji:'💎', status:'Activa', since:'Jun 2026', trustScore:100, desc:'Alianza internacional fuerte basada en valores compartidos, apoyo, respeto y lealtad.', values:['Lealtad','Respeto','Apoyo'] },
     { id:'a8', slug:'crows-of-olympus', name:'Crows Of Olympus', emoji:'⚜️', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Crows Of Olympus basada en respeto, no agresión, comercio y protección mutua.', values:['Respeto','Comercio','Protección'] },
     { id:'a9', slug:'neta', name:'Ñeta', emoji:'🩸', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza oficial con Ñeta basada en respeto, cooperación, apoyo estratégico y visión de futuro.', values:['Respeto','No agresión','Futuro'] },
+    { id:'a10', slug:'onyxis', name:'Onyxis', emoji:'🦉', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Onyxis para guerras, eventos y apoyo mutuo ante presión externa.', values:['Guerras','Eventos','Apoyo'] },
+    { id:'a11', slug:'redut', name:'Redut', emoji:'🦾', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Redut basada en respeto, eventos conjuntos y protección mutua.', values:['Respeto','Eventos','Protección'] },
+    { id:'a12', slug:'wagner', name:'Wagner', emoji:'☣️', status:'Activa', since:'Jul 2026', trustScore:100, desc:'Nueva alianza con Wagner orientada a eventos, apoyo y protección cuando sea necesario.', values:['Eventos','Apoyo','Protección'] },
   ],
 
   conflicts: [],
@@ -89,7 +92,7 @@ const KotzData = {
 
   memberGrowth: [
     { month:'Ene', total:0 }, { month:'Feb', total:0 }, { month:'Mar', total:0 },
-    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:17 },
+    { month:'Abr', total:0 }, { month:'May', total:0 }, { month:'Jun', total:17 }, { month:'Jul', total:29 },
   ],
 };
 /* ==========================================================================
@@ -366,19 +369,19 @@ const KotzStore = {
   stats(){
     const dues = this.getAllDues();
     return {
-      totalMembers: 34,
-      activeMembers: 30,
+      totalMembers: 46,
+      activeMembers: 46,
       pendingMembers: 0,
-      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 8,
+      alliances: this.getAlliances().filter(a => a.status === 'Activa').length || 12,
       duesPending: dues.filter(d => d.status === 'pending').length,
       duesApproved: dues.filter(d => d.status === 'approved').length,
       openSanctions: this.getAllSanctions().length,
       shopPending: this.getPendingShopOrders().length + this.getPendingShopOffers().length,
       eventsHeld: 1,
-      recruitsAccepted: 34,
+      recruitsAccepted: 46,
       weeklyDuesPct: 95,
       activityPct: 78,
-      recruitmentPct: 68,
+      recruitmentPct: 92,
       diplomacyPct: 99
     };
   }
